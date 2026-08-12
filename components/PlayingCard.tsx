@@ -9,8 +9,6 @@ interface PlayingCardProps {
   suit?: Suit;
   rank?: string;
   size?: ClassicCardSize;
-  /** Override face layout: fan (hand) or table (played). */
-  variant?: "fan" | "table";
   selected?: boolean;
   disabled?: boolean;
   /** Subtle highlight when the card is a legal play option */
@@ -34,7 +32,6 @@ export function PlayingCard({
   suit,
   rank,
   size = "md",
-  variant,
   selected = false,
   disabled = false,
   playable = false,
@@ -50,7 +47,7 @@ export function PlayingCard({
     playing-card-shell relative aspect-[5/7] overflow-hidden rounded-[0.35rem] transition-all duration-200
     ${sizeClasses[size]}
     ${elevated && !disabled ? "shadow-[0_3px_10px_rgba(0,0,0,0.45)]" : "shadow-[0_2px_5px_rgba(0,0,0,0.3)]"}
-    ${playable && !disabled ? "ring-2 ring-emerald-400/60" : ""}
+    ${playable && !disabled ? "card-playable" : ""}
     ${selected ? "ring-2 ring-gold-400 -translate-y-3 portrait-phone:-translate-y-2 landscape-phone:-translate-y-1.5 z-10 shadow-[0_8px_20px_rgba(232,197,71,0.35)]" : ""}
     ${interactive ? "cursor-pointer hover:-translate-y-2 portrait-phone:hover:-translate-y-1.5 landscape-phone:hover:-translate-y-1 hover:shadow-xl active:scale-95" : ""}
     ${disabled ? "card-unplayable" : ""}
@@ -58,7 +55,7 @@ export function PlayingCard({
   `.trim();
 
   const content = (
-    <ClassicCardFace suit={displaySuit} rank={displayRank} size={size} variant={variant} />
+    <ClassicCardFace suit={displaySuit} rank={displayRank} size={size} />
   );
 
   if (interactive) {
@@ -99,10 +96,10 @@ export function CardFan() {
   ];
 
   return (
-    <div className="game-hand-fan game-hand-fan--bbo mx-auto max-w-[18rem] justify-center px-1" aria-hidden>
+    <div className="game-hand-fan game-hand-fan--bbo mx-auto max-w-[20rem] justify-center px-1" aria-hidden>
       {cards.map((card, i) => (
         <div key={`${card.rank}-${card.suit}`} className="relative shrink-0" style={{ zIndex: i + 1 }}>
-          <PlayingCard suit={card.suit} rank={card.rank} size="hand" variant="fan" elevated />
+          <PlayingCard suit={card.suit} rank={card.rank} size="hand" elevated />
         </div>
       ))}
     </div>

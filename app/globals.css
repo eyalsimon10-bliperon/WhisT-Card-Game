@@ -17,7 +17,8 @@
     --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
     --card-hand-w: calc(var(--card-hand-h) * 5 / 7);
     /* Tight BBO fan: ~26–30% of each card remains visible */
-    --hand-visible-strip: max(1.25rem, calc(var(--card-hand-w) * 0.34));
+    /* Wider strip for easier tap targets in the fan */
+    --hand-visible-strip: max(1.45rem, calc(var(--card-hand-w) * 0.4));
     --hand-fan-overlap: calc(var(--hand-visible-strip) - var(--card-hand-w));
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
@@ -27,7 +28,7 @@
     :root {
       --card-hand-h: clamp(4.5rem, 17vw, 5.85rem);
       --card-table-h: clamp(4.65rem, 16vw, 6.25rem);
-      --hand-visible-strip: max(1.3rem, calc(var(--card-hand-w) * 0.36));
+      --hand-visible-strip: max(1.5rem, calc(var(--card-hand-w) * 0.42));
     }
   }
 
@@ -39,7 +40,7 @@
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-visible-strip: max(1.15rem, calc(var(--card-hand-w) * 0.38));
+      --hand-visible-strip: max(1.3rem, calc(var(--card-hand-w) * 0.44));
       --trick-zone-h: clamp(8rem, 50vh, 9.75rem);
       --trick-zone-w: clamp(13rem, 70vw, 16.5rem);
     }
@@ -350,10 +351,16 @@
     background: var(--card-face);
   }
 
+  /* Soft playable hint — no turquoise ring on fan cards */
+  .card-playable {
+    box-shadow:
+      0 0 0 1px rgba(232, 197, 71, 0.35),
+      0 3px 10px rgba(0, 0, 0, 0.35);
+  }
+
   /*
-    ========== BBO-style dual card faces ==========
-    Fan hand: rank+suit ONLY in top of left strip (rest of card blank)
-    Table: corners + large center suit pip
+    Unified card face (hand + table):
+    TL index + BR rotated index — same size, no center pip.
   */
   .bbo-face {
     position: relative;
@@ -361,7 +368,7 @@
     width: 100%;
     user-select: none;
     background: var(--card-face);
-    border: 1px solid var(--card-edge);
+    border: 1px solid #c5c5c5;
     border-radius: inherit;
     overflow: hidden;
   }
@@ -374,124 +381,111 @@
     color: var(--card-black);
   }
 
-  .bbo-face--table[data-red="true"] {
-    border-color: color-mix(in srgb, var(--card-red) 45%, #bbb);
-  }
-
-  .bbo-face--table[data-red="false"] {
-    border-color: color-mix(in srgb, var(--card-black) 28%, #bbb);
-  }
-
-  /* --- FAN (hand) — BBO: huge rank+suit in left strip --- */
-  .bbo-fan-strip {
+  .bbo-index {
     position: absolute;
-    top: 2%;
-    left: 0;
-    width: var(--hand-visible-strip);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    line-height: 0.9;
-    padding-top: 2%;
-  }
-
-  .bbo-face--fan .bbo-rank {
-    font-weight: 900;
-    font-size: clamp(1.15rem, 40cqh, 2rem);
-    letter-spacing: -0.06em;
+    width: 1.35rem;
     line-height: 0.9;
   }
 
-  .bbo-face--fan .bbo-rank--ten {
-    font-size: clamp(0.92rem, 32cqh, 1.55rem);
-    letter-spacing: -0.1em;
-  }
-
-  .bbo-face--fan .bbo-suit {
-    font-size: clamp(1.05rem, 34cqh, 1.7rem);
-    line-height: 1;
-    margin-top: 0.04em;
-  }
-
-  @media (orientation: landscape) and (max-height: 520px) {
-    .bbo-face--fan .bbo-rank {
-      font-size: clamp(1rem, 42cqh, 1.45rem);
-    }
-
-    .bbo-face--fan .bbo-rank--ten {
-      font-size: clamp(0.8rem, 34cqh, 1.15rem);
-    }
-
-    .bbo-face--fan .bbo-suit {
-      font-size: clamp(0.9rem, 36cqh, 1.25rem);
-    }
-  }
-
-  /* --- TABLE (played) --- */
-  .bbo-corner {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1;
-    z-index: 2;
-  }
-
-  .bbo-corner--tl {
+  .bbo-index--tl {
     top: 4%;
-    left: 7%;
+    left: 5%;
   }
 
-  .bbo-corner--br {
-    right: 7%;
+  .bbo-index--br {
+    right: 5%;
     bottom: 4%;
     transform: rotate(180deg);
   }
 
-  .bbo-face--table .bbo-rank {
+  .bbo-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 1.05em;
     font-weight: 800;
-    font-size: clamp(0.9rem, 20cqh, 1.35rem);
-    letter-spacing: -0.03em;
-    line-height: 1;
+    font-size: clamp(0.95rem, 28cqh, 1.45rem);
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    text-align: center;
   }
 
-  .bbo-face--table .bbo-rank--ten {
-    font-size: clamp(0.72rem, 16cqh, 1.1rem);
+  /* Keep "10" in the same box height so suit lines up with other cards */
+  .bbo-rank--ten {
+    font-size: clamp(0.78rem, 22cqh, 1.15rem);
     letter-spacing: -0.08em;
   }
 
-  .bbo-face--table .bbo-suit {
-    font-size: clamp(0.75rem, 16cqh, 1.05rem);
+  .bbo-suit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-size: clamp(0.85rem, 24cqh, 1.25rem);
     line-height: 1;
-    margin-top: 0.04em;
+    margin-top: 0.06em;
   }
 
-  .bbo-center-pip {
-    position: absolute;
-    left: 50%;
-    top: 58%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-    line-height: 1;
+  .bbo-face[data-size="hand"] .bbo-index {
+    width: max(1.2rem, calc(var(--hand-visible-strip) * 0.85));
   }
 
-  .bbo-suit--center {
-    font-size: clamp(1.75rem, 42cqh, 3rem);
-    line-height: 1;
+  .bbo-face[data-size="hand"] .bbo-rank {
+    font-size: clamp(1rem, 30cqh, 1.55rem);
+  }
+
+  .bbo-face[data-size="hand"] .bbo-rank--ten {
+    font-size: clamp(0.8rem, 24cqh, 1.2rem);
+  }
+
+  .bbo-face[data-size="hand"] .bbo-suit {
+    font-size: clamp(0.9rem, 26cqh, 1.35rem);
+  }
+
+  .bbo-face[data-size="table"] .bbo-index {
+    width: 1.45rem;
+  }
+
+  .bbo-face[data-size="table"] .bbo-rank {
+    font-size: clamp(1rem, 24cqh, 1.5rem);
+  }
+
+  .bbo-face[data-size="table"] .bbo-rank--ten {
+    font-size: clamp(0.8rem, 19cqh, 1.15rem);
+  }
+
+  .bbo-face[data-size="table"] .bbo-suit {
+    font-size: clamp(0.9rem, 22cqh, 1.3rem);
   }
 
   @media (orientation: landscape) and (max-height: 520px) {
-    .bbo-face--table .bbo-rank {
-      font-size: clamp(0.8rem, 22cqh, 1.1rem);
+    .bbo-face[data-size="hand"] .bbo-index {
+      width: max(1.05rem, calc(var(--hand-visible-strip) * 0.88));
     }
 
-    .bbo-face--table .bbo-suit {
-      font-size: clamp(0.65rem, 18cqh, 0.9rem);
+    .bbo-face[data-size="hand"] .bbo-rank {
+      font-size: clamp(0.9rem, 34cqh, 1.25rem);
     }
 
-    .bbo-suit--center {
-      font-size: clamp(1.35rem, 40cqh, 2.1rem);
+    .bbo-face[data-size="hand"] .bbo-rank--ten {
+      font-size: clamp(0.72rem, 27cqh, 1rem);
+    }
+
+    .bbo-face[data-size="hand"] .bbo-suit {
+      font-size: clamp(0.8rem, 30cqh, 1.1rem);
+    }
+
+    .bbo-face[data-size="table"] .bbo-rank {
+      font-size: clamp(0.85rem, 26cqh, 1.2rem);
+    }
+
+    .bbo-face[data-size="table"] .bbo-suit {
+      font-size: clamp(0.75rem, 24cqh, 1.05rem);
     }
   }
 

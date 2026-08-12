@@ -480,7 +480,6 @@ export function CardExchangePanel({
                   <PlayingCard
                     card={card}
                     size="hand"
-                    variant="fan"
                     selected={selected}
                     disabled={full}
                     onClick={() => onToggleCard(card.id)}
