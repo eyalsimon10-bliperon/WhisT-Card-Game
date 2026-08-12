@@ -228,10 +228,10 @@ export function PlayerHand({
           {
             ["--hand-visible-strip" as string]:
               count <= 6
-                ? "max(1.75rem, calc(var(--card-hand-w) * 0.48))"
+                ? "max(1.9rem, calc(var(--card-hand-w) * 0.55))"
                 : count <= 10
-                  ? "max(1.55rem, calc(var(--card-hand-w) * 0.42))"
-                  : "max(1.45rem, calc(var(--card-hand-w) * 0.4))",
+                  ? "max(1.7rem, calc(var(--card-hand-w) * 0.48))"
+                  : "max(1.55rem, calc(var(--card-hand-w) * 0.45))",
           } as CSSProperties
         }
       >
