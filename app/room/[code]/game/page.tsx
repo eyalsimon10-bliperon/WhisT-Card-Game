@@ -304,7 +304,7 @@ export default function GamePage() {
         )}
 
         {(state.phase === "bidding_contract" || state.phase === "bidding_tricks") && (
-          <footer className="game-hand-dock">
+          <footer className="game-hand-dock bidding-hand-dock">
             <PlayerHand
               hand={me.hand}
               legalCardIds={new Set(me.hand.map((c) => c.id))}

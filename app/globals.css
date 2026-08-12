@@ -190,12 +190,38 @@
   }
 
   .bid-panel {
-    @apply card-surface flex min-h-0 flex-1 flex-col gap-3 p-3;
+    @apply card-surface flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3;
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
     .bid-panel {
       @apply gap-4 p-3.5;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bid-panel {
+      @apply gap-2 p-2;
+    }
+  }
+
+  .bid-panel-scroll {
+    @apply min-h-0 flex-1 overflow-y-auto overscroll-y-contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bid-panel-actions {
+    @apply shrink-0 border-t border-white/10 bg-felt-900/95 pt-2 backdrop-blur-sm;
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bid-phase-stack {
+      @apply gap-1 pt-0;
+    }
+
+    .bidding-hand-dock {
+      --card-hand-h: clamp(2.35rem, 20vh, 2.75rem);
+      --hand-fan-overlap: calc(var(--card-hand-h) * -0.2);
     }
   }
 
@@ -215,7 +241,11 @@
 
   @media (orientation: landscape) and (max-height: 520px) {
     .bid-trump-btn {
-      @apply min-h-[2.85rem] py-1.5;
+      @apply min-h-[2.35rem] py-1;
+    }
+
+    .bid-trump-symbol {
+      @apply text-xl;
     }
   }
 
@@ -245,7 +275,12 @@
 
   @media (orientation: landscape) and (max-height: 520px) {
     .bid-number-btn {
-      @apply min-h-[2.35rem] text-sm;
+      @apply min-h-[2rem] text-sm;
+    }
+
+    .bid-number-grid,
+    .bid-trump-grid {
+      @apply gap-1;
     }
   }
 
@@ -271,17 +306,134 @@
 
   .card-unplayable {
     @apply cursor-not-allowed scale-[0.97];
-    filter: brightness(0.82) saturate(0.88);
+    filter: brightness(0.88) saturate(0.75);
   }
 
   .card-unplayable-veil {
-    @apply pointer-events-none absolute inset-0 rounded-lg;
+    @apply pointer-events-none absolute inset-0 rounded-[0.4rem];
     background: linear-gradient(
       165deg,
-      rgba(13, 40, 24, 0.08) 0%,
-      rgba(13, 40, 24, 0.28) 100%
+      rgba(13, 40, 24, 0.06) 0%,
+      rgba(13, 40, 24, 0.22) 100%
     );
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(13, 40, 24, 0.12);
+  }
+
+  .playing-card-shell {
+    @apply bg-white;
+  }
+
+  /* Classic solitaire / BBO-style card face */
+  .classic-card-face {
+    @apply relative h-full w-full select-none border border-neutral-300/90 bg-gradient-to-br from-white via-white to-neutral-100;
+    font-size: 22%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+  }
+
+  .classic-card-face[data-red="true"] {
+    @apply text-[#c41e3a];
+  }
+
+  .classic-card-face[data-red="false"] {
+    @apply text-[#141414];
+  }
+
+  .classic-card-corner {
+    @apply absolute flex flex-col items-center leading-none;
+  }
+
+  .classic-card-corner-tl {
+    @apply left-[7%] top-[5%];
+  }
+
+  .classic-card-corner-br {
+    @apply bottom-[5%] right-[7%] rotate-180;
+  }
+
+  .classic-card-rank {
+    @apply font-extrabold tracking-tight;
+    font-size: 1em;
+  }
+
+  .classic-card-rank-ten {
+    font-size: 0.82em;
+    letter-spacing: -0.04em;
+  }
+
+  .classic-card-corner-suit {
+    @apply mt-[0.08em];
+    font-size: 0.82em;
+  }
+
+  .classic-card-center {
+    @apply absolute inset-0 flex flex-col items-center justify-center;
+  }
+
+  .classic-card-pip {
+    @apply font-normal leading-none;
+    font-size: 3.2em;
+  }
+
+  .classic-card-face-rank {
+    @apply font-extrabold leading-none;
+    font-size: 2.4em;
+  }
+
+  .classic-card-face-suit {
+    @apply mt-[0.06em] leading-none;
+    font-size: 1.35em;
+  }
+
+  .classic-card-face[data-size="xs"],
+  .classic-card-face[data-size="sm"] {
+    font-size: 24%;
+  }
+
+  .classic-card-face[data-size="md"],
+  .classic-card-face[data-size="lg"] {
+    font-size: 21%;
+  }
+
+  .classic-card-face[data-size="hand"],
+  .classic-card-face[data-size="table"] {
+    font-size: 23%;
+  }
+
+  .classic-card-face[data-size="hand"] .classic-card-pip,
+  .classic-card-face[data-size="table"] .classic-card-pip {
+    font-size: 3.5em;
+  }
+
+  .classic-card-face[data-size="table"] .classic-card-rank {
+    font-size: 1.05em;
+  }
+
+  /* Solitaire-style card back */
+  .classic-card-back {
+    @apply relative h-full w-full overflow-hidden border border-white/30 bg-[#1d4f91];
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+  }
+
+  .classic-card-back-inner {
+    @apply absolute inset-[8%] rounded-[0.2rem] border border-white/25;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.14) 0 6px,
+        transparent 6px 12px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.1) 0 6px,
+        transparent 6px 12px
+      ),
+      radial-gradient(circle at 30% 30%, #3b82d6 0%, #1d4f91 55%, #153e72 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .classic-card-back-inner::after {
+    content: "";
+    @apply absolute inset-[18%] rounded-[0.15rem] border border-white/20;
   }
 
   .mobile-panel-sheet {

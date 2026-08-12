@@ -1,14 +1,14 @@
 "use client";
 
-import type { ComponentType, SVGProps } from "react";
-import * as Deck from "@letele/playing-cards";
+import { ClassicCardBack } from "@/components/cards/ClassicCardBack";
+import { ClassicCardFace, type ClassicCardSize } from "@/components/cards/ClassicCardFace";
 import type { Card as GameCard, Rank, Suit } from "@/lib/game/types";
 
 interface PlayingCardProps {
   card?: GameCard;
   suit?: Suit;
   rank?: string;
-  size?: "xs" | "sm" | "md" | "lg" | "hand" | "table";
+  size?: ClassicCardSize;
   selected?: boolean;
   disabled?: boolean;
   /** Subtle highlight when the card is a legal play option */
@@ -18,9 +18,7 @@ interface PlayingCardProps {
   className?: string;
 }
 
-type DeckCard = ComponentType<SVGProps<SVGSVGElement>>;
-
-const sizeClasses = {
+const sizeClasses: Record<ClassicCardSize, string> = {
   xs: "card-size-xs",
   sm: "card-size-sm",
   md: "card-size-md",
@@ -28,28 +26,6 @@ const sizeClasses = {
   hand: "card-size-hand",
   table: "card-size-table",
 };
-
-const SUIT_PREFIX: Record<Suit, string> = {
-  spades: "S",
-  hearts: "H",
-  diamonds: "D",
-  clubs: "C",
-};
-
-function toDeckKey(suit: Suit, rank: Rank | string): string {
-  const rankKey =
-    rank === "A" ? "a" :
-    rank === "J" ? "j" :
-    rank === "Q" ? "q" :
-    rank === "K" ? "k" :
-    rank;
-  return `${SUIT_PREFIX[suit]}${rankKey}`;
-}
-
-function getDeckComponent(suit: Suit, rank: Rank | string): DeckCard | null {
-  const key = toDeckKey(suit, rank);
-  return (Deck as Record<string, DeckCard>)[key] ?? null;
-}
 
 export function PlayingCard({
   card,
@@ -64,28 +40,23 @@ export function PlayingCard({
   className = "",
 }: PlayingCardProps) {
   const displaySuit = card?.suit ?? suit ?? "spades";
-  const displayRank = card?.rank ?? rank ?? "A";
-  const SvgCard = getDeckComponent(displaySuit, displayRank);
+  const displayRank = (card?.rank ?? rank ?? "A") as Rank | string;
   const interactive = !!onClick && !disabled;
 
-  const content = SvgCard ? (
-    <SvgCard style={{ height: "100%", width: "100%" }} aria-hidden />
-  ) : (
-    <div className="flex h-full w-full items-center justify-center bg-white text-xs text-gray-500">
-      ?
-    </div>
-  );
-
   const wrapperClass = `
-    relative aspect-[5/7] overflow-hidden rounded-lg transition-all duration-200
+    playing-card-shell relative aspect-[5/7] overflow-hidden rounded-[0.4rem] transition-all duration-200
     ${sizeClasses[size]}
-    ${elevated && !disabled ? "shadow-[0_4px_14px_rgba(0,0,0,0.45)] ring-1 ring-white/30" : "shadow-md"}
-    ${playable && !disabled ? "ring-2 ring-emerald-400/45 shadow-[0_4px_16px_rgba(52,211,153,0.2)]" : ""}
+    ${elevated && !disabled ? "shadow-[0_4px_14px_rgba(0,0,0,0.45)] ring-1 ring-white/30" : "shadow-[0_3px_10px_rgba(0,0,0,0.35)]"}
+    ${playable && !disabled ? "ring-2 ring-emerald-400/55 shadow-[0_4px_16px_rgba(52,211,153,0.25)]" : ""}
     ${selected ? "ring-2 ring-gold-400 -translate-y-3 portrait-phone:-translate-y-2 landscape-phone:-translate-y-1.5 z-10 shadow-[0_8px_20px_rgba(232,197,71,0.35)]" : ""}
     ${interactive ? "cursor-pointer hover:-translate-y-2 portrait-phone:hover:-translate-y-1.5 landscape-phone:hover:-translate-y-1 hover:shadow-xl active:scale-95" : ""}
     ${disabled ? "card-unplayable" : ""}
     ${className}
   `.trim();
+
+  const content = (
+    <ClassicCardFace suit={displaySuit} rank={displayRank} size={size} />
+  );
 
   if (interactive) {
     return (
@@ -143,10 +114,10 @@ export function CardBack({ size = "md", className = "" }: { size?: "sm" | "md" |
 
   return (
     <div
-      className={`relative aspect-[5/7] overflow-hidden rounded-lg shadow-lg ${sizeMap[size]} ${className}`}
+      className={`playing-card-shell relative aspect-[5/7] overflow-hidden rounded-[0.4rem] shadow-[0_3px_10px_rgba(0,0,0,0.35)] ${sizeMap[size]} ${className}`}
       aria-hidden
     >
-      <Deck.B1 style={{ height: "100%", width: "100%" }} />
+      <ClassicCardBack />
     </div>
   );
 }
