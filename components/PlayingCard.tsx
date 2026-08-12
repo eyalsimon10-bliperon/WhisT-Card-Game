@@ -9,6 +9,8 @@ interface PlayingCardProps {
   suit?: Suit;
   rank?: string;
   size?: ClassicCardSize;
+  /** Override face layout: fan (hand) or table (played). */
+  variant?: "fan" | "table";
   selected?: boolean;
   disabled?: boolean;
   /** Subtle highlight when the card is a legal play option */
@@ -32,6 +34,7 @@ export function PlayingCard({
   suit,
   rank,
   size = "md",
+  variant,
   selected = false,
   disabled = false,
   playable = false,
@@ -44,10 +47,10 @@ export function PlayingCard({
   const interactive = !!onClick && !disabled;
 
   const wrapperClass = `
-    playing-card-shell relative aspect-[5/7] overflow-hidden rounded-md transition-all duration-200
+    playing-card-shell relative aspect-[5/7] overflow-hidden rounded-[0.35rem] transition-all duration-200
     ${sizeClasses[size]}
-    ${elevated && !disabled ? "shadow-[0_3px_12px_rgba(0,0,0,0.4)]" : "shadow-[0_2px_6px_rgba(0,0,0,0.28)]"}
-    ${playable && !disabled ? "ring-2 ring-emerald-400/55" : ""}
+    ${elevated && !disabled ? "shadow-[0_3px_10px_rgba(0,0,0,0.45)]" : "shadow-[0_2px_5px_rgba(0,0,0,0.3)]"}
+    ${playable && !disabled ? "ring-2 ring-emerald-400/60" : ""}
     ${selected ? "ring-2 ring-gold-400 -translate-y-3 portrait-phone:-translate-y-2 landscape-phone:-translate-y-1.5 z-10 shadow-[0_8px_20px_rgba(232,197,71,0.35)]" : ""}
     ${interactive ? "cursor-pointer hover:-translate-y-2 portrait-phone:hover:-translate-y-1.5 landscape-phone:hover:-translate-y-1 hover:shadow-xl active:scale-95" : ""}
     ${disabled ? "card-unplayable" : ""}
@@ -55,7 +58,7 @@ export function PlayingCard({
   `.trim();
 
   const content = (
-    <ClassicCardFace suit={displaySuit} rank={displayRank} size={size} />
+    <ClassicCardFace suit={displaySuit} rank={displayRank} size={size} variant={variant} />
   );
 
   if (interactive) {
@@ -85,24 +88,21 @@ export function PlayingCard({
 
 export function CardFan() {
   const cards = [
-    { suit: "spades" as Suit, rank: "A", rotate: -18, x: -28 },
-    { suit: "hearts" as Suit, rank: "K", rotate: -6, x: -10 },
-    { suit: "diamonds" as Suit, rank: "Q", rotate: 6, x: 10 },
-    { suit: "clubs" as Suit, rank: "J", rotate: 18, x: 28 },
+    { suit: "clubs" as Suit, rank: "K" },
+    { suit: "clubs" as Suit, rank: "Q" },
+    { suit: "hearts" as Suit, rank: "A" },
+    { suit: "hearts" as Suit, rank: "J" },
+    { suit: "spades" as Suit, rank: "10" },
+    { suit: "spades" as Suit, rank: "7" },
+    { suit: "diamonds" as Suit, rank: "A" },
+    { suit: "diamonds" as Suit, rank: "K" },
   ];
 
   return (
-    <div className="relative mx-auto h-24 w-40" aria-hidden>
+    <div className="game-hand-fan mx-auto max-w-[16rem] justify-center px-1" aria-hidden>
       {cards.map((card, i) => (
-        <div
-          key={i}
-          className="absolute bottom-0 left-1/2"
-          style={{
-            transform: `translateX(calc(-50% + ${card.x}px)) rotate(${card.rotate}deg)`,
-            zIndex: i,
-          }}
-        >
-          <PlayingCard suit={card.suit} rank={card.rank} size="md" />
+        <div key={`${card.rank}-${card.suit}`} className="relative shrink-0" style={{ zIndex: i + 1 }}>
+          <PlayingCard suit={card.suit} rank={card.rank} size="hand" variant="fan" elevated />
         </div>
       ))}
     </div>

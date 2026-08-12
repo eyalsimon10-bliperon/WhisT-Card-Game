@@ -92,7 +92,7 @@ function TrickCard({
       }}
     >
       <div className="flex flex-col items-center gap-0.5 landscape-phone:gap-0">
-        <PlayingCard card={play.card} size="table" elevated />
+        <PlayingCard card={play.card} size="table" variant="table" elevated />
         <span
           className={`max-w-[5.5rem] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-md landscape-phone:max-w-[4rem] landscape-phone:px-1.5 landscape-phone:py-0 landscape-phone:text-[9px] ${
             isWinner && (isCollecting || isAwaitingCollect)
@@ -228,10 +228,10 @@ export function PlayerHand({
           {
             ["--hand-visible-strip" as string]:
               count <= 6
-                ? "max(1.35rem, calc(var(--card-hand-w) * 0.38))"
+                ? "max(1.25rem, calc(var(--card-hand-w) * 0.36))"
                 : count <= 10
-                  ? "max(1.2rem, calc(var(--card-hand-w) * 0.32))"
-                  : "max(1.1rem, calc(var(--card-hand-w) * 0.28))",
+                  ? "max(1.1rem, calc(var(--card-hand-w) * 0.3))"
+                  : "max(1.05rem, calc(var(--card-hand-w) * 0.27))",
           } as CSSProperties
         }
       >
@@ -249,6 +249,7 @@ export function PlayerHand({
               <PlayingCard
                 card={card}
                 size="hand"
+                variant="fan"
                 elevated
                 selected={isSelected}
                 disabled={isUnplayable}

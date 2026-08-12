@@ -2,43 +2,52 @@ import type { Rank, Suit } from "@/lib/game/types";
 import { SUIT_SYMBOL } from "@/lib/game/types";
 
 export type ClassicCardSize = "xs" | "sm" | "md" | "lg" | "hand" | "table";
+export type CardFaceVariant = "fan" | "table";
 
 interface ClassicCardFaceProps {
   suit: Suit;
   rank: Rank | string;
   size?: ClassicCardSize;
+  /** Explicit face style. Defaults from size: hand/xs/sm → fan, else table. */
+  variant?: CardFaceVariant;
 }
 
 const RED_SUITS = new Set<Suit>(["hearts", "diamonds"]);
 
-/** Hand-fan cards use a compact left index; table cards use full corner indices. */
-function isFanStyle(size: ClassicCardSize): boolean {
-  return size === "hand" || size === "xs" || size === "sm";
+function resolveVariant(size: ClassicCardSize, variant?: CardFaceVariant): CardFaceVariant {
+  if (variant) return variant;
+  return size === "hand" || size === "xs" || size === "sm" ? "fan" : "table";
 }
 
 /**
- * BBO-style dual faces:
- * - Fan (hand): rank + suit top-left, large and readable under overlap
- * - Table: traditional TL + BR corners on a clean white face
- * Suit glyphs match bidding trump symbols (♠ ♥ ♦ ♣).
+ * Dual card faces (BBO-inspired):
+ * - fan: only top-left rank + suit (readable under tight LTR overlap)
+ * - table: TL/BR corners + large center suit pip
+ * Glyphs are the same unicode suits used in trump bidding: ♠ ♥ ♦ ♣
  */
-export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProps) {
+export function ClassicCardFace({
+  suit,
+  rank,
+  size = "md",
+  variant,
+}: ClassicCardFaceProps) {
   const isRed = RED_SUITS.has(suit);
   const symbol = SUIT_SYMBOL[suit];
   const isTen = rank === "10";
-  const fan = isFanStyle(size);
+  const face = resolveVariant(size, variant);
+  const rankClass = `bbo-rank${isTen ? " bbo-rank--ten" : ""}`;
 
-  if (fan) {
+  if (face === "fan") {
     return (
       <div
-        className="bbo-card bbo-card--fan"
+        className="bbo-face bbo-face--fan"
         data-size={size}
         data-red={isRed ? "true" : "false"}
         aria-hidden
       >
-        <div className="bbo-card-fan-index">
-          <span className={`bbo-card-rank${isTen ? " bbo-card-rank--ten" : ""}`}>{rank}</span>
-          <span className="bbo-card-suit">{symbol}</span>
+        <div className="bbo-fan-strip">
+          <span className={rankClass}>{rank}</span>
+          <span className="bbo-suit">{symbol}</span>
         </div>
       </div>
     );
@@ -46,18 +55,23 @@ export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProp
 
   return (
     <div
-      className="bbo-card bbo-card--table"
+      className="bbo-face bbo-face--table"
       data-size={size}
       data-red={isRed ? "true" : "false"}
       aria-hidden
     >
-      <div className="bbo-card-corner bbo-card-corner--tl">
-        <span className={`bbo-card-rank${isTen ? " bbo-card-rank--ten" : ""}`}>{rank}</span>
-        <span className="bbo-card-suit">{symbol}</span>
+      <div className="bbo-corner bbo-corner--tl">
+        <span className={rankClass}>{rank}</span>
+        <span className="bbo-suit">{symbol}</span>
       </div>
-      <div className="bbo-card-corner bbo-card-corner--br">
-        <span className={`bbo-card-rank${isTen ? " bbo-card-rank--ten" : ""}`}>{rank}</span>
-        <span className="bbo-card-suit">{symbol}</span>
+
+      <div className="bbo-center-pip" aria-hidden>
+        <span className="bbo-suit bbo-suit--center">{symbol}</span>
+      </div>
+
+      <div className="bbo-corner bbo-corner--br">
+        <span className={rankClass}>{rank}</span>
+        <span className="bbo-suit">{symbol}</span>
       </div>
     </div>
   );
