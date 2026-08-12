@@ -87,6 +87,20 @@ export default function GamePage() {
     if (!state || !humanId) return;
     if (state.awaitingTrickCollect != null || state.completedTrickDisplay) return;
 
+    if (state.phase === "card_exchange") {
+      const humanReady = state.cardExchangeReady[humanId];
+      const pendingBot = state.players.some(
+        (p) => p.isBot && !state.cardExchangeReady[p.id]
+      );
+      if (humanReady && pendingBot) {
+        const timer = setTimeout(() => {
+          void runAction({ type: "runBots" });
+        }, 450);
+        return () => clearTimeout(timer);
+      }
+      return;
+    }
+
     const isBotTurn = state.players.find((p) => p.seatIndex === state.currentPlayerIndex)?.isBot;
     if (!isBotTurn) return;
 
@@ -210,7 +224,7 @@ export default function GamePage() {
           {state.phase === "playing" ? (
             <div className="relative flex h-full min-h-0 flex-col">
               <OpponentSeats state={state} mySeat={mySeat} />
-              <div className="game-table-zone landscape-phone:px-[3.75rem] portrait-phone:px-0">
+              <div className="game-table-zone landscape-phone:px-[4.25rem] portrait-phone:px-0">
                 <TrickArea state={state} mySeat={mySeat} />
               </div>
             </div>

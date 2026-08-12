@@ -21,12 +21,12 @@ interface PlayingCardProps {
 type DeckCard = ComponentType<SVGProps<SVGSVGElement>>;
 
 const sizeClasses = {
-  xs: "h-12",
-  sm: "h-14",
-  md: "h-20",
-  lg: "h-[4.75rem] portrait-phone:h-[3.65rem] landscape-phone:h-[2.85rem]",
-  hand: "h-[4rem] portrait-phone:h-[2.85rem] landscape-phone:h-[2.5rem]",
-  table: "h-[5.5rem] portrait-phone:h-[3.65rem] landscape-phone:h-[2.85rem]",
+  xs: "card-size-xs",
+  sm: "card-size-sm",
+  md: "card-size-md",
+  lg: "card-size-lg",
+  hand: "card-size-hand",
+  table: "card-size-table",
 };
 
 const SUIT_PREFIX: Record<Suit, string> = {
@@ -81,8 +81,8 @@ export function PlayingCard({
     ${sizeClasses[size]}
     ${elevated && !disabled ? "shadow-[0_4px_14px_rgba(0,0,0,0.45)] ring-1 ring-white/30" : "shadow-md"}
     ${playable && !disabled ? "ring-2 ring-emerald-400/45 shadow-[0_4px_16px_rgba(52,211,153,0.2)]" : ""}
-    ${selected ? "ring-2 ring-gold-400 -translate-y-3 portrait-phone:-translate-y-1 landscape-phone:-translate-y-1 z-10 shadow-[0_8px_20px_rgba(232,197,71,0.35)]" : ""}
-    ${interactive ? "cursor-pointer hover:-translate-y-2 portrait-phone:hover:-translate-y-1 landscape-phone:hover:-translate-y-0.5 hover:shadow-xl active:scale-95" : ""}
+    ${selected ? "ring-2 ring-gold-400 -translate-y-3 portrait-phone:-translate-y-2 landscape-phone:-translate-y-1.5 z-10 shadow-[0_8px_20px_rgba(232,197,71,0.35)]" : ""}
+    ${interactive ? "cursor-pointer hover:-translate-y-2 portrait-phone:hover:-translate-y-1.5 landscape-phone:hover:-translate-y-1 hover:shadow-xl active:scale-95" : ""}
     ${disabled ? "card-unplayable" : ""}
     ${className}
   `.trim();
@@ -139,7 +139,7 @@ export function CardFan() {
 }
 
 export function CardBack({ size = "md", className = "" }: { size?: "sm" | "md" | "lg"; className?: string }) {
-  const sizeMap = { sm: "h-14", md: "h-20", lg: "h-28" } as const;
+  const sizeMap = { sm: "card-size-sm", md: "card-size-md", lg: "card-size-lg" } as const;
 
   return (
     <div

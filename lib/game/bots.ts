@@ -44,9 +44,12 @@ export function processBotTurn(state: GameState): GameState {
       return submitTrickBid(state, state.currentPlayerIndex, bid);
     }
     case "card_exchange": {
-      if (state.cardExchangeReady[current.id]) return state;
-      const cards = getBotCardExchange(state, current.id);
-      return submitCardExchange(state, current.id, cards);
+      const pendingBot = state.players.find(
+        (p) => p.isBot && !state.cardExchangeReady[p.id]
+      );
+      if (!pendingBot) return state;
+      const cards = getBotCardExchange(state, pendingBot.id);
+      return submitCardExchange(state, pendingBot.id, cards);
     }
     case "playing": {
       const card = getBotPlayCard(state);
@@ -91,7 +94,10 @@ export function runBotsUntilHumanOrStable(state: GameState, humanPlayerId: strin
         (p) => p.isBot && !current.cardExchangeReady[p.id]
       );
       if (!pendingBot) break;
-      current = processBotTurn(current);
+      const cards = getBotCardExchange(current, pendingBot.id);
+      const updated = submitCardExchange(current, pendingBot.id, cards);
+      if (updated === current) break;
+      current = updated;
       continue;
     }
 

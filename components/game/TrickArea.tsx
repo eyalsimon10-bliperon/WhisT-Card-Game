@@ -13,10 +13,10 @@ interface TrickAreaProps {
 
 /** Card positions around center (relative seat 0=me, 1=right, 2=top, 3=left) */
 const CARD_LAYOUT: Record<number, { x: number; y: number; rotate: number }> = {
-  0: { x: 0, y: 44, rotate: 5 },
-  1: { x: 52, y: 4, rotate: 14 },
-  2: { x: 0, y: -38, rotate: -8 },
-  3: { x: -52, y: 4, rotate: -14 },
+  0: { x: 0, y: 52, rotate: 5 },
+  1: { x: 58, y: 6, rotate: 14 },
+  2: { x: 0, y: -44, rotate: -8 },
+  3: { x: -58, y: 6, rotate: -14 },
 };
 
 const FLY_FROM: Record<number, { x: string; y: string }> = {
@@ -94,7 +94,7 @@ function TrickCard({
       <div className="flex flex-col items-center gap-0.5 landscape-phone:gap-0">
         <PlayingCard card={play.card} size="table" elevated />
         <span
-          className={`max-w-[4.5rem] truncate rounded-full px-2 py-0.5 text-[9px] font-semibold shadow-md landscape-phone:max-w-[3.25rem] landscape-phone:px-1.5 landscape-phone:py-0 landscape-phone:text-[8px] ${
+          className={`max-w-[5.5rem] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-md landscape-phone:max-w-[4rem] landscape-phone:px-1.5 landscape-phone:py-0 landscape-phone:text-[9px] ${
             isWinner && (isCollecting || isAwaitingCollect)
               ? "bg-gold-500 text-felt-900"
               : "bg-black/70 text-white/90 ring-1 ring-white/20"
@@ -141,8 +141,8 @@ export function TrickArea({ state, mySeat }: TrickAreaProps) {
   }, [state.currentTrick, isCollecting]);
 
   return (
-    <div className="mx-auto w-full max-w-[20rem] px-1 portrait-phone:max-w-[16rem] landscape-phone:max-w-[12rem]">
-      <div className="relative mx-auto h-[15rem] w-full portrait-phone:h-[10.5rem] landscape-phone:h-[7rem]">
+    <div className="trick-zone mx-auto px-1">
+      <div className="trick-zone-inner relative mx-auto w-full">
         <div className="absolute inset-1.5 rounded-[45%] border-2 border-gold-500/25 bg-gradient-to-b from-felt-700/80 to-felt-900/90 shadow-[inset_0_4px_24px_rgba(0,0,0,0.5),0_0_40px_rgba(232,197,71,0.08)] portrait-phone:inset-1 landscape-phone:inset-0.5" />
         <div className="absolute inset-4 rounded-[45%] border border-white/5 portrait-phone:inset-2.5 landscape-phone:inset-2" />
 

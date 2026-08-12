@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PlayingCard } from "@/components/PlayingCard";
 import {
   formatContractBid,
   isContractBidLegal,
@@ -451,20 +452,19 @@ export function CardExchangePanel({
 
       {!isReady && player && (
         <>
-          <div className="game-hand-fan game-hand-fan-mini overflow-hidden px-0.5">
+          <div className="game-hand-fan game-hand-fan-mini touch-scroll-x overflow-hidden px-0.5">
             {player.hand.map((card, index) => {
               const selected = selectedCardIds.includes(card.id);
               const full = selectedCardIds.length >= 3 && !selected;
               return (
                 <div key={card.id} className="relative shrink-0" style={{ zIndex: selected ? 20 : index + 1 }}>
-                  <button
-                    type="button"
+                  <PlayingCard
+                    card={card}
+                    size="hand"
+                    selected={selected}
                     disabled={full}
                     onClick={() => onToggleCard(card.id)}
-                    className={`block rounded-lg transition ${selected ? "ring-2 ring-gold-400" : ""} ${full ? "card-unplayable" : ""}`}
-                  >
-                    <PlayingCardMini card={card} />
-                  </button>
+                  />
                 </div>
               );
             })}
@@ -483,24 +483,6 @@ export function CardExchangePanel({
       {isReady && (
         <p className="text-center text-sm text-white/50 animate-pulse">ממתין לשחקנים אחרים...</p>
       )}
-    </div>
-  );
-}
-
-function PlayingCardMini({ card }: { card: { rank: string; suit: string } }) {
-  const symbols: Record<string, string> = {
-    spades: "♠",
-    hearts: "♥",
-    diamonds: "♦",
-    clubs: "♣",
-  };
-  const isRed = card.suit === "hearts" || card.suit === "diamonds";
-  return (
-    <div
-      className={`flex h-12 w-8 flex-col items-center justify-center rounded-md border border-white/20 bg-white text-[10px] font-bold portrait-phone:h-10 portrait-phone:w-7 portrait-phone:text-[9px] landscape-phone:h-9 landscape-phone:w-6 landscape-phone:text-[8px] ${isRed ? "text-red-600" : "text-gray-900"}`}
-    >
-      <span>{card.rank}</span>
-      <span>{symbols[card.suit] ?? "?"}</span>
     </div>
   );
 }

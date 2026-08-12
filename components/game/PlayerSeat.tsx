@@ -304,8 +304,8 @@ interface PlayerSeatProps {
 
 const positionClasses = {
   top: "top-0 left-1/2 -translate-x-1/2 portrait-phone:top-0 landscape-phone:top-0",
-  left: "left-0 top-[3.25rem] portrait-phone:left-0 portrait-phone:top-[2.75rem] landscape-phone:left-0.5 landscape-phone:top-1/2 landscape-phone:-translate-y-1/2",
-  right: "right-0 top-[3.25rem] portrait-phone:right-0 portrait-phone:top-[2.75rem] landscape-phone:right-0.5 landscape-phone:top-1/2 landscape-phone:-translate-y-1/2",
+  left: "left-0 top-[3.75rem] portrait-phone:left-0 portrait-phone:top-[3.25rem] landscape-phone:left-0.5 landscape-phone:top-1/2 landscape-phone:-translate-y-1/2",
+  right: "right-0 top-[3.75rem] portrait-phone:right-0 portrait-phone:top-[3.25rem] landscape-phone:right-0.5 landscape-phone:top-1/2 landscape-phone:-translate-y-1/2",
 };
 
 export function PlayerSeat({ player, state, position, isActive }: PlayerSeatProps) {
@@ -330,6 +330,54 @@ export function HumanPlayerHud({
   state: GameState;
   isActive: boolean;
 }) {
+  const trickBid = state.trickBids[player.seatIndex];
+  const showTrump = state.phase === "playing" && state.trump;
+  const bidMet =
+    trickBid !== null && trickBid !== undefined
+      ? player.tricksWon >= trickBid
+      : null;
+
+  if (state.phase === "playing") {
+    return (
+      <div className="px-0.5 pb-0.5 portrait-phone:px-0 landscape-phone:px-0">
+        <div
+          className={`game-hud-slim ${isActive ? "border-gold-400/50 bg-gold-500/10" : ""}`}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                isActive ? "bg-gold-500 text-felt-900" : "bg-white/10 text-white/80"
+              }`}
+            >
+              {player.name.charAt(0)}
+            </span>
+            <span className="truncate text-xs font-semibold text-white">את/ה</span>
+            {isActive && (
+              <span className="rounded-md bg-gold-500/25 px-1.5 py-0.5 text-[9px] font-bold text-gold-300">
+                תור
+              </span>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <StatPill label="הכרזה" value={trickBid ?? "—"} micro />
+            <StatPill
+              label="לקיחות"
+              value={
+                trickBid !== null && trickBid !== undefined
+                  ? `${player.tricksWon}/${trickBid}`
+                  : player.tricksWon
+              }
+              warn={bidMet === false && player.tricksWon > 0}
+              highlight={bidMet === true}
+              micro
+            />
+            {showTrump && state.trump && <TrumpIcon trump={state.trump} size="sm" />}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-0.5 portrait-phone:px-0 landscape-phone:px-0">
       <PlayerHud player={player} state={state} isActive={isActive} isMe />

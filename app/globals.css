@@ -3,6 +3,33 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Fluid card heights — scale with viewport while keeping readable minimums */
+    --card-hand-h: clamp(3.75rem, 13vw, 5.25rem);
+    --card-table-h: clamp(4.5rem, 15vw, 6.5rem);
+    --card-md-h: clamp(4rem, 11vw, 5rem);
+    --card-lg-h: clamp(4.5rem, 12vw, 5.75rem);
+    --card-xs-h: clamp(2.75rem, 8vw, 3.25rem);
+    --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
+    --hand-fan-overlap: calc(var(--card-hand-h) * -0.24);
+    --trick-zone-h: clamp(12rem, 38vw, 16rem);
+    --trick-zone-w: clamp(17rem, 92vw, 22rem);
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    :root {
+      --card-hand-h: clamp(3.1rem, 28vh, 3.85rem);
+      --card-table-h: clamp(3.65rem, 32vh, 4.5rem);
+      --card-md-h: clamp(3.25rem, 24vh, 4rem);
+      --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
+      --card-xs-h: clamp(2.5rem, 18vh, 3rem);
+      --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
+      --hand-fan-overlap: calc(var(--card-hand-h) * -0.22);
+      --trick-zone-h: clamp(8.5rem, 52vh, 10rem);
+      --trick-zone-w: clamp(13.5rem, 72vw, 17rem);
+    }
+  }
+
   html {
     @apply scroll-smooth;
   }
@@ -87,7 +114,8 @@
 
   .game-hand-dock {
     @apply shrink-0 border-t border-white/5 bg-felt-900/95 backdrop-blur-md;
-    padding-bottom: max(0.125rem, env(safe-area-inset-bottom));
+    padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
+    padding-top: 0.25rem;
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
@@ -107,29 +135,54 @@
   }
 
   .game-hand-fan > * + * {
-    margin-inline-start: -1.05rem;
+    margin-inline-start: var(--hand-fan-overlap);
   }
 
   @media (min-width: 641px) {
     .game-hand-fan > * + * {
-      margin-inline-start: 0.35rem;
-    }
-  }
-
-  @media (orientation: landscape) and (max-height: 520px) {
-    .game-hand-fan > * + * {
-      margin-inline-start: -0.85rem;
+      margin-inline-start: 0.4rem;
     }
   }
 
   .game-hand-fan-mini > * + * {
-    margin-inline-start: -0.6rem;
+    margin-inline-start: calc(var(--card-hand-h) * -0.18);
   }
 
-  @media (orientation: landscape) and (max-height: 520px) {
-    .game-hand-fan-mini > * + * {
-      margin-inline-start: -0.45rem;
-    }
+  .card-size-hand {
+    height: var(--card-hand-h);
+  }
+
+  .card-size-table {
+    height: var(--card-table-h);
+  }
+
+  .card-size-md {
+    height: var(--card-md-h);
+  }
+
+  .card-size-lg {
+    height: var(--card-lg-h);
+  }
+
+  .card-size-xs {
+    height: var(--card-xs-h);
+  }
+
+  .card-size-sm {
+    height: var(--card-sm-h);
+  }
+
+  .trick-zone {
+    width: var(--trick-zone-w);
+    max-width: 100%;
+  }
+
+  .trick-zone-inner {
+    height: var(--trick-zone-h);
+  }
+
+  .game-hud-slim {
+    @apply flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/45 px-2.5 py-1 backdrop-blur-md;
   }
 
   .card-unplayable {

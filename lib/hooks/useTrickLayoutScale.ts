@@ -10,8 +10,8 @@ export function useTrickLayoutScale(): number {
     function update() {
       const landscape = window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches;
       const portraitPhone = window.matchMedia("(orientation: portrait) and (max-width: 640px)").matches;
-      if (landscape) setScale(0.52);
-      else if (portraitPhone) setScale(0.72);
+      if (landscape) setScale(0.62);
+      else if (portraitPhone) setScale(0.82);
       else setScale(1);
     }
 
