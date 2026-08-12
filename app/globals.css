@@ -185,6 +185,90 @@
     @apply flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/45 px-2.5 py-1 backdrop-blur-md;
   }
 
+  .bid-phase-stack {
+    @apply flex min-h-0 flex-1 flex-col gap-2 pt-1;
+  }
+
+  .bid-panel {
+    @apply card-surface flex min-h-0 flex-1 flex-col gap-3 p-3;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .bid-panel {
+      @apply gap-4 p-3.5;
+    }
+  }
+
+  .bid-trump-grid {
+    @apply grid w-full grid-cols-5 gap-2;
+  }
+
+  .bid-trump-btn {
+    @apply flex min-h-[3.25rem] flex-col items-center justify-center rounded-xl border px-1 py-2 transition active:scale-95;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .bid-trump-btn {
+      @apply min-h-[3.75rem] py-2.5;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bid-trump-btn {
+      @apply min-h-[2.85rem] py-1.5;
+    }
+  }
+
+  .bid-trump-symbol {
+    @apply text-2xl font-bold leading-none;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .bid-trump-symbol {
+      @apply text-3xl;
+    }
+  }
+
+  .bid-number-grid {
+    @apply grid w-full grid-cols-5 gap-2;
+  }
+
+  .bid-number-btn {
+    @apply flex min-h-[2.75rem] items-center justify-center rounded-xl text-base font-bold transition active:scale-95;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .bid-number-btn {
+      @apply min-h-[3rem] text-lg;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bid-number-btn {
+      @apply min-h-[2.35rem] text-sm;
+    }
+  }
+
+  .bid-trick-grid {
+    @apply grid w-full grid-cols-7 gap-2;
+  }
+
+  .bid-trick-btn {
+    @apply flex min-h-[2.75rem] items-center justify-center rounded-xl text-base font-bold transition active:scale-95;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .bid-trick-btn {
+      @apply min-h-[3rem] text-lg;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bid-trick-btn {
+      @apply min-h-[2.35rem] text-sm;
+    }
+  }
+
   .card-unplayable {
     @apply cursor-not-allowed scale-[0.97];
     filter: brightness(0.82) saturate(0.88);

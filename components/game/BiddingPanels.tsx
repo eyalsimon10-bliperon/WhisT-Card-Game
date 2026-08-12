@@ -228,19 +228,19 @@ export function ContractBiddingPanel({
       : isContractBidLegal(previewBid, state.currentHighBid, state.minContractTricks));
 
   return (
-    <div className="card-surface space-y-3 p-3 portrait-phone:space-y-1.5 portrait-phone:p-2 landscape-phone:space-y-1 landscape-phone:p-1.5">
-      <div className="text-center portrait-phone:space-y-0 landscape-phone:space-y-0">
-        <p className="text-xs font-medium text-white/50 portrait-phone:text-[10px] landscape-phone:text-[9px]">
+    <div className="bid-panel">
+      <div className="shrink-0 text-center">
+        <p className="text-xs font-medium text-white/50 portrait-phone:text-[11px] landscape-phone:text-[10px]">
           חלק א&apos; — הכרזת חוזה ושליט
         </p>
         {isConfirmPhase ? (
-          <p className="mt-1 text-sm font-semibold text-gold-300 portrait-phone:mt-0 portrait-phone:text-xs landscape-phone:text-xs">אישור חוזה סופי</p>
+          <p className="mt-1 text-sm font-semibold text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">אישור חוזה סופי</p>
         ) : state.currentHighBid ? (
-          <p className="mt-1 text-sm text-gold-300 portrait-phone:mt-0 portrait-phone:text-xs landscape-phone:text-xs">
+          <p className="mt-1 text-sm text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">
             הכרזה גבוהה: {formatContractBid(state.currentHighBid)}
           </p>
         ) : (
-          <p className="mt-1 text-sm text-white/60 portrait-phone:mt-0 portrait-phone:text-xs landscape-phone:text-xs">מינימום: {state.minContractTricks} לקיחות</p>
+          <p className="mt-1 text-sm text-white/60 portrait-phone:text-sm landscape-phone:text-xs">מינימום: {state.minContractTricks} לקיחות</p>
         )}
         {isConfirmPhase && confirmBase && (
           <p className="mt-1 text-[10px] text-white/50 portrait-phone:hidden landscape-phone:hidden">
@@ -248,17 +248,17 @@ export function ContractBiddingPanel({
           </p>
         )}
         {!isMyTurn && (
-          <p className="mt-1 text-xs text-amber-300 animate-pulse portrait-phone:mt-0 portrait-phone:text-[10px] landscape-phone:text-[10px]">ממתין לשחקן אחר...</p>
+          <p className="mt-1 text-xs text-amber-300 animate-pulse portrait-phone:text-[11px] landscape-phone:text-[10px]">ממתין לשחקן אחר...</p>
         )}
       </div>
 
       {isMyTurn && (
-        <>
-          <div>
-            <p className="mb-1.5 text-center text-xs text-white/60 portrait-phone:mb-1 portrait-phone:text-[10px] landscape-phone:mb-0.5 landscape-phone:text-[10px]">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 portrait-phone:gap-5 landscape-phone:gap-3">
+          <div className="shrink-0">
+            <p className="mb-2 text-center text-sm font-medium text-white/70 portrait-phone:mb-2.5 portrait-phone:text-base landscape-phone:mb-1.5 landscape-phone:text-xs">
               {isConfirmPhase ? "בחר שליט" : "בחר שליט"}
             </p>
-            <div className="flex justify-center gap-1.5 portrait-phone:gap-0.5 landscape-phone:gap-0.5">
+            <div className="bid-trump-grid">
               {TRUMP_OPTIONS.map(({ trump, symbol, label, isRed }) => {
                 const available = isTrumpAvailable(trump);
                 const selected = selectedTrump === trump;
@@ -271,18 +271,18 @@ export function ContractBiddingPanel({
                       setSelectedTrump(trump);
                       setSelectedTricks(null);
                     }}
-                    className={`flex flex-col items-center rounded-xl border px-2 py-1.5 transition portrait-phone:px-1 portrait-phone:py-0.5 landscape-phone:rounded-lg landscape-phone:px-1 landscape-phone:py-0.5 ${
+                    className={`bid-trump-btn ${
                       selected
                         ? "border-gold-400 bg-gold-500/25 shadow-md shadow-gold-500/20"
                         : available
-                          ? "border-white/15 bg-white/10 hover:border-white/30 active:scale-95"
+                          ? "border-white/15 bg-white/10 hover:border-white/30"
                           : "cursor-not-allowed border-white/5 bg-white/5 opacity-30"
                     }`}
                   >
-                    <span className={`text-xl font-bold portrait-phone:text-base landscape-phone:text-sm ${isRed ? "text-red-400" : "text-white"}`}>
+                    <span className={`bid-trump-symbol ${isRed ? "text-red-400" : "text-white"}`}>
                       {symbol}
                     </span>
-                    <span className="mt-0.5 text-[10px] text-white/70 portrait-phone:hidden landscape-phone:hidden">{label}</span>
+                    <span className="mt-1 hidden text-[10px] text-white/70 sm:block">{label}</span>
                   </button>
                 );
               })}
@@ -290,9 +290,11 @@ export function ContractBiddingPanel({
           </div>
 
           {selectedTrump && (
-            <div>
-              <p className="mb-1.5 text-center text-xs text-white/60 portrait-phone:mb-1 portrait-phone:text-[10px] landscape-phone:mb-0.5 landscape-phone:text-[10px]">בחר כמות לקיחות</p>
-              <div className="flex flex-wrap justify-center gap-1 portrait-phone:gap-0.5 landscape-phone:gap-0.5">
+            <div className="min-h-0 flex-1">
+              <p className="mb-2 text-center text-sm font-medium text-white/70 portrait-phone:mb-2.5 portrait-phone:text-base landscape-phone:mb-1.5 landscape-phone:text-xs">
+                בחר כמות לקיחות
+              </p>
+              <div className="bid-number-grid">
                 {tricks.map((t) => {
                   const available = isTricksAvailable(t);
                   const selected = selectedTricks === t;
@@ -302,11 +304,11 @@ export function ContractBiddingPanel({
                       type="button"
                       disabled={!available}
                       onClick={() => setSelectedTricks(t)}
-                      className={`min-w-[2rem] rounded-lg px-1.5 py-1.5 text-sm font-bold transition portrait-phone:min-w-[1.75rem] portrait-phone:py-1 portrait-phone:text-xs landscape-phone:min-w-[1.6rem] landscape-phone:py-0.5 landscape-phone:text-[11px] ${
+                      className={`bid-number-btn ${
                         selected
                           ? "bg-gold-500 text-felt-900 shadow-md"
                           : available
-                            ? "bg-white/10 text-white hover:bg-gold-500/30 active:scale-95"
+                            ? "bg-white/10 text-white hover:bg-gold-500/30"
                             : "cursor-not-allowed bg-white/5 text-white/20 line-through"
                       }`}
                     >
@@ -318,10 +320,10 @@ export function ContractBiddingPanel({
             </div>
           )}
 
-          <div className="flex gap-2 landscape-phone:gap-1.5">
+          <div className="mt-auto flex shrink-0 gap-2 pt-1 landscape-phone:gap-1.5">
             <button
               type="button"
-              className="btn-primary flex-1 landscape-phone:min-h-9 landscape-phone:py-1.5 landscape-phone:text-sm"
+              className="btn-primary min-h-[3rem] flex-1 portrait-phone:min-h-[3.25rem] portrait-phone:text-base landscape-phone:min-h-10 landscape-phone:text-sm"
               disabled={!canConfirm}
               onClick={handleConfirmBid}
             >
@@ -334,12 +336,16 @@ export function ContractBiddingPanel({
                   : "הכרז"}
             </button>
             {!isConfirmPhase && (
-              <button type="button" className="btn-secondary w-24 shrink-0 landscape-phone:w-[4.5rem] landscape-phone:min-h-9 landscape-phone:px-2 landscape-phone:py-1.5 landscape-phone:text-sm" onClick={onPass}>
+              <button
+                type="button"
+                className="btn-secondary min-h-[3rem] w-28 shrink-0 portrait-phone:min-h-[3.25rem] portrait-phone:w-32 portrait-phone:text-base landscape-phone:min-h-10 landscape-phone:w-24 landscape-phone:text-sm"
+                onClick={onPass}
+              >
                 PASS
               </button>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {state.bidLog.length > 0 && (
@@ -371,40 +377,49 @@ export function TrickBiddingPanel({
   const contractPlayer = state.players.find((p) => p.seatIndex === state.contractWinnerIndex);
 
   return (
-    <div className="card-surface space-y-3 p-3 portrait-phone:space-y-1.5 portrait-phone:p-2 landscape-phone:space-y-1 landscape-phone:p-1.5">
-      <div className="text-center">
-        <p className="text-xs text-white/50 landscape-phone:text-[9px] portrait-phone:text-[10px]">חלק ב&apos; — הכרזת לקיחות</p>
+    <div className="bid-panel">
+      <div className="shrink-0 text-center">
+        <p className="text-xs font-medium text-white/50 portrait-phone:text-[11px] landscape-phone:text-[10px]">
+          חלק ב&apos; — הכרזת לקיחות
+        </p>
         {state.contractBid && (
-          <p className="mt-0.5 text-sm text-gold-300 portrait-phone:text-xs landscape-phone:text-xs">
+          <p className="mt-1 text-sm text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">
             {contractPlayer?.name}: {formatContractBid(state.contractBid)}
           </p>
         )}
         {!isMyTurn && (
-          <p className="mt-0.5 text-xs text-amber-300 animate-pulse portrait-phone:text-[10px] landscape-phone:text-[10px]">ממתין לשחקן אחר...</p>
+          <p className="mt-1 text-xs text-amber-300 animate-pulse portrait-phone:text-[11px] landscape-phone:text-[10px]">
+            ממתין לשחקן אחר...
+          </p>
         )}
       </div>
 
       {isMyTurn && (
-        <div className="grid grid-cols-7 gap-1 portrait-phone:gap-0.5 landscape-phone:gap-0.5">
-          {Array.from({ length: 14 }, (_, i) => i).map((n) => {
-            const disabled = disabledBids.has(n);
-            return (
-              <button
-                key={n}
-                type="button"
-                disabled={disabled}
-                onClick={() => onBid(n)}
-                className={`rounded-lg py-2 text-sm font-bold transition portrait-phone:py-1.5 portrait-phone:text-xs landscape-phone:py-1 landscape-phone:text-[11px] ${
-                  disabled
-                    ? "cursor-not-allowed bg-white/5 text-white/20 line-through"
-                    : "bg-gold-500/20 text-gold-300 hover:bg-gold-500/40 active:scale-95"
-                }`}
-                title={disabled ? "סכום 13 אסור" : undefined}
-              >
-                {n}
-              </button>
-            );
-          })}
+        <div className="min-h-0 flex-1">
+          <p className="mb-2 text-center text-sm font-medium text-white/70 portrait-phone:mb-2.5 portrait-phone:text-base landscape-phone:mb-1.5 landscape-phone:text-xs">
+            כמה לקיחות את/ה מצפה?
+          </p>
+          <div className="bid-trick-grid">
+            {Array.from({ length: 14 }, (_, i) => i).map((n) => {
+              const disabled = disabledBids.has(n);
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onBid(n)}
+                  className={`bid-trick-btn ${
+                    disabled
+                      ? "cursor-not-allowed bg-white/5 text-white/20 line-through"
+                      : "bg-gold-500/20 text-gold-300 hover:bg-gold-500/40"
+                  }`}
+                  title={disabled ? "סכום 13 אסור" : undefined}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

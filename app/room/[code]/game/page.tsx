@@ -231,9 +231,9 @@ export default function GamePage() {
           ) : (
             <div className="flex h-full min-h-0 flex-col">
               <div className="mobile-panel-sheet w-full">
-                <div className="mobile-panel-fit flex flex-col justify-end">
+                <div className="mobile-panel-fit flex flex-col justify-start gap-2">
                   {state.phase === "bidding_contract" && (
-                    <>
+                    <div className="bid-phase-stack">
                       <ContractBiddingTracker state={state} mySeat={mySeat} />
                       <ContractBiddingPanel
                         state={state}
@@ -241,39 +241,47 @@ export default function GamePage() {
                         onBid={handleContractBid}
                         onPass={handlePass}
                       />
-                    </>
+                    </div>
                   )}
 
                   {state.phase === "bidding_tricks" && (
-                    <TrickBiddingPanel
-                      state={state}
-                      isMyTurn={isMyTurn && !actionLoading}
-                      disabledBids={disabledTrickBids}
-                      onBid={handleTrickBid}
-                    />
+                    <div className="bid-phase-stack">
+                      <TrickBiddingPanel
+                        state={state}
+                        isMyTurn={isMyTurn && !actionLoading}
+                        disabledBids={disabledTrickBids}
+                        onBid={handleTrickBid}
+                      />
+                    </div>
                   )}
 
                   {state.phase === "card_exchange" && (
-                    <CardExchangePanel
+                    <div className="mobile-panel-fit flex flex-col justify-end">
+                      <CardExchangePanel
                       state={state}
                       humanPlayerId={humanId}
                       selectedCardIds={exchangeSelection}
                       onToggleCard={handleToggleExchange}
                       onConfirm={handleConfirmExchange}
-                    />
+                      />
+                    </div>
                   )}
 
                   {state.phase === "round_scoring" && (
-                    <RoundSummary state={state} onContinue={handleContinueRound} />
+                    <div className="mobile-panel-fit flex flex-col justify-end">
+                      <RoundSummary state={state} onContinue={handleContinueRound} />
+                    </div>
                   )}
 
                   {state.phase === "game_over" && (
-                    <GameOverPanel
+                    <div className="mobile-panel-fit flex flex-col justify-end">
+                      <GameOverPanel
                       state={state}
                       isBotRoom={isBotRoom}
                       onExit={() => void handleExit()}
                       onPlayAgain={isBotRoom ? () => void handlePlayAgainBots() : undefined}
                     />
+                    </div>
                   )}
                 </div>
               </div>
