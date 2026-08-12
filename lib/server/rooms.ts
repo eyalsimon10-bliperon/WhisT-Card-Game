@@ -214,6 +214,12 @@ export async function joinRoomInDb(
     return { error: "שגיאה בהצטרפות לחדר." };
   }
 
+  // Touch rooms so host realtime (PK-filtered) also fires — not only room_players
+  await supabase
+    .from("rooms")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("code", code.toUpperCase());
+
   const updated = await fetchRoom(code);
   return updated ? { room: updated } : { error: "שגיאה בטעינת החדר." };
 }
@@ -275,6 +281,12 @@ export async function leaveRoomInDb(code: string, playerId: string): Promise<Roo
       .update({ is_host: true })
       .eq("room_code", normalized)
       .eq("player_id", newHost.id);
+  } else {
+    // Touch rooms so other clients' rooms subscription refreshes the player list
+    await supabase
+      .from("rooms")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("code", normalized);
   }
 
   return fetchRoom(normalized);

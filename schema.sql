@@ -178,5 +178,8 @@ begin
   end if;
 end $$;
 
+-- Helps Realtime filters on room_players (non-PK columns) deliver full row payloads
+alter table public.room_players replica identity full;
+
 -- Optional: verify
 -- select * from pg_publication_tables where pubname = 'supabase_realtime';

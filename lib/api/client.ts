@@ -11,13 +11,15 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 export async function fetchRoom(code: string): Promise<Room | null> {
-  const res = await fetch(`/api/rooms?code=${encodeURIComponent(code)}`);
+  const res = await fetch(`/api/rooms?code=${encodeURIComponent(code)}`, {
+    cache: "no-store",
+  });
   const data = await parseJson<{ room: Room | null }>(res);
   return data.room;
 }
 
 export async function fetchOpenRoomsCount(): Promise<number> {
-  const res = await fetch("/api/rooms?openCount=true");
+  const res = await fetch("/api/rooms?openCount=true", { cache: "no-store" });
   const data = await parseJson<{ count: number }>(res);
   return data.count;
 }
@@ -56,6 +58,7 @@ export async function postGameAction(
 export async function fetchGameState(code: string): Promise<GameState | null> {
   const res = await fetch(`/api/game/${encodeURIComponent(code)}/action`, {
     method: "GET",
+    cache: "no-store",
   });
   const data = await parseJson<{ state: GameState | null }>(res);
   return data.state;

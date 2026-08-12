@@ -6,6 +6,8 @@ import { normalizeGameState } from "@/lib/game/normalize-state";
 import type { GameState } from "@/lib/game/types";
 import { createClient } from "@/lib/supabase/client";
 
+const POLL_MS = 1500;
+
 export function useGameRealtime(code: string, onState: (state: GameState | null) => void) {
   const handlerRef = useRef(onState);
   handlerRef.current = onState;
@@ -23,7 +25,7 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
       }
     }
 
-    load();
+    void load();
 
     const supabase = createClient();
     const channel = supabase
@@ -45,10 +47,25 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
           void load();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          void load();
+        }
+      });
+
+    const pollId = window.setInterval(() => {
+      void load();
+    }, POLL_MS);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
+      document.removeEventListener("visibilitychange", onVisible);
       void supabase.removeChannel(channel);
     };
   }, [code]);

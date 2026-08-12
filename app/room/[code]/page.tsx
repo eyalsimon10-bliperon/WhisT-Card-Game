@@ -54,12 +54,23 @@ export default function RoomLobbyPage() {
         if (current.status === "playing") {
           const inRoom = current.players.some((p) => p.id === session!.playerId);
           if (inRoom) {
-            const game = await fetchGameState(code);
+            // Retry briefly — game_states may lag a moment behind rooms.status
+            let game = await fetchGameState(code);
+            if (!game) {
+              await new Promise((r) => setTimeout(r, 400));
+              game = await fetchGameState(code);
+            }
             if (game && game.phase !== "game_over") {
               router.replace(`/room/${code}/game`);
               return;
             }
-            await postRoomsAction({ action: "resetWaiting", code });
+            if (game?.phase === "game_over") {
+              await postRoomsAction({ action: "resetWaiting", code });
+            } else {
+              // Playing but state missing — do NOT wipe a live game; enter game page
+              router.replace(`/room/${code}/game`);
+              return;
+            }
           } else {
             setError("המשחק בחדר זה כבר התחיל.");
             setInitialized(true);

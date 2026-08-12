@@ -221,11 +221,12 @@ export function PlayerHand({
   const count = hand.length;
 
   return (
-    <div className="game-hand-dock-hand w-full overflow-hidden">
+    <div className="game-hand-dock-hand w-full min-w-0">
       <div
         className="game-hand-fan game-hand-fan--bbo touch-scroll-x px-0.5 py-0.5"
         style={
           {
+            /* Portrait overlap strip only — landscape uses CSS 1mm gap */
             ["--hand-visible-strip" as string]:
               count <= 6
                 ? "max(1.9rem, calc(var(--card-hand-w) * 0.55))"

@@ -37,13 +37,25 @@
 
   @media (orientation: landscape) and (max-height: 520px) {
     :root {
-      --card-hand-h: clamp(3.25rem, 32vh, 4rem);
+      /*
+        Same card face proportions as portrait, sized to fit 13 cards
+        with a 1mm gap between each (no overlap).
+      */
+      --card-hand-w: min(
+        calc(5.4rem * 5 / 7),
+        calc((100vw - 0.75rem - 12mm) / 13)
+      );
+      --card-hand-h: calc(var(--card-hand-w) * 7 / 5);
       --card-table-h: clamp(3.6rem, 36vh, 4.5rem);
       --card-md-h: clamp(3.25rem, 24vh, 4rem);
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-visible-strip: max(1.3rem, calc(var(--card-hand-w) * 0.44));
+      /* Index strip like portrait (for rank/suit readability) */
+      --hand-visible-strip: max(1.7rem, calc(var(--card-hand-w) * 0.5));
+      --hand-fan-overlap: 1mm;
+      --index-rank-h: 34cqh;
+      --index-suit-top: 35cqh;
       --trick-zone-h: clamp(8rem, 50vh, 9.75rem);
       --trick-zone-w: clamp(13rem, 70vw, 16.5rem);
     }
@@ -160,9 +172,17 @@
     margin-left: var(--hand-fan-overlap);
   }
 
-  /* Always keep BBO-style overlap — never switch to spaced cards */
+  /* BBO-style overlap in portrait; landscape uses 1mm gap via --hand-fan-overlap */
   .game-hand-fan--bbo > * + * {
     margin-left: var(--hand-fan-overlap) !important;
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-hand-fan > * + *,
+    .game-hand-fan--bbo > * + *,
+    .game-hand-fan-mini > * + * {
+      margin-left: 1mm !important;
+    }
   }
 
   .game-hand-fan-mini {
@@ -249,9 +269,9 @@
       @apply gap-1 pt-0;
     }
 
+    /* Keep landscape hand cards same size as play phase (no shrink) */
     .bidding-hand-dock {
-      --card-hand-h: clamp(2.35rem, 20vh, 2.75rem);
-      --hand-fan-overlap: calc(var(--card-hand-h) * -0.2);
+      --hand-fan-overlap: 1mm;
     }
   }
 
@@ -487,20 +507,21 @@
   }
 
   @media (orientation: landscape) and (max-height: 520px) {
+    /* Match portrait hand index scale — cards are fully visible with 1mm gaps */
     .bbo-face[data-size="hand"] .bbo-index {
-      width: max(1.15rem, calc(var(--hand-visible-strip) * 0.86));
+      width: max(1.35rem, calc(var(--hand-visible-strip) * 0.82));
     }
 
     .bbo-face[data-size="hand"] .bbo-rank {
-      font-size: clamp(0.95rem, 36cqh, 1.3rem);
+      font-size: clamp(1.15rem, 34cqh, 1.75rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank--ten {
-      font-size: clamp(0.8rem, 29cqh, 1.05rem);
+      font-size: clamp(0.95rem, 28cqh, 1.4rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-suit {
-      font-size: clamp(0.85rem, 32cqh, 1.15rem);
+      font-size: clamp(1.05rem, 30cqh, 1.55rem);
     }
 
     .bbo-face[data-size="table"] .bbo-rank {
