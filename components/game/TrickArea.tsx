@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
 import { scalePx, useTrickLayoutScale } from "@/lib/hooks/useTrickLayoutScale";
 import type { Card, TrickPlay } from "@/lib/game/types";
@@ -218,9 +218,24 @@ export function PlayerHand({
   onPlayCard,
   canPlay,
 }: PlayerHandProps) {
+  const count = hand.length;
+
   return (
     <div className="game-hand-dock-hand w-full overflow-hidden">
-      <div className="game-hand-fan touch-scroll-x px-0.5 py-0.5">
+      <div
+        className="game-hand-fan touch-scroll-x px-0.5 py-0.5"
+        style={
+          {
+            // Slightly widen visible strip when few cards; tighten when many
+            ["--hand-visible-strip" as string]:
+              count <= 6
+                ? "max(1.55rem, calc(var(--card-hand-w) * 0.5))"
+                : count <= 10
+                  ? "max(1.4rem, calc(var(--card-hand-w) * 0.44))"
+                  : "max(1.35rem, calc(var(--card-hand-w) * 0.42))",
+          } as CSSProperties
+        }
+      >
         {hand.map((card, index) => {
           const isLegal = legalCardIds.has(card.id);
           const isSelected = selectedCardId === card.id;

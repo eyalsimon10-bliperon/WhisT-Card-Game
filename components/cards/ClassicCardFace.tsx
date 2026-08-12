@@ -12,24 +12,24 @@ interface ClassicCardFaceProps {
 const RED_SUITS = new Set<Suit>(["hearts", "diamonds"]);
 
 /**
- * High-readability mobile card: one large rank + suit block on the left edge.
- * Left placement keeps the index visible when cards fan/overlap.
+ * Mobile-first playing card face.
+ * One large rank + suit block on the LEFT so it stays visible
+ * when cards fan and overlap left-to-right.
  */
 export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProps) {
   const isRed = RED_SUITS.has(suit);
+  const isTen = rank === "10";
 
   return (
     <div
-      className="readable-card-face"
+      className="whist-card-face"
       data-size={size}
       data-red={isRed ? "true" : "false"}
       aria-hidden
     >
-      <div className="readable-card-index">
-        <span className={`readable-card-rank ${rank === "10" ? "readable-card-rank-ten" : ""}`}>
-          {rank}
-        </span>
-        <SuitIcon suit={suit} className="readable-card-suit" />
+      <div className="whist-card-index">
+        <span className={`whist-card-rank${isTen ? " whist-card-rank--ten" : ""}`}>{rank}</span>
+        <SuitIcon suit={suit} className="whist-card-suit" />
       </div>
     </div>
   );

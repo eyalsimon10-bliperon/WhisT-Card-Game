@@ -4,30 +4,46 @@
 
 @layer base {
   :root {
-    /* Fluid card heights — scale with viewport while keeping readable minimums */
-    --card-hand-h: clamp(3.9rem, 13.5vw, 5.5rem);
-    --card-table-h: clamp(4.25rem, 14vw, 6rem);
+    /*
+      Card sizing for WhisT web app.
+      Aspect ratio is 5:7 (width:height).
+      Hand cards leave a fixed LEFT index strip visible when fanned.
+    */
+    --card-hand-h: clamp(4.25rem, min(16vw, 12vh), 5.75rem);
+    --card-table-h: clamp(4.5rem, min(15vw, 14vh), 6.25rem);
     --card-md-h: clamp(4rem, 11vw, 5rem);
     --card-lg-h: clamp(4.5rem, 12vw, 5.75rem);
     --card-xs-h: clamp(2.75rem, 8vw, 3.25rem);
     --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
-    /* ~26% width overlap — leaves left index strip visible under fan */
-    --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.26);
+    --card-hand-w: calc(var(--card-hand-h) * 5 / 7);
+    /* Visible left strip must fit rank+suit (~42% of card width, min 1.4rem) */
+    --hand-visible-strip: max(1.4rem, calc(var(--card-hand-w) * 0.42));
+    --hand-fan-overlap: calc(var(--hand-visible-strip) - var(--card-hand-w));
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
   }
 
+  /* Portrait phones */
+  @media (orientation: portrait) and (max-width: 640px) {
+    :root {
+      --card-hand-h: clamp(4.1rem, 15vw, 5.35rem);
+      --card-table-h: clamp(4.25rem, 14vw, 5.75rem);
+      --hand-visible-strip: max(1.45rem, calc(var(--card-hand-w) * 0.44));
+    }
+  }
+
+  /* Landscape phones — compact height, still readable index */
   @media (orientation: landscape) and (max-height: 520px) {
     :root {
-      --card-hand-h: clamp(3.35rem, 30vh, 4.1rem);
-      --card-table-h: clamp(3.95rem, 34vh, 4.85rem);
+      --card-hand-h: clamp(3.15rem, 28vh, 3.85rem);
+      --card-table-h: clamp(3.5rem, 32vh, 4.35rem);
       --card-md-h: clamp(3.25rem, 24vh, 4rem);
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.24);
-      --trick-zone-h: clamp(8.5rem, 52vh, 10rem);
-      --trick-zone-w: clamp(13.5rem, 72vw, 17rem);
+      --hand-visible-strip: max(1.2rem, calc(var(--card-hand-w) * 0.46));
+      --trick-zone-h: clamp(8rem, 50vh, 9.75rem);
+      --trick-zone-w: clamp(13rem, 70vw, 16.5rem);
     }
   }
 
@@ -131,13 +147,6 @@
     }
   }
 
-  @media (orientation: portrait) and (max-width: 640px) {
-    :root {
-      --card-hand-h: clamp(3.85rem, 14vw, 5.25rem);
-      --card-table-h: clamp(4rem, 13vw, 5.5rem);
-    }
-  }
-
   .game-hand-fan {
     direction: ltr;
     @apply flex min-w-0 justify-center;
@@ -151,7 +160,7 @@
 
   @media (min-width: 641px) {
     .game-hand-fan > * + * {
-      margin-left: 0.4rem;
+      margin-left: 0.35rem;
     }
   }
 
@@ -160,7 +169,7 @@
   }
 
   .game-hand-fan-mini > * + * {
-    margin-left: calc(var(--card-hand-h) * 5 / 7 * -0.22);
+    margin-left: calc(var(--hand-visible-strip) - var(--card-hand-w));
   }
 
   .game-hand-dock-hand {
@@ -341,109 +350,140 @@
 
   .playing-card-shell {
     container-type: size;
-    @apply bg-[#f7f7f5];
+    background: #f8f8f6;
   }
 
-  /* High-readability mobile card: rank + suit block on the LEFT (visible in fan) */
-  .readable-card-face {
-    @apply relative h-full w-full select-none border border-neutral-300/80 bg-[#fafaf8];
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  /*
+    WhisT card face — minimal digital style.
+    Large rank + SVG suit on the LEFT edge so the fan overlap
+    (next card covers the right) never hides the index.
+  */
+  .whist-card-face {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    user-select: none;
+    background: linear-gradient(165deg, #ffffff 0%, #f5f5f2 100%);
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   }
 
-  .readable-card-face[data-red="true"] {
+  .whist-card-face[data-red="true"] {
     color: #c40000;
   }
 
-  .readable-card-face[data-red="false"] {
+  .whist-card-face[data-red="false"] {
     color: #111111;
   }
 
-  .readable-card-index {
+  .whist-card-index {
     position: absolute;
-    left: 6cqw;
-    right: auto;
-    top: 50%;
-    transform: translateY(-50%);
+    inset-block: 0;
+    left: 0;
+    width: 46%;
+    max-width: 2.1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4cqh;
+    gap: 0.12em;
+    padding: 4% 2%;
     line-height: 1;
-    width: 34cqw;
-    max-width: 38%;
+    text-align: center;
   }
 
-  .readable-card-rank {
+  .whist-card-rank {
     font-weight: 900;
-    font-size: 1rem;
-    font-size: 48cqh;
-    letter-spacing: -0.03em;
-    line-height: 0.85;
+    font-size: clamp(1.05rem, 46cqh, 2.35rem);
+    letter-spacing: -0.04em;
+    line-height: 0.9;
   }
 
-  .readable-card-rank-ten {
-    font-size: 0.8125rem;
-    font-size: 38cqh;
-    letter-spacing: -0.07em;
+  .whist-card-rank--ten {
+    font-size: clamp(0.85rem, 36cqh, 1.85rem);
+    letter-spacing: -0.08em;
   }
 
-  .readable-card-suit {
+  .whist-card-suit {
     display: block;
     flex-shrink: 0;
-    width: 0.8125rem;
-    height: 0.8125rem;
-    width: 40cqh;
-    height: 40cqh;
+    width: clamp(0.95rem, 38cqh, 1.9rem);
+    height: clamp(0.95rem, 38cqh, 1.9rem);
   }
 
-  .readable-card-face[data-size="hand"] .readable-card-rank {
-    font-size: 50cqh;
+  /* Hand cards — emphasize index for mobile fan */
+  .whist-card-face[data-size="hand"] .whist-card-index {
+    width: 48%;
+    max-width: 2.25rem;
   }
 
-  .readable-card-face[data-size="hand"] .readable-card-rank-ten {
-    font-size: 40cqh;
+  .whist-card-face[data-size="hand"] .whist-card-rank {
+    font-size: clamp(1.15rem, 50cqh, 2.5rem);
   }
 
-  .readable-card-face[data-size="hand"] .readable-card-suit {
-    width: 42cqh;
-    height: 42cqh;
+  .whist-card-face[data-size="hand"] .whist-card-rank--ten {
+    font-size: clamp(0.9rem, 40cqh, 2rem);
   }
 
-  .readable-card-face[data-size="hand"] .readable-card-index {
-    left: 4cqw;
-    width: 38cqw;
-    max-width: 40%;
-    gap: 3cqh;
+  .whist-card-face[data-size="hand"] .whist-card-suit {
+    width: clamp(1.05rem, 42cqh, 2.05rem);
+    height: clamp(1.05rem, 42cqh, 2.05rem);
   }
 
-  .readable-card-face[data-size="table"] .readable-card-index {
-    left: 7cqw;
-    width: 36cqw;
+  /* Table cards */
+  .whist-card-face[data-size="table"] .whist-card-index {
+    width: 44%;
+    max-width: 2.35rem;
   }
 
-  .readable-card-face[data-size="table"] .readable-card-rank {
-    font-size: 46cqh;
+  .whist-card-face[data-size="table"] .whist-card-rank {
+    font-size: clamp(1.1rem, 48cqh, 2.4rem);
   }
 
-  .readable-card-face[data-size="table"] .readable-card-rank-ten {
-    font-size: 36cqh;
+  .whist-card-face[data-size="table"] .whist-card-suit {
+    width: clamp(1rem, 40cqh, 2rem);
+    height: clamp(1rem, 40cqh, 2rem);
   }
 
-  .readable-card-face[data-size="table"] .readable-card-suit {
-    width: 38cqh;
-    height: 38cqh;
+  /* Landscape phone — keep index bold even when cards are shorter */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .whist-card-face[data-size="hand"] .whist-card-index {
+      width: 52%;
+      max-width: 1.85rem;
+    }
+
+    .whist-card-face[data-size="hand"] .whist-card-rank {
+      font-size: clamp(1rem, 52cqh, 1.65rem);
+    }
+
+    .whist-card-face[data-size="hand"] .whist-card-rank--ten {
+      font-size: clamp(0.8rem, 42cqh, 1.35rem);
+    }
+
+    .whist-card-face[data-size="hand"] .whist-card-suit {
+      width: clamp(0.9rem, 44cqh, 1.45rem);
+      height: clamp(0.9rem, 44cqh, 1.45rem);
+    }
+
+    .whist-card-face[data-size="table"] .whist-card-rank {
+      font-size: clamp(0.95rem, 48cqh, 1.55rem);
+    }
+
+    .whist-card-face[data-size="table"] .whist-card-suit {
+      width: clamp(0.85rem, 40cqh, 1.35rem);
+      height: clamp(0.85rem, 40cqh, 1.35rem);
+    }
   }
 
-  .readable-card-face[data-size="xs"] .readable-card-rank,
-  .readable-card-face[data-size="sm"] .readable-card-rank {
-    font-size: 46cqh;
+  .whist-card-face[data-size="xs"] .whist-card-rank,
+  .whist-card-face[data-size="sm"] .whist-card-rank {
+    font-size: clamp(0.85rem, 42cqh, 1.4rem);
   }
 
-  .readable-card-face[data-size="xs"] .readable-card-suit,
-  .readable-card-face[data-size="sm"] .readable-card-suit {
-    width: 38cqh;
-    height: 38cqh;
+  .whist-card-face[data-size="xs"] .whist-card-suit,
+  .whist-card-face[data-size="sm"] .whist-card-suit {
+    width: clamp(0.75rem, 34cqh, 1.15rem);
+    height: clamp(0.75rem, 34cqh, 1.15rem);
   }
 
   /* Solitaire-style card back */
