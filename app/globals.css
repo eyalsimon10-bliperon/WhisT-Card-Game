@@ -310,7 +310,7 @@
   }
 
   .card-unplayable-veil {
-    @apply pointer-events-none absolute inset-0 rounded-[0.45rem];
+    @apply pointer-events-none absolute inset-0 rounded-lg;
     background: linear-gradient(
       165deg,
       rgba(13, 40, 24, 0.06) 0%,
@@ -320,17 +320,13 @@
   }
 
   .playing-card-shell {
+    container-type: size;
     @apply bg-white;
-    box-shadow:
-      0 0 0 2px rgba(255, 255, 255, 0.98),
-      0 5px 14px rgba(0, 0, 0, 0.5);
   }
 
-  /* Bold corner-index card face (no center pip) */
+  /* Corner index only — scales with card height via cqh units */
   .classic-card-face {
-    @apply relative h-full w-full select-none border-2 border-neutral-400 bg-white;
-    font-size: 34%;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 1);
+    @apply relative h-full w-full select-none bg-gradient-to-br from-white via-white to-neutral-100;
   }
 
   .classic-card-face[data-red="true"] {
@@ -342,67 +338,63 @@
   }
 
   .classic-card-corner {
-    @apply absolute flex flex-col items-center leading-none;
+    @apply absolute flex flex-col items-center;
+    gap: 4cqh;
+    line-height: 1;
   }
 
   .classic-card-corner-tl {
-    @apply left-[5%] top-[4%];
+    left: 8cqw;
+    top: 7cqh;
   }
 
   .classic-card-corner-br {
-    @apply bottom-[4%] right-[5%] rotate-180;
+    right: 8cqw;
+    bottom: 7cqh;
+    transform: rotate(180deg);
   }
 
   .classic-card-rank {
-    @apply font-black tracking-tight;
-    font-size: 1em;
-    line-height: 0.9;
+    @apply font-black;
+    font-size: 0.875rem;
+    font-size: 42cqh;
+    letter-spacing: -0.02em;
   }
 
   .classic-card-rank-ten {
-    font-size: 0.72em;
+    font-size: 0.75rem;
+    font-size: 34cqh;
     letter-spacing: -0.08em;
   }
 
   .classic-card-suit-icon {
     @apply block shrink-0;
+    width: 0.75rem;
+    height: 0.75rem;
+    width: 34cqh;
+    height: 34cqh;
   }
 
-  .classic-card-suit-icon-corner {
-    @apply mt-[0.1em];
-    width: 1.05em;
-    height: 1.05em;
+  .classic-card-face[data-size="table"] .classic-card-rank {
+    font-size: 44cqh;
   }
 
-  .classic-card-face[data-size="xs"] {
-    font-size: 36%;
+  .classic-card-face[data-size="table"] .classic-card-rank-ten {
+    font-size: 36cqh;
   }
 
-  .classic-card-face[data-size="sm"] {
-    font-size: 38%;
+  .classic-card-face[data-size="table"] .classic-card-suit-icon {
+    width: 36cqh;
+    height: 36cqh;
   }
 
-  .classic-card-face[data-size="md"],
-  .classic-card-face[data-size="lg"] {
-    font-size: 34%;
+  .classic-card-face[data-size="hand"] .classic-card-rank {
+    font-size: 43cqh;
   }
 
-  .classic-card-face[data-size="hand"] {
-    font-size: 46%;
-  }
-
-  .classic-card-face[data-size="table"] {
-    font-size: 48%;
-  }
-
-  .classic-card-face[data-size="hand"] .classic-card-suit-icon-corner {
-    width: 1.15em;
-    height: 1.15em;
-  }
-
-  .classic-card-face[data-size="table"] .classic-card-suit-icon-corner {
-    width: 1.18em;
-    height: 1.18em;
+  .classic-card-face[data-size="hand"] .classic-card-suit-icon {
+    width: 35cqh;
+    height: 35cqh;
   }
 
   /* Solitaire-style card back */

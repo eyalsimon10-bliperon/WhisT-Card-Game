@@ -25,14 +25,14 @@ export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProp
         <span className={`classic-card-rank ${rank === "10" ? "classic-card-rank-ten" : ""}`}>
           {rank}
         </span>
-        <SuitIcon suit={suit} className="classic-card-suit-icon classic-card-suit-icon-corner" />
+        <SuitIcon suit={suit} className="classic-card-suit-icon" />
       </div>
 
       <div className="classic-card-corner classic-card-corner-br">
         <span className={`classic-card-rank ${rank === "10" ? "classic-card-rank-ten" : ""}`}>
           {rank}
         </span>
-        <SuitIcon suit={suit} className="classic-card-suit-icon classic-card-suit-icon-corner" />
+        <SuitIcon suit={suit} className="classic-card-suit-icon" />
       </div>
     </div>
   );

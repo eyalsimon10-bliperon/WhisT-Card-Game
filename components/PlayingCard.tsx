@@ -44,10 +44,10 @@ export function PlayingCard({
   const interactive = !!onClick && !disabled;
 
   const wrapperClass = `
-    playing-card-shell relative aspect-[5/7] overflow-hidden rounded-[0.45rem] transition-all duration-200
+    playing-card-shell relative aspect-[5/7] overflow-hidden rounded-lg transition-all duration-200
     ${sizeClasses[size]}
-    ${elevated && !disabled ? "ring-1 ring-white/40" : ""}
-    ${playable && !disabled ? "ring-2 ring-emerald-400/70" : ""}
+    ${elevated && !disabled ? "shadow-[0_4px_14px_rgba(0,0,0,0.45)] ring-1 ring-white/30" : "shadow-md"}
+    ${playable && !disabled ? "ring-2 ring-emerald-400/55 shadow-[0_4px_16px_rgba(52,211,153,0.25)]" : ""}
     ${selected ? "ring-2 ring-gold-400 -translate-y-3 portrait-phone:-translate-y-2 landscape-phone:-translate-y-1.5 z-10 shadow-[0_8px_20px_rgba(232,197,71,0.35)]" : ""}
     ${interactive ? "cursor-pointer hover:-translate-y-2 portrait-phone:hover:-translate-y-1.5 landscape-phone:hover:-translate-y-1 hover:shadow-xl active:scale-95" : ""}
     ${disabled ? "card-unplayable" : ""}
@@ -114,7 +114,7 @@ export function CardBack({ size = "md", className = "" }: { size?: "sm" | "md" |
 
   return (
     <div
-      className={`playing-card-shell relative aspect-[5/7] overflow-hidden rounded-[0.45rem] transition-all duration-200 ${sizeMap[size]} ${className}`}
+      className={`playing-card-shell relative aspect-[5/7] overflow-hidden rounded-lg shadow-lg ${sizeMap[size]} ${className}`}
       aria-hidden
     >
       <ClassicCardBack />
