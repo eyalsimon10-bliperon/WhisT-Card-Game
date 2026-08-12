@@ -12,8 +12,8 @@ interface ClassicCardFaceProps {
 const RED_SUITS = new Set<Suit>(["hearts", "diamonds"]);
 
 /**
- * High-readability mobile card: one large rank + suit block on the right edge.
- * No corner indices, no center pips.
+ * High-readability mobile card: one large rank + suit block on the left edge.
+ * Left placement keeps the index visible when cards fan/overlap.
  */
 export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProps) {
   const isRed = RED_SUITS.has(suit);

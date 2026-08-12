@@ -219,8 +219,8 @@ export function PlayerHand({
   canPlay,
 }: PlayerHandProps) {
   return (
-    <div className="w-full overflow-hidden">
-      <div className="game-hand-fan touch-scroll-x px-1 py-0.5">
+    <div className="game-hand-dock-hand w-full overflow-hidden">
+      <div className="game-hand-fan touch-scroll-x px-0.5 py-0.5">
         {hand.map((card, index) => {
           const isLegal = legalCardIds.has(card.id);
           const isSelected = selectedCardId === card.id;

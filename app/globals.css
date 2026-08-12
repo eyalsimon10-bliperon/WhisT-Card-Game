@@ -5,13 +5,14 @@
 @layer base {
   :root {
     /* Fluid card heights — scale with viewport while keeping readable minimums */
-    --card-hand-h: clamp(4.35rem, 15vw, 6.25rem);
-    --card-table-h: clamp(4.85rem, 16vw, 7rem);
+    --card-hand-h: clamp(3.9rem, 13.5vw, 5.5rem);
+    --card-table-h: clamp(4.25rem, 14vw, 6rem);
     --card-md-h: clamp(4rem, 11vw, 5rem);
     --card-lg-h: clamp(4.5rem, 12vw, 5.75rem);
     --card-xs-h: clamp(2.75rem, 8vw, 3.25rem);
     --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
-    --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.34);
+    /* ~26% width overlap — leaves left index strip visible under fan */
+    --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.26);
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
   }
@@ -24,7 +25,7 @@
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.32);
+      --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.24);
       --trick-zone-h: clamp(8.5rem, 52vh, 10rem);
       --trick-zone-w: clamp(13.5rem, 72vw, 17rem);
     }
@@ -130,9 +131,18 @@
     }
   }
 
+  @media (orientation: portrait) and (max-width: 640px) {
+    :root {
+      --card-hand-h: clamp(3.85rem, 14vw, 5.25rem);
+      --card-table-h: clamp(4rem, 13vw, 5.5rem);
+    }
+  }
+
   .game-hand-fan {
     direction: ltr;
     @apply flex min-w-0 justify-center;
+    max-width: 100%;
+    padding-inline: 0.125rem;
   }
 
   .game-hand-fan > * + * {
@@ -150,7 +160,12 @@
   }
 
   .game-hand-fan-mini > * + * {
-    margin-left: calc(var(--card-hand-h) * 5 / 7 * -0.28);
+    margin-left: calc(var(--card-hand-h) * 5 / 7 * -0.22);
+  }
+
+  .game-hand-dock-hand {
+    @apply shrink-0;
+    max-width: 100%;
   }
 
   .card-size-hand {
@@ -329,7 +344,7 @@
     @apply bg-[#f7f7f5];
   }
 
-  /* High-readability mobile card: rank + suit block on the right */
+  /* High-readability mobile card: rank + suit block on the LEFT (visible in fan) */
   .readable-card-face {
     @apply relative h-full w-full select-none border border-neutral-300/80 bg-[#fafaf8];
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
@@ -345,70 +360,79 @@
 
   .readable-card-index {
     position: absolute;
-    right: 7cqw;
+    left: 6cqw;
+    right: auto;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5cqh;
+    gap: 4cqh;
     line-height: 1;
-    min-width: 38cqw;
+    width: 34cqw;
+    max-width: 38%;
   }
 
   .readable-card-rank {
     font-weight: 900;
     font-size: 1rem;
-    font-size: 50cqh;
+    font-size: 48cqh;
     letter-spacing: -0.03em;
     line-height: 0.85;
   }
 
   .readable-card-rank-ten {
-    font-size: 0.875rem;
-    font-size: 40cqh;
+    font-size: 0.8125rem;
+    font-size: 38cqh;
     letter-spacing: -0.07em;
   }
 
   .readable-card-suit {
     display: block;
     flex-shrink: 0;
-    width: 0.875rem;
-    height: 0.875rem;
+    width: 0.8125rem;
+    height: 0.8125rem;
+    width: 40cqh;
+    height: 40cqh;
+  }
+
+  .readable-card-face[data-size="hand"] .readable-card-rank {
+    font-size: 50cqh;
+  }
+
+  .readable-card-face[data-size="hand"] .readable-card-rank-ten {
+    font-size: 40cqh;
+  }
+
+  .readable-card-face[data-size="hand"] .readable-card-suit {
     width: 42cqh;
     height: 42cqh;
   }
 
-  .readable-card-face[data-size="hand"] .readable-card-rank {
-    font-size: 52cqh;
-  }
-
-  .readable-card-face[data-size="hand"] .readable-card-rank-ten {
-    font-size: 42cqh;
-  }
-
-  .readable-card-face[data-size="hand"] .readable-card-suit {
-    width: 44cqh;
-    height: 44cqh;
-  }
-
   .readable-card-face[data-size="hand"] .readable-card-index {
-    right: 6cqw;
-    min-width: 40cqw;
+    left: 4cqw;
+    width: 38cqw;
+    max-width: 40%;
+    gap: 3cqh;
+  }
+
+  .readable-card-face[data-size="table"] .readable-card-index {
+    left: 7cqw;
+    width: 36cqw;
   }
 
   .readable-card-face[data-size="table"] .readable-card-rank {
-    font-size: 48cqh;
+    font-size: 46cqh;
   }
 
   .readable-card-face[data-size="table"] .readable-card-rank-ten {
-    font-size: 38cqh;
+    font-size: 36cqh;
   }
 
   .readable-card-face[data-size="table"] .readable-card-suit {
-    width: 40cqh;
-    height: 40cqh;
+    width: 38cqh;
+    height: 38cqh;
   }
 
   .readable-card-face[data-size="xs"] .readable-card-rank,
