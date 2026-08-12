@@ -99,7 +99,7 @@ export function CardFan() {
   ];
 
   return (
-    <div className="game-hand-fan mx-auto max-w-[16rem] justify-center px-1" aria-hidden>
+    <div className="game-hand-fan game-hand-fan--bbo mx-auto max-w-[18rem] justify-center px-1" aria-hidden>
       {cards.map((card, i) => (
         <div key={`${card.rank}-${card.suit}`} className="relative shrink-0" style={{ zIndex: i + 1 }}>
           <PlayingCard suit={card.suit} rank={card.rank} size="hand" variant="fan" elevated />

@@ -17,7 +17,7 @@
     --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
     --card-hand-w: calc(var(--card-hand-h) * 5 / 7);
     /* Tight BBO fan: ~26–30% of each card remains visible */
-    --hand-visible-strip: max(1.05rem, calc(var(--card-hand-w) * 0.28));
+    --hand-visible-strip: max(1.25rem, calc(var(--card-hand-w) * 0.34));
     --hand-fan-overlap: calc(var(--hand-visible-strip) - var(--card-hand-w));
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
@@ -27,7 +27,7 @@
     :root {
       --card-hand-h: clamp(4.5rem, 17vw, 5.85rem);
       --card-table-h: clamp(4.65rem, 16vw, 6.25rem);
-      --hand-visible-strip: max(1.1rem, calc(var(--card-hand-w) * 0.3));
+      --hand-visible-strip: max(1.3rem, calc(var(--card-hand-w) * 0.36));
     }
   }
 
@@ -39,7 +39,7 @@
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-visible-strip: max(0.95rem, calc(var(--card-hand-w) * 0.32));
+      --hand-visible-strip: max(1.15rem, calc(var(--card-hand-w) * 0.38));
       --trick-zone-h: clamp(8rem, 50vh, 9.75rem);
       --trick-zone-w: clamp(13rem, 70vw, 16.5rem);
     }
@@ -156,10 +156,9 @@
     margin-left: var(--hand-fan-overlap);
   }
 
-  @media (min-width: 641px) {
-    .game-hand-fan > * + * {
-      margin-left: 0.35rem;
-    }
+  /* Always keep BBO-style overlap — never switch to spaced cards */
+  .game-hand-fan--bbo > * + * {
+    margin-left: var(--hand-fan-overlap) !important;
   }
 
   .game-hand-fan-mini {
@@ -383,49 +382,49 @@
     border-color: color-mix(in srgb, var(--card-black) 28%, #bbb);
   }
 
-  /* --- FAN (hand) --- */
+  /* --- FAN (hand) — BBO: huge rank+suit in left strip --- */
   .bbo-fan-strip {
     position: absolute;
-    top: 3%;
+    top: 2%;
     left: 0;
     width: var(--hand-visible-strip);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    line-height: 1;
-    padding-top: 1%;
+    line-height: 0.9;
+    padding-top: 2%;
   }
 
   .bbo-face--fan .bbo-rank {
-    font-weight: 800;
-    font-size: clamp(1rem, 34cqh, 1.7rem);
-    letter-spacing: -0.05em;
-    line-height: 0.95;
+    font-weight: 900;
+    font-size: clamp(1.15rem, 40cqh, 2rem);
+    letter-spacing: -0.06em;
+    line-height: 0.9;
   }
 
   .bbo-face--fan .bbo-rank--ten {
-    font-size: clamp(0.82rem, 27cqh, 1.35rem);
-    letter-spacing: -0.09em;
+    font-size: clamp(0.92rem, 32cqh, 1.55rem);
+    letter-spacing: -0.1em;
   }
 
   .bbo-face--fan .bbo-suit {
-    font-size: clamp(0.95rem, 30cqh, 1.45rem);
+    font-size: clamp(1.05rem, 34cqh, 1.7rem);
     line-height: 1;
-    margin-top: 0.02em;
+    margin-top: 0.04em;
   }
 
   @media (orientation: landscape) and (max-height: 520px) {
     .bbo-face--fan .bbo-rank {
-      font-size: clamp(0.88rem, 36cqh, 1.25rem);
+      font-size: clamp(1rem, 42cqh, 1.45rem);
     }
 
     .bbo-face--fan .bbo-rank--ten {
-      font-size: clamp(0.72rem, 29cqh, 1.05rem);
+      font-size: clamp(0.8rem, 34cqh, 1.15rem);
     }
 
     .bbo-face--fan .bbo-suit {
-      font-size: clamp(0.8rem, 32cqh, 1.1rem);
+      font-size: clamp(0.9rem, 36cqh, 1.25rem);
     }
   }
 

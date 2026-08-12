@@ -223,15 +223,15 @@ export function PlayerHand({
   return (
     <div className="game-hand-dock-hand w-full overflow-hidden">
       <div
-        className="game-hand-fan touch-scroll-x px-0.5 py-0.5"
+        className="game-hand-fan game-hand-fan--bbo touch-scroll-x px-0.5 py-0.5"
         style={
           {
             ["--hand-visible-strip" as string]:
               count <= 6
-                ? "max(1.25rem, calc(var(--card-hand-w) * 0.36))"
+                ? "max(1.4rem, calc(var(--card-hand-w) * 0.4))"
                 : count <= 10
-                  ? "max(1.1rem, calc(var(--card-hand-w) * 0.3))"
-                  : "max(1.05rem, calc(var(--card-hand-w) * 0.27))",
+                  ? "max(1.25rem, calc(var(--card-hand-w) * 0.34))"
+                  : "max(1.2rem, calc(var(--card-hand-w) * 0.32))",
           } as CSSProperties
         }
       >
