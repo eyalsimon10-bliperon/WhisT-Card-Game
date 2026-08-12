@@ -1,0 +1,9 @@
+@echo off
+cd /d "%~dp0"
+echo Stopping old Node processes...
+taskkill /F /IM node.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
+echo Cleaning Next.js cache...
+node scripts/clean-next.mjs
+echo Starting dev server...
+npm run dev

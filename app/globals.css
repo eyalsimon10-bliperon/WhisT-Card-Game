@@ -1,0 +1,232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply min-h-dvh bg-felt-900 text-white antialiased;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input::placeholder {
+    @apply text-white/40;
+  }
+}
+
+@layer components {
+  .card-surface {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold-500 px-6 py-3 text-base font-semibold text-felt-900 transition active:scale-[0.98] hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-base font-semibold text-white transition active:scale-[0.98] hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .btn-primary,
+    .btn-secondary {
+      @apply min-h-9 py-1.5 text-sm;
+    }
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .btn-primary,
+    .btn-secondary {
+      @apply min-h-10 py-2 text-sm;
+    }
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/40 focus:border-gold-500/60 focus:ring-2 focus:ring-gold-500/20;
+  }
+
+  .trick-card-play {
+    animation: trick-card-play 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .trick-card-collect {
+    animation: trick-card-collect 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .trick-card-winner {
+    animation: trick-card-collect-winner 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .trick-card-pending-winner {
+    filter: drop-shadow(0 0 10px rgba(232, 197, 71, 0.55));
+  }
+
+  .trick-winner-banner {
+    animation: trick-winner-banner 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  }
+
+  .contract-pass-badge {
+    animation: contract-pass-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .game-shell {
+    @apply flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+
+  .game-table-zone {
+    @apply flex min-h-0 flex-1 items-center justify-center;
+  }
+
+  .game-hand-dock {
+    @apply shrink-0 border-t border-white/5 bg-felt-900/95 backdrop-blur-md;
+    padding-bottom: max(0.125rem, env(safe-area-inset-bottom));
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .game-hand-dock {
+      @apply pt-0 pb-0;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-hand-dock {
+      @apply pt-0 pb-0;
+    }
+  }
+
+  .game-hand-fan {
+    @apply flex min-w-0 justify-center;
+  }
+
+  .game-hand-fan > * + * {
+    margin-inline-start: -1.05rem;
+  }
+
+  @media (min-width: 641px) {
+    .game-hand-fan > * + * {
+      margin-inline-start: 0.35rem;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-hand-fan > * + * {
+      margin-inline-start: -0.85rem;
+    }
+  }
+
+  .game-hand-fan-mini > * + * {
+    margin-inline-start: -0.6rem;
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-hand-fan-mini > * + * {
+      margin-inline-start: -0.45rem;
+    }
+  }
+
+  .card-unplayable {
+    @apply cursor-not-allowed scale-[0.97];
+    filter: brightness(0.82) saturate(0.88);
+  }
+
+  .card-unplayable-veil {
+    @apply pointer-events-none absolute inset-0 rounded-lg;
+    background: linear-gradient(
+      165deg,
+      rgba(13, 40, 24, 0.08) 0%,
+      rgba(13, 40, 24, 0.28) 100%
+    );
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+
+  .mobile-panel-sheet {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+  }
+
+  .mobile-panel-fit {
+    @apply min-h-0 flex-1 overflow-hidden;
+  }
+
+  .touch-scroll-x {
+    @apply overflow-x-auto overscroll-x-contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .touch-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes trick-card-play {
+  from {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--from-x)), calc(-50% + var(--from-y))) scale(0.55) rotate(8deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--layout-x)), calc(-50% + var(--layout-y))) rotate(var(--layout-rotate));
+  }
+}
+
+@keyframes trick-card-collect {
+  from {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--layout-x)), calc(-50% + var(--layout-y))) rotate(var(--layout-rotate));
+  }
+  70% {
+    opacity: 0.85;
+    transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(0.4);
+  }
+}
+
+@keyframes trick-card-collect-winner {
+  from {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--layout-x)), calc(-50% + var(--layout-y))) rotate(var(--layout-rotate));
+    filter: brightness(1.1);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(1.08);
+    filter: brightness(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(0.5);
+  }
+}
+
+@keyframes trick-winner-banner {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@keyframes contract-pass-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
