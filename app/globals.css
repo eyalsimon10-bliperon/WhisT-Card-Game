@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* Fluid card heights — scale with viewport while keeping readable minimums */
-    --card-hand-h: clamp(3.75rem, 13vw, 5.25rem);
-    --card-table-h: clamp(4.5rem, 15vw, 6.5rem);
+    --card-hand-h: clamp(4.1rem, 14vw, 5.75rem);
+    --card-table-h: clamp(4.85rem, 16vw, 7rem);
     --card-md-h: clamp(4rem, 11vw, 5rem);
     --card-lg-h: clamp(4.5rem, 12vw, 5.75rem);
     --card-xs-h: clamp(2.75rem, 8vw, 3.25rem);
@@ -18,8 +18,8 @@
 
   @media (orientation: landscape) and (max-height: 520px) {
     :root {
-      --card-hand-h: clamp(3.1rem, 28vh, 3.85rem);
-      --card-table-h: clamp(3.65rem, 32vh, 4.5rem);
+      --card-hand-h: clamp(3.35rem, 30vh, 4.1rem);
+      --card-table-h: clamp(3.95rem, 34vh, 4.85rem);
       --card-md-h: clamp(3.25rem, 24vh, 4rem);
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
@@ -310,7 +310,7 @@
   }
 
   .card-unplayable-veil {
-    @apply pointer-events-none absolute inset-0 rounded-[0.4rem];
+    @apply pointer-events-none absolute inset-0 rounded-[0.45rem];
     background: linear-gradient(
       165deg,
       rgba(13, 40, 24, 0.06) 0%,
@@ -321,21 +321,24 @@
 
   .playing-card-shell {
     @apply bg-white;
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.98),
+      0 5px 14px rgba(0, 0, 0, 0.5);
   }
 
-  /* Classic solitaire / BBO-style card face */
+  /* Bold solitaire / BBO-style card face */
   .classic-card-face {
-    @apply relative h-full w-full select-none border border-neutral-300/90 bg-gradient-to-br from-white via-white to-neutral-100;
-    font-size: 22%;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+    @apply relative h-full w-full select-none border-2 border-neutral-400 bg-white;
+    font-size: 26%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 1);
   }
 
   .classic-card-face[data-red="true"] {
-    @apply text-[#c41e3a];
+    @apply text-[#dc2626];
   }
 
   .classic-card-face[data-red="false"] {
-    @apply text-[#141414];
+    @apply text-[#0a0a0a];
   }
 
   .classic-card-corner {
@@ -343,69 +346,87 @@
   }
 
   .classic-card-corner-tl {
-    @apply left-[7%] top-[5%];
+    @apply left-[6%] top-[4%];
   }
 
   .classic-card-corner-br {
-    @apply bottom-[5%] right-[7%] rotate-180;
+    @apply bottom-[4%] right-[6%] rotate-180;
   }
 
   .classic-card-rank {
-    @apply font-extrabold tracking-tight;
-    font-size: 1em;
+    @apply font-black tracking-tight;
+    font-size: 1.05em;
+    line-height: 0.95;
   }
 
   .classic-card-rank-ten {
-    font-size: 0.82em;
-    letter-spacing: -0.04em;
+    font-size: 0.78em;
+    letter-spacing: -0.06em;
   }
 
-  .classic-card-corner-suit {
-    @apply mt-[0.08em];
-    font-size: 0.82em;
+  .classic-card-suit-icon {
+    @apply block shrink-0;
+  }
+
+  .classic-card-suit-icon-corner {
+    @apply mt-[0.12em];
+    width: 1.15em;
+    height: 1.15em;
   }
 
   .classic-card-center {
     @apply absolute inset-0 flex flex-col items-center justify-center;
   }
 
-  .classic-card-pip {
-    @apply font-normal leading-none;
-    font-size: 3.2em;
+  .classic-card-suit-icon-center {
+    width: 58%;
+    height: 58%;
+    max-width: 78%;
+    max-height: 78%;
   }
 
   .classic-card-face-rank {
-    @apply font-extrabold leading-none;
-    font-size: 2.4em;
+    @apply font-black leading-none;
+    font-size: 2.75em;
   }
 
-  .classic-card-face-suit {
-    @apply mt-[0.06em] leading-none;
-    font-size: 1.35em;
+  .classic-card-suit-icon-face {
+    @apply mt-[0.08em];
+    width: 1.45em;
+    height: 1.45em;
   }
 
-  .classic-card-face[data-size="xs"],
+  .classic-card-face[data-size="xs"] {
+    font-size: 27%;
+  }
+
   .classic-card-face[data-size="sm"] {
-    font-size: 24%;
+    font-size: 28%;
   }
 
   .classic-card-face[data-size="md"],
   .classic-card-face[data-size="lg"] {
-    font-size: 21%;
+    font-size: 25%;
   }
 
   .classic-card-face[data-size="hand"],
   .classic-card-face[data-size="table"] {
-    font-size: 23%;
+    font-size: 28%;
   }
 
-  .classic-card-face[data-size="hand"] .classic-card-pip,
-  .classic-card-face[data-size="table"] .classic-card-pip {
-    font-size: 3.5em;
+  .classic-card-face[data-size="hand"] .classic-card-suit-icon-center,
+  .classic-card-face[data-size="table"] .classic-card-suit-icon-center {
+    width: 62%;
+    height: 62%;
   }
 
   .classic-card-face[data-size="table"] .classic-card-rank {
-    font-size: 1.05em;
+    font-size: 1.12em;
+  }
+
+  .classic-card-face[data-size="table"] .classic-card-suit-icon-corner {
+    width: 1.25em;
+    height: 1.25em;
   }
 
   /* Solitaire-style card back */
