@@ -226,13 +226,12 @@ export function PlayerHand({
         className="game-hand-fan touch-scroll-x px-0.5 py-0.5"
         style={
           {
-            // Slightly widen visible strip when few cards; tighten when many
             ["--hand-visible-strip" as string]:
               count <= 6
-                ? "max(1.55rem, calc(var(--card-hand-w) * 0.5))"
+                ? "max(1.35rem, calc(var(--card-hand-w) * 0.38))"
                 : count <= 10
-                  ? "max(1.4rem, calc(var(--card-hand-w) * 0.44))"
-                  : "max(1.35rem, calc(var(--card-hand-w) * 0.42))",
+                  ? "max(1.2rem, calc(var(--card-hand-w) * 0.32))"
+                  : "max(1.1rem, calc(var(--card-hand-w) * 0.28))",
           } as CSSProperties
         }
       >

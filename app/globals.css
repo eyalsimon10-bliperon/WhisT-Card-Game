@@ -5,43 +5,45 @@
 @layer base {
   :root {
     /*
-      Card sizing for WhisT web app.
-      Aspect ratio is 5:7 (width:height).
-      Hand cards leave a fixed LEFT index strip visible when fanned.
+      BBO-inspired dual card system.
+      Fan hand: narrow left strip stays visible under LTR overlap.
+      Table cards: full face with TL/BR corners.
     */
-    --card-hand-h: clamp(4.25rem, min(16vw, 12vh), 5.75rem);
-    --card-table-h: clamp(4.5rem, min(15vw, 14vh), 6.25rem);
+    --card-red: #c41e3a;
+    --card-black: #1a1a1a;
+    --card-face: #ffffff;
+    --card-border: #c8c8c8;
+    --card-hand-h: clamp(4.5rem, min(17vw, 13vh), 6rem);
+    --card-table-h: clamp(4.75rem, min(16vw, 15vh), 6.5rem);
     --card-md-h: clamp(4rem, 11vw, 5rem);
     --card-lg-h: clamp(4.5rem, 12vw, 5.75rem);
     --card-xs-h: clamp(2.75rem, 8vw, 3.25rem);
     --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
     --card-hand-w: calc(var(--card-hand-h) * 5 / 7);
-    /* Visible left strip must fit rank+suit (~42% of card width, min 1.4rem) */
-    --hand-visible-strip: max(1.4rem, calc(var(--card-hand-w) * 0.42));
+    /* BBO-like tight fan: ~28–32% of card width remains visible */
+    --hand-visible-strip: max(1.15rem, calc(var(--card-hand-w) * 0.3));
     --hand-fan-overlap: calc(var(--hand-visible-strip) - var(--card-hand-w));
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
   }
 
-  /* Portrait phones */
   @media (orientation: portrait) and (max-width: 640px) {
     :root {
-      --card-hand-h: clamp(4.1rem, 15vw, 5.35rem);
-      --card-table-h: clamp(4.25rem, 14vw, 5.75rem);
-      --hand-visible-strip: max(1.45rem, calc(var(--card-hand-w) * 0.44));
+      --card-hand-h: clamp(4.35rem, 16vw, 5.65rem);
+      --card-table-h: clamp(4.5rem, 15vw, 6rem);
+      --hand-visible-strip: max(1.2rem, calc(var(--card-hand-w) * 0.32));
     }
   }
 
-  /* Landscape phones — compact height, still readable index */
   @media (orientation: landscape) and (max-height: 520px) {
     :root {
-      --card-hand-h: clamp(3.15rem, 28vh, 3.85rem);
-      --card-table-h: clamp(3.5rem, 32vh, 4.35rem);
+      --card-hand-h: clamp(3.2rem, 30vh, 3.9rem);
+      --card-table-h: clamp(3.55rem, 34vh, 4.4rem);
       --card-md-h: clamp(3.25rem, 24vh, 4rem);
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-visible-strip: max(1.2rem, calc(var(--card-hand-w) * 0.46));
+      --hand-visible-strip: max(1.05rem, calc(var(--card-hand-w) * 0.34));
       --trick-zone-h: clamp(8rem, 50vh, 9.75rem);
       --trick-zone-w: clamp(13rem, 70vw, 16.5rem);
     }
@@ -350,140 +352,136 @@
 
   .playing-card-shell {
     container-type: size;
-    background: #f8f8f6;
+    background: var(--card-face);
   }
 
   /*
-    WhisT card face — minimal digital style.
-    Large rank + SVG suit on the LEFT edge so the fan overlap
-    (next card covers the right) never hides the index.
+    BBO-style cards
+    - Fan: rank+suit top-left in the visible strip
+    - Table: TL + BR corners, clean white face, soft suit-tint border
   */
-  .whist-card-face {
+  .bbo-card {
     position: relative;
     height: 100%;
     width: 100%;
     user-select: none;
-    background: linear-gradient(165deg, #ffffff 0%, #f5f5f2 100%);
-    border: 1px solid rgba(0, 0, 0, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    background: var(--card-face);
+    border: 1px solid var(--card-border);
+    border-radius: inherit;
   }
 
-  .whist-card-face[data-red="true"] {
-    color: #c40000;
+  .bbo-card[data-red="true"] {
+    color: var(--card-red);
   }
 
-  .whist-card-face[data-red="false"] {
-    color: #111111;
+  .bbo-card[data-red="false"] {
+    color: var(--card-black);
   }
 
-  .whist-card-index {
+  .bbo-card--table[data-red="true"] {
+    border-color: color-mix(in srgb, var(--card-red) 35%, #d0d0d0);
+  }
+
+  .bbo-card--table[data-red="false"] {
+    border-color: color-mix(in srgb, var(--card-black) 22%, #d0d0d0);
+  }
+
+  /* --- Fan / hand cards --- */
+  .bbo-card-fan-index {
     position: absolute;
-    inset-block: 0;
+    top: 4%;
     left: 0;
-    width: 46%;
-    max-width: 2.1rem;
+    width: 100%;
+    max-width: var(--hand-visible-strip);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0.12em;
-    padding: 4% 2%;
+    justify-content: flex-start;
+    gap: 0;
     line-height: 1;
-    text-align: center;
+    padding-top: 2%;
   }
 
-  .whist-card-rank {
-    font-weight: 900;
-    font-size: clamp(1.05rem, 46cqh, 2.35rem);
+  .bbo-card--fan .bbo-card-rank {
+    font-weight: 800;
+    font-size: clamp(0.95rem, 32cqh, 1.55rem);
     letter-spacing: -0.04em;
-    line-height: 0.9;
+    line-height: 1;
   }
 
-  .whist-card-rank--ten {
-    font-size: clamp(0.85rem, 36cqh, 1.85rem);
+  .bbo-card--fan .bbo-card-rank--ten {
+    font-size: clamp(0.78rem, 26cqh, 1.25rem);
     letter-spacing: -0.08em;
   }
 
-  .whist-card-suit {
+  .bbo-card--fan .bbo-card-suit {
     display: block;
-    flex-shrink: 0;
-    width: clamp(0.95rem, 38cqh, 1.9rem);
-    height: clamp(0.95rem, 38cqh, 1.9rem);
+    font-size: clamp(0.85rem, 28cqh, 1.35rem);
+    line-height: 1;
+    margin-top: 0.05em;
   }
 
-  /* Hand cards — emphasize index for mobile fan */
-  .whist-card-face[data-size="hand"] .whist-card-index {
-    width: 48%;
-    max-width: 2.25rem;
-  }
-
-  .whist-card-face[data-size="hand"] .whist-card-rank {
-    font-size: clamp(1.15rem, 50cqh, 2.5rem);
-  }
-
-  .whist-card-face[data-size="hand"] .whist-card-rank--ten {
-    font-size: clamp(0.9rem, 40cqh, 2rem);
-  }
-
-  .whist-card-face[data-size="hand"] .whist-card-suit {
-    width: clamp(1.05rem, 42cqh, 2.05rem);
-    height: clamp(1.05rem, 42cqh, 2.05rem);
-  }
-
-  /* Table cards */
-  .whist-card-face[data-size="table"] .whist-card-index {
-    width: 44%;
-    max-width: 2.35rem;
-  }
-
-  .whist-card-face[data-size="table"] .whist-card-rank {
-    font-size: clamp(1.1rem, 48cqh, 2.4rem);
-  }
-
-  .whist-card-face[data-size="table"] .whist-card-suit {
-    width: clamp(1rem, 40cqh, 2rem);
-    height: clamp(1rem, 40cqh, 2rem);
-  }
-
-  /* Landscape phone — keep index bold even when cards are shorter */
   @media (orientation: landscape) and (max-height: 520px) {
-    .whist-card-face[data-size="hand"] .whist-card-index {
-      width: 52%;
-      max-width: 1.85rem;
+    .bbo-card--fan .bbo-card-rank {
+      font-size: clamp(0.85rem, 34cqh, 1.2rem);
     }
 
-    .whist-card-face[data-size="hand"] .whist-card-rank {
-      font-size: clamp(1rem, 52cqh, 1.65rem);
+    .bbo-card--fan .bbo-card-rank--ten {
+      font-size: clamp(0.7rem, 28cqh, 1rem);
     }
 
-    .whist-card-face[data-size="hand"] .whist-card-rank--ten {
-      font-size: clamp(0.8rem, 42cqh, 1.35rem);
-    }
-
-    .whist-card-face[data-size="hand"] .whist-card-suit {
-      width: clamp(0.9rem, 44cqh, 1.45rem);
-      height: clamp(0.9rem, 44cqh, 1.45rem);
-    }
-
-    .whist-card-face[data-size="table"] .whist-card-rank {
-      font-size: clamp(0.95rem, 48cqh, 1.55rem);
-    }
-
-    .whist-card-face[data-size="table"] .whist-card-suit {
-      width: clamp(0.85rem, 40cqh, 1.35rem);
-      height: clamp(0.85rem, 40cqh, 1.35rem);
+    .bbo-card--fan .bbo-card-suit {
+      font-size: clamp(0.75rem, 30cqh, 1.05rem);
     }
   }
 
-  .whist-card-face[data-size="xs"] .whist-card-rank,
-  .whist-card-face[data-size="sm"] .whist-card-rank {
-    font-size: clamp(0.85rem, 42cqh, 1.4rem);
+  /* --- Table / played cards --- */
+  .bbo-card-corner {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
   }
 
-  .whist-card-face[data-size="xs"] .whist-card-suit,
-  .whist-card-face[data-size="sm"] .whist-card-suit {
-    width: clamp(0.75rem, 34cqh, 1.15rem);
-    height: clamp(0.75rem, 34cqh, 1.15rem);
+  .bbo-card-corner--tl {
+    top: 5%;
+    left: 8%;
+  }
+
+  .bbo-card-corner--br {
+    right: 8%;
+    bottom: 5%;
+    transform: rotate(180deg);
+  }
+
+  .bbo-card--table .bbo-card-rank {
+    font-weight: 800;
+    font-size: clamp(0.95rem, 22cqh, 1.45rem);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .bbo-card--table .bbo-card-rank--ten {
+    font-size: clamp(0.78rem, 18cqh, 1.15rem);
+    letter-spacing: -0.07em;
+  }
+
+  .bbo-card--table .bbo-card-suit {
+    display: block;
+    font-size: clamp(0.8rem, 18cqh, 1.15rem);
+    line-height: 1;
+    margin-top: 0.06em;
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .bbo-card--table .bbo-card-rank {
+      font-size: clamp(0.85rem, 24cqh, 1.15rem);
+    }
+
+    .bbo-card--table .bbo-card-suit {
+      font-size: clamp(0.7rem, 20cqh, 0.95rem);
+    }
   }
 
   /* Solitaire-style card back */
