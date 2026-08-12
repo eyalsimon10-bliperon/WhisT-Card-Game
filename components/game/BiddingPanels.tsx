@@ -471,7 +471,7 @@ export function CardExchangePanel({
 
       {!isReady && player && (
         <>
-          <div className="game-hand-fan game-hand-fan-mini touch-scroll-x overflow-hidden px-0.5">
+          <div className="game-hand-fan game-hand-fan--bbo game-hand-fan-mini touch-scroll-x overflow-hidden px-0.5">
             {player.hand.map((card, index) => {
               const selected = selectedCardIds.includes(card.id);
               const full = selectedCardIds.length >= 3 && !selected;
