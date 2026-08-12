@@ -220,7 +220,7 @@ export function PlayerHand({
 }: PlayerHandProps) {
   return (
     <div className="w-full overflow-hidden">
-      <div className="game-hand-fan touch-scroll-x px-1">
+      <div className="game-hand-fan touch-scroll-x px-1 py-0.5">
         {hand.map((card, index) => {
           const isLegal = legalCardIds.has(card.id);
           const isSelected = selectedCardId === card.id;
@@ -230,7 +230,7 @@ export function PlayerHand({
             <div
               key={card.id}
               className="relative shrink-0"
-              style={{ zIndex: isSelected ? 30 : isUnplayable ? index : index + 1 }}
+              style={{ zIndex: isSelected ? 50 : index + 1 }}
             >
               <PlayingCard
                 card={card}

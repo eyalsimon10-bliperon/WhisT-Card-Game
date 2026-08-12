@@ -5,13 +5,13 @@
 @layer base {
   :root {
     /* Fluid card heights — scale with viewport while keeping readable minimums */
-    --card-hand-h: clamp(4.1rem, 14vw, 5.75rem);
+    --card-hand-h: clamp(4.35rem, 15vw, 6.25rem);
     --card-table-h: clamp(4.85rem, 16vw, 7rem);
     --card-md-h: clamp(4rem, 11vw, 5rem);
     --card-lg-h: clamp(4.5rem, 12vw, 5.75rem);
     --card-xs-h: clamp(2.75rem, 8vw, 3.25rem);
     --card-sm-h: clamp(3.25rem, 9vw, 3.75rem);
-    --hand-fan-overlap: calc(var(--card-hand-h) * -0.24);
+    --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.34);
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
   }
@@ -24,7 +24,7 @@
       --card-lg-h: clamp(3.5rem, 26vh, 4.25rem);
       --card-xs-h: clamp(2.5rem, 18vh, 3rem);
       --card-sm-h: clamp(2.85rem, 20vh, 3.35rem);
-      --hand-fan-overlap: calc(var(--card-hand-h) * -0.22);
+      --hand-fan-overlap: calc(var(--card-hand-h) * 5 / 7 * -0.32);
       --trick-zone-h: clamp(8.5rem, 52vh, 10rem);
       --trick-zone-w: clamp(13.5rem, 72vw, 17rem);
     }
@@ -131,21 +131,26 @@
   }
 
   .game-hand-fan {
+    direction: ltr;
     @apply flex min-w-0 justify-center;
   }
 
   .game-hand-fan > * + * {
-    margin-inline-start: var(--hand-fan-overlap);
+    margin-left: var(--hand-fan-overlap);
   }
 
   @media (min-width: 641px) {
     .game-hand-fan > * + * {
-      margin-inline-start: 0.4rem;
+      margin-left: 0.4rem;
     }
   }
 
+  .game-hand-fan-mini {
+    direction: ltr;
+  }
+
   .game-hand-fan-mini > * + * {
-    margin-inline-start: calc(var(--card-hand-h) * -0.18);
+    margin-left: calc(var(--card-hand-h) * 5 / 7 * -0.28);
   }
 
   .card-size-hand {
@@ -321,80 +326,100 @@
 
   .playing-card-shell {
     container-type: size;
-    @apply bg-white;
+    @apply bg-[#f7f7f5];
   }
 
-  /* Corner index only — scales with card height via cqh units */
-  .classic-card-face {
-    @apply relative h-full w-full select-none bg-gradient-to-br from-white via-white to-neutral-100;
+  /* High-readability mobile card: rank + suit block on the right */
+  .readable-card-face {
+    @apply relative h-full w-full select-none border border-neutral-300/80 bg-[#fafaf8];
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 
-  .classic-card-face[data-red="true"] {
-    @apply text-[#dc2626];
+  .readable-card-face[data-red="true"] {
+    color: #c40000;
   }
 
-  .classic-card-face[data-red="false"] {
-    @apply text-[#0a0a0a];
+  .readable-card-face[data-red="false"] {
+    color: #111111;
   }
 
-  .classic-card-corner {
-    @apply absolute flex flex-col items-center;
-    gap: 4cqh;
+  .readable-card-index {
+    position: absolute;
+    right: 7cqw;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5cqh;
     line-height: 1;
+    min-width: 38cqw;
   }
 
-  .classic-card-corner-tl {
-    left: 8cqw;
-    top: 7cqh;
+  .readable-card-rank {
+    font-weight: 900;
+    font-size: 1rem;
+    font-size: 50cqh;
+    letter-spacing: -0.03em;
+    line-height: 0.85;
   }
 
-  .classic-card-corner-br {
-    right: 8cqw;
-    bottom: 7cqh;
-    transform: rotate(180deg);
-  }
-
-  .classic-card-rank {
-    @apply font-black;
+  .readable-card-rank-ten {
     font-size: 0.875rem;
+    font-size: 40cqh;
+    letter-spacing: -0.07em;
+  }
+
+  .readable-card-suit {
+    display: block;
+    flex-shrink: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    width: 42cqh;
+    height: 42cqh;
+  }
+
+  .readable-card-face[data-size="hand"] .readable-card-rank {
+    font-size: 52cqh;
+  }
+
+  .readable-card-face[data-size="hand"] .readable-card-rank-ten {
     font-size: 42cqh;
-    letter-spacing: -0.02em;
   }
 
-  .classic-card-rank-ten {
-    font-size: 0.75rem;
-    font-size: 34cqh;
-    letter-spacing: -0.08em;
+  .readable-card-face[data-size="hand"] .readable-card-suit {
+    width: 44cqh;
+    height: 44cqh;
   }
 
-  .classic-card-suit-icon {
-    @apply block shrink-0;
-    width: 0.75rem;
-    height: 0.75rem;
-    width: 34cqh;
-    height: 34cqh;
+  .readable-card-face[data-size="hand"] .readable-card-index {
+    right: 6cqw;
+    min-width: 40cqw;
   }
 
-  .classic-card-face[data-size="table"] .classic-card-rank {
-    font-size: 44cqh;
+  .readable-card-face[data-size="table"] .readable-card-rank {
+    font-size: 48cqh;
   }
 
-  .classic-card-face[data-size="table"] .classic-card-rank-ten {
-    font-size: 36cqh;
+  .readable-card-face[data-size="table"] .readable-card-rank-ten {
+    font-size: 38cqh;
   }
 
-  .classic-card-face[data-size="table"] .classic-card-suit-icon {
-    width: 36cqh;
-    height: 36cqh;
+  .readable-card-face[data-size="table"] .readable-card-suit {
+    width: 40cqh;
+    height: 40cqh;
   }
 
-  .classic-card-face[data-size="hand"] .classic-card-rank {
-    font-size: 43cqh;
+  .readable-card-face[data-size="xs"] .readable-card-rank,
+  .readable-card-face[data-size="sm"] .readable-card-rank {
+    font-size: 46cqh;
   }
 
-  .classic-card-face[data-size="hand"] .classic-card-suit-icon {
-    width: 35cqh;
-    height: 35cqh;
+  .readable-card-face[data-size="xs"] .readable-card-suit,
+  .readable-card-face[data-size="sm"] .readable-card-suit {
+    width: 38cqh;
+    height: 38cqh;
   }
 
   /* Solitaire-style card back */

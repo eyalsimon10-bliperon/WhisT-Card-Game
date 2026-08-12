@@ -11,28 +11,25 @@ interface ClassicCardFaceProps {
 
 const RED_SUITS = new Set<Suit>(["hearts", "diamonds"]);
 
+/**
+ * High-readability mobile card: one large rank + suit block on the right edge.
+ * No corner indices, no center pips.
+ */
 export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProps) {
   const isRed = RED_SUITS.has(suit);
 
   return (
     <div
-      className="classic-card-face"
+      className="readable-card-face"
       data-size={size}
       data-red={isRed ? "true" : "false"}
       aria-hidden
     >
-      <div className="classic-card-corner classic-card-corner-tl">
-        <span className={`classic-card-rank ${rank === "10" ? "classic-card-rank-ten" : ""}`}>
+      <div className="readable-card-index">
+        <span className={`readable-card-rank ${rank === "10" ? "readable-card-rank-ten" : ""}`}>
           {rank}
         </span>
-        <SuitIcon suit={suit} className="classic-card-suit-icon" />
-      </div>
-
-      <div className="classic-card-corner classic-card-corner-br">
-        <span className={`classic-card-rank ${rank === "10" ? "classic-card-rank-ten" : ""}`}>
-          {rank}
-        </span>
-        <SuitIcon suit={suit} className="classic-card-suit-icon" />
+        <SuitIcon suit={suit} className="readable-card-suit" />
       </div>
     </div>
   );
