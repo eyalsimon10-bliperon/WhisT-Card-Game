@@ -94,7 +94,7 @@ function TrickCard({
       <div className="flex flex-col items-center gap-0.5 landscape-phone:gap-0">
         <PlayingCard card={play.card} size="table" elevated />
         <span
-          className={`max-w-[5.5rem] truncate rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-md landscape-phone:max-w-[4rem] landscape-phone:px-1.5 landscape-phone:py-0 landscape-phone:text-[9px] ${
+          className={`max-w-[6rem] truncate rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-md landscape-phone:max-w-[5rem] landscape-phone:px-1.5 landscape-phone:py-0.5 landscape-phone:text-[10px] ${
             isWinner && (isCollecting || isAwaitingCollect)
               ? "bg-gold-500 text-felt-900"
               : "bg-black/70 text-white/90 ring-1 ring-white/20"
@@ -173,19 +173,19 @@ export function TrickArea({ state, mySeat }: TrickAreaProps) {
         })}
 
         {isCollecting && winnerName && (
-          <div className="trick-winner-banner absolute bottom-1 left-1/2 z-[60] -translate-x-1/2 rounded-full border border-gold-400/50 bg-gold-500/90 px-3 py-1 text-[10px] font-bold text-felt-900 shadow-lg shadow-gold-500/30 landscape-phone:bottom-0 landscape-phone:px-2 landscape-phone:py-0.5 landscape-phone:text-[9px]">
+          <div className="trick-winner-banner absolute bottom-1 left-1/2 z-[60] -translate-x-1/2 rounded-full border border-gold-400/50 bg-gold-500/90 px-3 py-1 text-xs font-bold text-felt-900 shadow-lg shadow-gold-500/30 landscape-phone:bottom-0 landscape-phone:px-2.5 landscape-phone:py-0.5 landscape-phone:text-[11px]">
             🏆 {winnerName} לקח/ה
           </div>
         )}
 
         {isAwaitingCollect && winnerName && !isCollecting && (
-          <div className="absolute bottom-1 left-1/2 z-[60] -translate-x-1/2 rounded-full border border-gold-400/30 bg-black/60 px-2.5 py-0.5 text-[9px] font-semibold text-gold-300 backdrop-blur-sm landscape-phone:bottom-0 landscape-phone:text-[8px]">
+          <div className="absolute bottom-1 left-1/2 z-[60] -translate-x-1/2 rounded-full border border-gold-400/30 bg-black/60 px-2.5 py-0.5 text-[11px] font-semibold text-gold-300 backdrop-blur-sm landscape-phone:bottom-0 landscape-phone:text-[10px]">
             {winnerName} זוכה בלקיחה
           </div>
         )}
 
         {state.contractBid && (
-          <div className="absolute top-1 left-1/2 z-[5] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-2.5 py-0.5 text-[9px] text-gold-300 backdrop-blur-sm landscape-phone:top-0 landscape-phone:text-[8px]">
+          <div className="absolute top-1 left-1/2 z-[5] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-2.5 py-0.5 text-[11px] text-gold-300 backdrop-blur-sm landscape-phone:top-0 landscape-phone:text-[10px]">
             {state.contractBid.tricks}{" "}
             {state.contractBid.trump === "NT" ? "NT" : state.contractBid.trump}
           </div>

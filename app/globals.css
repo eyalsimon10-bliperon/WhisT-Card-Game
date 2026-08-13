@@ -232,7 +232,190 @@
   }
 
   .game-hud-slim {
-    @apply flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/45 px-2.5 py-1 backdrop-blur-md;
+    @apply flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/45 px-2.5 py-1.5 backdrop-blur-md;
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-hud-slim {
+      @apply px-2 py-1;
+    }
+  }
+
+  /* Top score strip — readable names + scores in both orientations */
+  .game-scoreboard {
+    display: flex;
+    align-items: stretch;
+    gap: 0.45rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.28));
+    padding: 0.4rem 0.45rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .game-scoreboard-round {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.4rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgba(232, 197, 71, 0.28);
+    background: rgba(232, 197, 71, 0.1);
+  }
+
+  .game-scoreboard-round-num {
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #f0d060;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .game-scoreboard-round-label {
+    margin-top: 0.12rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .game-scoreboard-phase {
+    margin-top: 0.15rem;
+    max-width: 3.6rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .game-scoreboard-players {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.28rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .game-score-cell {
+    min-width: 0;
+    text-align: center;
+    padding: 0.18rem 0.12rem 0.22rem;
+    border-radius: 0.55rem;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .game-score-cell.is-you {
+    background: rgba(232, 197, 71, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(232, 197, 71, 0.22);
+  }
+
+  .game-score-cell.is-turn {
+    box-shadow: inset 0 0 0 1.5px rgba(232, 197, 71, 0.55);
+    background: rgba(232, 197, 71, 0.16);
+  }
+
+  .game-score-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .game-score-value {
+    margin-top: 0.08rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #f0d060;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .game-score-bid {
+    margin-top: 0.12rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.62);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .game-score-bid.is-met {
+    color: #6ee7b7;
+  }
+
+  .game-score-bid.is-short {
+    color: #fcd34d;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .game-scoreboard {
+      gap: 0.4rem;
+      padding: 0.45rem 0.4rem;
+    }
+
+    .game-scoreboard-round {
+      min-width: 3.15rem;
+    }
+
+    .game-scoreboard-round-num {
+      font-size: 1.12rem;
+    }
+
+    .game-score-name {
+      font-size: 0.78rem;
+    }
+
+    .game-score-value {
+      font-size: 1.28rem;
+    }
+
+    .game-score-bid {
+      font-size: 0.74rem;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-scoreboard {
+      gap: 0.35rem;
+      padding: 0.28rem 0.35rem;
+      border-radius: 0.7rem;
+    }
+
+    .game-scoreboard-round {
+      min-width: 3rem;
+      padding: 0.1rem 0.3rem;
+    }
+
+    .game-scoreboard-round-num {
+      font-size: 0.95rem;
+    }
+
+    .game-scoreboard-round-label {
+      font-size: 0.55rem;
+    }
+
+    .game-scoreboard-phase {
+      display: none;
+    }
+
+    .game-score-name {
+      font-size: 0.68rem;
+    }
+
+    .game-score-value {
+      font-size: 1.05rem;
+    }
+
+    .game-score-bid {
+      font-size: 0.66rem;
+    }
   }
 
   .bid-phase-stack {

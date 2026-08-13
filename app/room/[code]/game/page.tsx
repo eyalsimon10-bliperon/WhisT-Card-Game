@@ -217,7 +217,11 @@ export default function GamePage() {
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-2 pb-0 pt-0.5 landscape-phone:px-1 portrait-phone:px-1.5">
         <header className="shrink-0">
-          <Scoreboard state={state} phaseLabel={getPhaseLabel(state.phase)} />
+          <Scoreboard
+            state={state}
+            phaseLabel={getPhaseLabel(state.phase)}
+            humanPlayerId={humanId}
+          />
         </header>
 
         <div className="relative min-h-0 flex-1">

@@ -54,7 +54,7 @@ function StatPill({
 }) {
   return (
     <div
-      className={`flex flex-col items-center rounded-md px-1.5 py-0.5 portrait-phone:px-1 portrait-phone:py-0 landscape-phone:px-1 landscape-phone:py-0 ${
+      className={`flex flex-col items-center rounded-md px-2 py-0.5 portrait-phone:px-1.5 portrait-phone:py-0.5 landscape-phone:px-1.5 landscape-phone:py-0.5 ${
         highlight
           ? "bg-gold-500/20 ring-1 ring-gold-400/40"
           : warn
@@ -62,11 +62,11 @@ function StatPill({
             : "bg-black/30 ring-1 ring-white/10"
       }`}
     >
-      <span className={`font-medium uppercase tracking-wider text-white/45 ${micro ? "text-[7px]" : "text-[8px]"}`}>
+      <span className={`font-medium uppercase tracking-wider text-white/50 ${micro ? "text-[8px]" : "text-[9px]"}`}>
         {label}
       </span>
       <span
-        className={`font-bold tabular-nums leading-none ${micro ? "text-xs" : "text-sm"} ${
+        className={`font-bold tabular-nums leading-none ${micro ? "text-sm" : "text-base"} ${
           highlight ? "text-gold-300" : warn ? "text-amber-300" : "text-white"
         }`}
       >
@@ -92,28 +92,28 @@ function OpponentChip({
 
   return (
     <div
-      className={`flex max-w-[6.5rem] items-center gap-1 rounded-full border px-1.5 py-0.5 backdrop-blur-md landscape-phone:max-w-[5.75rem] landscape-phone:gap-0.5 landscape-phone:px-1 ${
+      className={`flex max-w-[8.75rem] items-center gap-1.5 rounded-full border px-2 py-1 backdrop-blur-md landscape-phone:max-w-[7.75rem] landscape-phone:gap-1 landscape-phone:px-1.5 landscape-phone:py-0.5 ${
         isActive
           ? "border-gold-400/60 bg-gold-500/20 shadow-sm shadow-gold-500/20"
           : "border-white/10 bg-black/55"
       }`}
     >
       <span
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold landscape-phone:h-4 landscape-phone:w-4 landscape-phone:text-[7px] ${
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold landscape-phone:h-6 landscape-phone:w-6 landscape-phone:text-[10px] ${
           isActive ? "bg-gold-500 text-felt-900" : "bg-white/10 text-white/80"
         }`}
       >
         {player.name.charAt(0)}
       </span>
-      <span className="min-w-0 flex-1 truncate text-[9px] font-semibold text-white/90 landscape-phone:text-[8px]">
+      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-white landscape-phone:text-[11px]">
         {player.name}
       </span>
       {showStats && trickBid !== null && trickBid !== undefined ? (
-        <span className="shrink-0 tabular-nums text-[8px] font-bold text-gold-300 landscape-phone:text-[7px]">
+        <span className="shrink-0 tabular-nums text-[11px] font-bold text-gold-300 landscape-phone:text-[10px]">
           {player.tricksWon}/{trickBid}
         </span>
       ) : (
-        <span className="shrink-0 text-[8px] text-white/45 landscape-phone:text-[7px]">🃏{player.hand.length}</span>
+        <span className="shrink-0 text-[11px] text-white/50 landscape-phone:text-[10px]">🃏{player.hand.length}</span>
       )}
     </div>
   );
@@ -137,7 +137,7 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
       className={`relative transition-all duration-300 ${
         isActive ? "scale-[1.03] z-20 portrait-phone:scale-100 landscape-phone:scale-100" : "z-10"
       } w-full max-w-[11rem] portrait-phone:max-w-none landscape-phone:max-w-none ${
-        isMe ? "portrait-phone:mx-auto portrait-phone:max-w-[20rem] landscape-phone:mx-auto landscape-phone:max-w-[22rem]" : "portrait-phone:max-w-[6.5rem] landscape-phone:max-w-[5.75rem]"
+        isMe ? "portrait-phone:mx-auto portrait-phone:max-w-[20rem] landscape-phone:mx-auto landscape-phone:max-w-[22rem]" : "portrait-phone:max-w-[8.75rem] landscape-phone:max-w-[7.75rem]"
       }`}
     >
       {isActive && (
@@ -196,16 +196,16 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
             }`}
           >
             <div className={isMe ? "portrait-phone:min-w-0 landscape-phone:min-w-0" : ""}>
-              <p className="truncate text-xs font-bold text-white portrait-phone:text-[11px] landscape-phone:text-[11px]">
+              <p className="truncate text-sm font-bold text-white portrait-phone:text-xs landscape-phone:text-xs">
                 {isMe ? "את/ה" : player.name}
               </p>
               <div className="mt-0.5 flex items-center gap-1.5 portrait-phone:mt-0 portrait-phone:gap-1 landscape-phone:mt-0 landscape-phone:gap-1">
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-white/5 px-1.5 py-0.5 text-[9px] text-white/50 landscape-phone:text-[8px]">
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-white/5 px-1.5 py-0.5 text-[11px] text-white/55 landscape-phone:text-[10px]">
                   <span aria-hidden>🃏</span>
-                  <span className="tabular-nums font-semibold text-white/70">{player.hand.length}</span>
+                  <span className="tabular-nums font-semibold text-white/75">{player.hand.length}</span>
                 </span>
                 {isActive && (
-                  <span className="rounded-md bg-gold-500/25 px-1.5 py-0.5 text-[8px] font-bold text-gold-300 animate-pulse">
+                  <span className="rounded-md bg-gold-500/25 px-1.5 py-0.5 text-[10px] font-bold text-gold-300 animate-pulse">
                     תור
                   </span>
                 )}
@@ -345,15 +345,15 @@ export function HumanPlayerHud({
         >
           <div className="flex min-w-0 items-center gap-2">
             <span
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold landscape-phone:h-6 landscape-phone:w-6 landscape-phone:text-[11px] ${
                 isActive ? "bg-gold-500 text-felt-900" : "bg-white/10 text-white/80"
               }`}
             >
               {player.name.charAt(0)}
             </span>
-            <span className="truncate text-xs font-semibold text-white">את/ה</span>
+            <span className="truncate text-sm font-semibold text-white landscape-phone:text-xs">את/ה</span>
             {isActive && (
-              <span className="rounded-md bg-gold-500/25 px-1.5 py-0.5 text-[9px] font-bold text-gold-300">
+              <span className="rounded-md bg-gold-500/25 px-1.5 py-0.5 text-[10px] font-bold text-gold-300">
                 תור
               </span>
             )}

@@ -45,11 +45,11 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
   const seatLabels = ["את/ה", "ימין", "מול", "שמאל"];
 
   return (
-    <div className="shrink-0 px-0.5 landscape-phone:mb-0 portrait-phone:mb-1 mb-1.5">
-      <p className="mb-1 text-center text-[9px] font-medium uppercase tracking-wide text-white/40 portrait-phone:hidden landscape-phone:hidden">
+    <div className="shrink-0 px-0.5 landscape-phone:mb-0 portrait-phone:mb-1.5 mb-1.5">
+      <p className="mb-1 text-center text-[10px] font-medium uppercase tracking-wide text-white/40 portrait-phone:hidden landscape-phone:hidden">
         מעקב הכרזות
       </p>
-      <div className="grid grid-cols-4 gap-1 landscape-phone:gap-0.5 portrait-phone:gap-0.5">
+      <div className="grid grid-cols-4 gap-1.5 landscape-phone:gap-1 portrait-phone:gap-1.5">
         {seats.map((seatIndex, i) => {
           const player = state.players.find((p) => p.seatIndex === seatIndex);
           if (!player) return null;
@@ -60,7 +60,7 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
           return (
             <div
               key={seatIndex}
-              className={`relative flex flex-col items-center rounded-xl border px-1 py-1.5 transition-all duration-300 portrait-phone:rounded-lg portrait-phone:px-0.5 portrait-phone:py-0.5 landscape-phone:rounded-lg landscape-phone:px-0.5 landscape-phone:py-0.5 ${
+              className={`relative flex flex-col items-center rounded-xl border px-1.5 py-2 transition-all duration-300 portrait-phone:rounded-xl portrait-phone:px-1 portrait-phone:py-1.5 landscape-phone:rounded-lg landscape-phone:px-1 landscape-phone:py-1 ${
                 display === "thinking" || display === "confirm"
                   ? "border-gold-400/70 bg-gold-500/15 shadow-lg shadow-gold-500/20"
                   : display === "pass"
@@ -71,51 +71,51 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
               }`}
             >
               {(display === "thinking" || display === "confirm") && (
-                <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-gold-500 px-1 py-0.5 text-[7px] font-bold text-felt-900 portrait-phone:-top-0.5">
+                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 rounded-full bg-gold-500 px-1.5 py-0.5 text-[9px] font-bold text-felt-900 landscape-phone:-top-1 landscape-phone:text-[8px]">
                   {display === "confirm" ? "אישור" : "תור"}
                 </span>
               )}
 
               <div
-                className={`mb-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold portrait-phone:mb-0 portrait-phone:h-5 portrait-phone:w-5 portrait-phone:text-[8px] landscape-phone:h-5 landscape-phone:w-5 ${
+                className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold portrait-phone:mb-0.5 portrait-phone:h-7 portrait-phone:w-7 portrait-phone:text-[11px] landscape-phone:mb-0.5 landscape-phone:h-6 landscape-phone:w-6 landscape-phone:text-[10px] ${
                   isMe ? "bg-gold-500/30 text-gold-200" : "bg-white/10 text-white/70"
                 }`}
               >
                 {player.name.charAt(0)}
               </div>
 
-              <p className="max-w-full truncate text-[8px] font-semibold text-white/80 portrait-phone:text-[7px] landscape-phone:text-[7px]">
+              <p className="max-w-full truncate text-[11px] font-semibold text-white/90 portrait-phone:text-[11px] landscape-phone:text-[10px]">
                 {isMe ? "את/ה" : player.name}
               </p>
-              <p className="text-[7px] text-white/30 portrait-phone:hidden landscape-phone:hidden">{seatLabels[i]}</p>
+              <p className="text-[8px] text-white/30 portrait-phone:hidden landscape-phone:hidden">{seatLabels[i]}</p>
 
-              <div className="mt-0.5 flex min-h-[1.1rem] items-center justify-center portrait-phone:min-h-[0.9rem] landscape-phone:min-h-[0.9rem]">
+              <div className="mt-1 flex min-h-[1.25rem] items-center justify-center portrait-phone:mt-0.5 portrait-phone:min-h-[1.2rem] landscape-phone:mt-0.5 landscape-phone:min-h-[1.1rem]">
                 {display === "pass" && (
-                  <span className="contract-pass-badge rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white/60">
+                  <span className="contract-pass-badge rounded-md bg-white/10 px-2 py-0.5 text-xs font-bold tracking-wide text-white/70 landscape-phone:text-[11px]">
                     PASS
                   </span>
                 )}
                 {display === "bid" && state.currentHighBid && (
-                  <span className="text-center text-[10px] font-bold text-emerald-300">
+                  <span className="text-center text-sm font-bold text-emerald-300 landscape-phone:text-xs">
                     {state.currentHighBid.tricks}
                     <span className="mx-0.5">{trumpBadge(state.currentHighBid.trump)}</span>
                   </span>
                 )}
                 {display === "confirm" && state.currentHighBid && (
-                  <span className="text-center text-[10px] font-bold text-gold-300">
+                  <span className="text-center text-sm font-bold text-gold-300 landscape-phone:text-xs">
                     {state.currentHighBid.tricks}
                     <span className="mx-0.5">{trumpBadge(state.currentHighBid.trump)}</span>
                   </span>
                 )}
                 {display === "thinking" && (
                   <span className="flex gap-0.5">
-                    <span className="h-1 w-1 animate-bounce rounded-full bg-gold-400 [animation-delay:0ms]" />
-                    <span className="h-1 w-1 animate-bounce rounded-full bg-gold-400 [animation-delay:150ms]" />
-                    <span className="h-1 w-1 animate-bounce rounded-full bg-gold-400 [animation-delay:300ms]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gold-400 [animation-delay:0ms]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gold-400 [animation-delay:150ms]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gold-400 [animation-delay:300ms]" />
                   </span>
                 )}
                 {display === "waiting" && (
-                  <span className="text-[9px] text-white/20">—</span>
+                  <span className="text-xs text-white/25">—</span>
                 )}
               </div>
             </div>
@@ -124,7 +124,7 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
       </div>
 
       {state.contractConfirmPending && state.currentHighBid && (
-        <p className="mt-1 text-center text-[9px] text-gold-300/90 portrait-phone:text-[8px] landscape-phone:mt-0.5 landscape-phone:text-[8px]">
+        <p className="mt-1.5 text-center text-[11px] text-gold-300/90 portrait-phone:text-[11px] landscape-phone:mt-1 landscape-phone:text-[10px]">
           3 PASS —{" "}
           <span className="font-semibold">
             {state.players.find((p) => p.seatIndex === state.highBidderIndex)?.name}
@@ -230,7 +230,7 @@ export function ContractBiddingPanel({
   return (
     <div className="bid-panel">
       <div className="shrink-0 text-center">
-        <p className="text-xs font-medium text-white/50 portrait-phone:text-[11px] landscape-phone:text-[10px]">
+        <p className="text-sm font-medium text-white/55 portrait-phone:text-xs landscape-phone:text-[11px]">
           חלק א&apos; — הכרזת חוזה ושליט
         </p>
         {isConfirmPhase ? (
@@ -383,7 +383,7 @@ export function TrickBiddingPanel({
   return (
     <div className="bid-panel">
       <div className="shrink-0 text-center">
-        <p className="text-xs font-medium text-white/50 portrait-phone:text-[11px] landscape-phone:text-[10px]">
+        <p className="text-sm font-medium text-white/55 portrait-phone:text-xs landscape-phone:text-[11px]">
           חלק ב&apos; — הכרזת לקיחות
         </p>
         {state.contractBid && (
@@ -427,12 +427,12 @@ export function TrickBiddingPanel({
         </div>
       )}
 
-      <div className="flex flex-wrap justify-center gap-1.5 portrait-phone:gap-1 landscape-phone:gap-1">
+      <div className="flex flex-wrap justify-center gap-1.5 portrait-phone:gap-1.5 landscape-phone:gap-1">
         {state.players.map((p) => {
           const bid = state.trickBids[p.seatIndex];
           if (bid === null) return null;
           return (
-            <span key={p.id} className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] portrait-phone:text-[8px] landscape-phone:text-[8px]">
+            <span key={p.id} className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold portrait-phone:text-[11px] landscape-phone:px-2 landscape-phone:py-0.5 landscape-phone:text-[11px]">
               {p.name}: {bid}
             </span>
           );
@@ -509,33 +509,46 @@ export function CardExchangePanel({
 interface ScoreboardProps {
   state: GameState;
   phaseLabel?: string;
+  humanPlayerId?: string;
 }
 
-export function Scoreboard({ state, phaseLabel }: ScoreboardProps) {
+export function Scoreboard({ state, phaseLabel, humanPlayerId }: ScoreboardProps) {
   return (
-    <div className="flex items-center justify-between gap-1.5 rounded-lg border border-white/10 bg-black/30 px-2 py-1 landscape-phone:py-0.5 portrait-phone:py-0.5">
-      <div className="flex shrink-0 items-center gap-2">
-        <div>
-          <p className="text-[8px] text-white/40 landscape-phone:text-[7px]">סיבוב</p>
-          <p className="text-xs font-bold leading-none landscape-phone:text-[10px]">
-            {state.currentRound}/{state.totalRounds}
-          </p>
-        </div>
-        {phaseLabel && (
-          <span className="max-w-[5.5rem] truncate rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] text-white/55 landscape-phone:max-w-[4.5rem] landscape-phone:text-[7px]">
-            {phaseLabel}
-          </span>
-        )}
+    <div className="game-scoreboard">
+      <div className="game-scoreboard-round">
+        <span className="game-scoreboard-round-num">
+          {state.currentRound}/{state.totalRounds}
+        </span>
+        <span className="game-scoreboard-round-label">סיבוב</span>
+        {phaseLabel && <span className="game-scoreboard-phase">{phaseLabel}</span>}
       </div>
-      <div className="flex min-w-0 flex-1 justify-end gap-1.5 landscape-phone:gap-1 portrait-phone:gap-1">
-        {state.players.map((p) => (
-          <div key={p.id} className="shrink-0 text-center">
-            <p className="max-w-[2.25rem] truncate text-[8px] text-white/50 landscape-phone:max-w-[1.75rem] landscape-phone:text-[7px]">
-              {p.name}
-            </p>
-            <p className="text-[10px] font-bold leading-none text-gold-300 landscape-phone:text-[9px]">{p.totalScore}</p>
-          </div>
-        ))}
+      <div className="game-scoreboard-players">
+        {state.players.map((p) => {
+          const bid = state.trickBids[p.seatIndex];
+          const showBid = bid !== null && bid !== undefined;
+          const isYou = humanPlayerId != null && p.id === humanPlayerId;
+          const isTurn = state.currentPlayerIndex === p.seatIndex;
+          const bidMet = showBid && state.phase === "playing" ? p.tricksWon >= bid : null;
+
+          return (
+            <div
+              key={p.id}
+              className={`game-score-cell ${isYou ? "is-you" : ""} ${isTurn ? "is-turn" : ""}`}
+            >
+              <p className="game-score-name">{isYou ? "את/ה" : p.name}</p>
+              <p className="game-score-value">{p.totalScore}</p>
+              {showBid && (
+                <p
+                  className={`game-score-bid ${
+                    bidMet === true ? "is-met" : bidMet === false && p.tricksWon > 0 ? "is-short" : ""
+                  }`}
+                >
+                  {state.phase === "playing" ? `${p.tricksWon}/${bid}` : `הכרזה ${bid}`}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
