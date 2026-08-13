@@ -14,6 +14,7 @@ import {
 import { HumanPlayerHud, OpponentSeats } from "@/components/game/PlayerSeat";
 import { getMySeat, PlayerHand, TrickArea } from "@/components/game/TrickArea";
 import { useGameRealtime } from "@/hooks/useGameRealtime";
+import { unlockCardAudio } from "@/lib/audio/card-sounds";
 import { fetchRoom, postGameAction } from "@/lib/api/client";
 import { getDisabledTricksForCurrentBidder } from "@/lib/game/bots";
 import { getPhaseLabel } from "@/lib/game/engine";
@@ -37,6 +38,12 @@ export default function GamePage() {
   const humanId = session?.playerId ?? "";
 
   useGameRealtime(code, setState);
+
+  useEffect(() => {
+    const unlock = () => unlockCardAudio();
+    document.addEventListener("pointerdown", unlock, { once: true });
+    return () => document.removeEventListener("pointerdown", unlock);
+  }, []);
 
   useEffect(() => {
     if (!humanId) {

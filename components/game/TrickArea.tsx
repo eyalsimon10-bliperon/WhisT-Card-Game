@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
+import { playCardSlide, unlockCardAudio } from "@/lib/audio/card-sounds";
 import { scalePx, useTrickLayoutScale } from "@/lib/hooks/useTrickLayoutScale";
 import type { Card, TrickPlay } from "@/lib/game/types";
 import type { GameState } from "@/lib/game/types";
@@ -110,6 +111,7 @@ function TrickCard({
 export function TrickArea({ state, mySeat }: TrickAreaProps) {
   const layoutScale = useTrickLayoutScale();
   const prevTrickLen = useRef(0);
+  const primed = useRef(false);
   const newCardKey = useRef<string | null>(null);
 
   const isCollecting = !!state.completedTrickDisplay;
@@ -124,7 +126,14 @@ export function TrickArea({ state, mySeat }: TrickAreaProps) {
   const winnerRelative = winnerSeat !== null ? relativeSeat(winnerSeat, mySeat) : 0;
 
   useEffect(() => {
+    if (!primed.current) {
+      primed.current = true;
+      prevTrickLen.current = isCollecting ? 0 : state.currentTrick.length;
+      return;
+    }
+
     if (!isCollecting && state.currentTrick.length > prevTrickLen.current) {
+      playCardSlide();
       const latest = state.currentTrick[state.currentTrick.length - 1];
       newCardKey.current = `${latest.seatIndex}-${latest.card.id}`;
       const timer = setTimeout(() => {
