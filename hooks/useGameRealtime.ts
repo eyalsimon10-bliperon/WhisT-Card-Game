@@ -82,7 +82,7 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
           table: "game_states",
           filter: `room_code=eq.${normalized}`,
         },
-        (payload) => {
+        (payload: { new: { state?: GameState } | Record<string, never> }) => {
           const row = payload.new as { state?: GameState } | null;
           if (row?.state && !cancelled) {
             emit(normalizeGameState(row.state));
@@ -91,7 +91,7 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
           void load();
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         subscribed = status === "SUBSCRIBED";
         startPoll();
         if (subscribed) void load();

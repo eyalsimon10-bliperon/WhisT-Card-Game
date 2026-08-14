@@ -489,10 +489,13 @@ export function choosePlayCard(state: GameState): Card | null {
 export function chooseCardExchange(hand: Card[], minContractTricks: number): string[] {
   const analyses = analyzeHand(hand, minContractTricks);
   const bestTrump = analyses[0]?.trump;
+  const naturalTrump = analyses.find((a) => a.trump !== "NT")?.trump;
   const keepSuit: Suit | undefined =
     bestTrump && bestTrump !== "NT"
       ? bestTrump
-      : analyses.find((a) => a.trump !== "NT")?.trump;
+      : naturalTrump && naturalTrump !== "NT"
+        ? naturalTrump
+        : undefined;
 
   const scored = hand.map((card) => {
     const len = suitLength(hand, card.suit);

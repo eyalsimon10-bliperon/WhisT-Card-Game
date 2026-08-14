@@ -73,7 +73,7 @@ export function useRoomRealtime(code: string, onRoom: (room: Room | null) => voi
           void load();
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         subscribed = status === "SUBSCRIBED";
         startPoll();
         if (subscribed) void load();
