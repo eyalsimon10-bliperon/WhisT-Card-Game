@@ -14,7 +14,7 @@ export function SuitGlyph({
 }) {
   if (trump === "NT") {
     return (
-      <span className={`bid-mark-nt ${className}`} aria-label="NT">
+      <span className={`bid-mark-nt ${className}`} aria-label="NT" dir="ltr">
         NT
       </span>
     );

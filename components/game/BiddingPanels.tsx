@@ -256,8 +256,11 @@ export function ContractBiddingPanel({
                               : "is-disabled"
                         }`}
                       >
-                        <span className="bid-trump-face">
-                          <SuitGlyph trump={trump} className="bid-trump-suit" />
+                        <span className={`bid-trump-face ${trump === "NT" ? "is-nt" : ""}`}>
+                          <SuitGlyph
+                            trump={trump}
+                            className={trump === "NT" ? "bid-trump-nt" : "bid-trump-suit"}
+                          />
                         </span>
                         <span className="bid-trump-caption">{label}</span>
                       </button>

@@ -22,7 +22,7 @@ function TrumpTile({ trump, size = "md" }: { trump: Trump; size?: "md" | "lg" })
   return (
     <div className={`trump-tile is-${size}`} title={trump === "NT" ? "ללא שליט" : trump}>
       {trump === "NT" ? (
-        <span className="trump-tile-nt">NT</span>
+        <span className="trump-tile-nt" dir="ltr">NT</span>
       ) : (
         <span className={`trump-tile-suit ${isRed ? "is-red" : "is-black"}`}>{SUIT_SYMBOL[trump]}</span>
       )}

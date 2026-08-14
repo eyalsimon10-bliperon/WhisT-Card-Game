@@ -78,7 +78,7 @@ function TrickCard({
   const [arrived, setArrived] = useState(false);
 
   useEffect(() => {
-    playCardSlide();
+    playCardSlide(play.card.id);
     const timer = window.setTimeout(() => setArrived(true), 280);
     return () => window.clearTimeout(timer);
   }, []);

@@ -14,7 +14,7 @@ import {
 import { HumanPlayerHud, PlayField } from "@/components/game/PlayerSeat";
 import { getMySeat, PlayerHand, TrickArea } from "@/components/game/TrickArea";
 import { useGameRealtime } from "@/hooks/useGameRealtime";
-import { unlockCardAudio } from "@/lib/audio/card-sounds";
+import { playCardSlide, playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
 import { fetchRoom, postGameAction } from "@/lib/api/client";
 import { getDisabledTricksForCurrentBidder } from "@/lib/game/bots";
 import { getPhaseLabel } from "@/lib/game/engine";
@@ -43,8 +43,13 @@ export default function GamePage() {
 
   useEffect(() => {
     const unlock = () => unlockCardAudio();
-    document.addEventListener("pointerdown", unlock, { once: true });
-    return () => document.removeEventListener("pointerdown", unlock);
+    document.addEventListener("pointerdown", unlock);
+    document.addEventListener("touchstart", unlock, { passive: true });
+    unlock();
+    return () => {
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("touchstart", unlock);
+    };
   }, []);
 
   useEffect(() => {
@@ -184,6 +189,7 @@ export default function GamePage() {
   }
 
   function handlePlayCard(cardId: string) {
+    playCardSlide(cardId);
     void runAction({ type: "playCard", cardId });
     setSelectedCardId(null);
   }
@@ -202,6 +208,14 @@ export default function GamePage() {
   }
 
   function handleContinueRound() {
+    if (state && state.currentRound >= state.totalRounds) {
+      const ranked = [...state.players].sort((a, b) => b.totalScore - a.totalScore);
+      const topScore = ranked[0]?.totalScore ?? 0;
+      const me = state.players.find((p) => p.id === humanId);
+      const resultKey = `${state.roomCode}:${ranked.map((p) => `${p.id}:${p.totalScore}`).join("|")}`;
+      unlockCardAudio();
+      playMatchResult(!!me && me.totalScore === topScore, resultKey);
+    }
     void runAction({ type: "advanceRound" });
   }
 
