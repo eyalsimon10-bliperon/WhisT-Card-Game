@@ -27,7 +27,10 @@ export interface TrickGoal {
   needed: number;
   remaining: number;
   mustWinEvery: boolean;
+  /** Avoid taking this trick (0-bid still clean, or already made a non-zero bid). */
   shouldDump: boolean;
+  /** Bid 0 but already took a trick — fail is locked; take more to reduce the penalty. */
+  recoverFromZero: boolean;
 }
 
 export function getTrickGoal(state: GameState, seatIndex: number): TrickGoal {
@@ -36,6 +39,8 @@ export function getTrickGoal(state: GameState, seatIndex: number): TrickGoal {
   const won = player?.tricksWon ?? 0;
   const needed = bid - won;
   const remaining = Math.max(0, 13 - state.tricksPlayed);
+  const recoverFromZero = bid === 0 && won > 0;
+  const shouldDump = recoverFromZero ? false : needed <= 0;
 
   return {
     bid,
@@ -43,7 +48,8 @@ export function getTrickGoal(state: GameState, seatIndex: number): TrickGoal {
     needed,
     remaining,
     mustWinEvery: needed > 0 && needed >= remaining,
-    shouldDump: needed <= 0,
+    shouldDump,
+    recoverFromZero,
   };
 }
 
@@ -70,6 +76,16 @@ function scoreTrickBidCandidate(
   return score;
 }
 
+function countSureWinners(hand: Card[], trump: Trump): number {
+  let n = 0;
+  if (trump !== "NT" && hasRank(hand, trump, "A")) n += 1;
+  for (const suit of SUITS) {
+    if (trump !== "NT" && suit === trump) continue;
+    if (hasRank(hand, suit, "A")) n += 1;
+  }
+  return n;
+}
+
 export function chooseTrickBid(state: GameState, seatIndex: number): number {
   const player = state.players.find((p) => p.seatIndex === seatIndex);
   if (!player || !state.trump) return 0;
@@ -81,6 +97,15 @@ export function chooseTrickBid(state: GameState, seatIndex: number): number {
     state.trump,
     state.contractBid?.tricks ?? 5
   );
+
+  const sure = countSureWinners(player.hand, state.trump);
+  if (sure >= 1) target = Math.max(target, sure);
+  if (sure === 0 && target <= 1) {
+    const trumpLen = state.trump === "NT" ? 0 : suitLength(player.hand, state.trump);
+    if (trumpLen <= 2 && countHighCardPoints(player.hand) <= 6) {
+      target = 0;
+    }
+  }
 
   const partialSum = getTotalTrickBids(state.trickBids);
   const biddersLeft = state.trickBidOrder.length - state.trickBidStep;
@@ -183,7 +208,12 @@ export function chooseContractAction(state: GameState): ContractAction {
   return { type: "bid", bid };
 }
 
-function cardWinsTrick(card: Card, hand: Card[], currentTrick: GameState["currentTrick"], trump: Trump): boolean {
+function cardWinsTrick(
+  card: Card,
+  hand: Card[],
+  currentTrick: GameState["currentTrick"],
+  trump: Trump
+): boolean {
   const legal = getLegalPlays(hand, currentTrick, trump);
   if (!legal.some((c) => c.id === card.id)) return false;
   const testTrick = [...currentTrick, { seatIndex: 999, card }];
@@ -197,51 +227,136 @@ function sortByRank(cards: Card[], ascending = true): Card[] {
   );
 }
 
-function pickFromLegal(legal: Card[], preferLow: boolean): Card {
-  return sortByRank(legal, preferLow)[0];
+function lowest(cards: Card[]): Card {
+  return sortByRank(cards, true)[0];
 }
 
-function estimateSuitRemaining(state: GameState, suit: Suit, myHand: Card[]): number {
-  let seen = myHand.filter((c) => c.suit === suit).length;
-  for (const play of state.currentTrick) {
-    if (play.card.suit === suit) seen += 1;
-  }
-  return Math.max(0, 13 - seen);
+function highest(cards: Card[]): Card {
+  return sortByRank(cards, false)[0];
 }
 
-function pickLeadCard(hand: Card[], trump: Trump, goal: TrickGoal, state: GameState): Card {
-  if (goal.mustWinEvery) {
-    for (const suit of SUITS) {
-      const suitCards = hand.filter((c) => c.suit === suit);
-      if (suitCards.some((c) => c.rank === "A")) {
-        return suitCards.find((c) => c.rank === "A")!;
-      }
+function isTrump(card: Card, trump: Trump): boolean {
+  return trump !== "NT" && card.suit === trump;
+}
+
+function playedCards(state: GameState): Card[] {
+  const played: Card[] = [];
+  for (const trick of state.trickHistory ?? []) {
+    for (const play of trick.plays) played.push(play.card);
+  }
+  for (const play of state.currentTrick) played.push(play.card);
+  return played;
+}
+
+function aceStillOut(state: GameState, suit: Suit, myHand: Card[]): boolean {
+  if (hasRank(myHand, suit, "A")) return false;
+  return !playedCards(state).some((c) => c.suit === suit && c.rank === "A");
+}
+
+/** High cards that may steal a later trick if left in hand. */
+function dumpDanger(card: Card, hand: Card[], trump: Trump, state: GameState): number {
+  const v = RANK_VALUE[card.rank];
+  let danger = v;
+  if (isTrump(card, trump)) danger += 18;
+  if (card.rank === "A") danger += 12;
+  if (card.rank === "K" && aceStillOut(state, card.suit, hand)) danger += 8;
+  if (card.rank === "Q") danger += 3;
+  const len = suitLength(hand, card.suit);
+  if (len === 1 && v >= 11) danger += 6;
+  return danger;
+}
+
+function pickSafestLoser(
+  legal: Card[],
+  hand: Card[],
+  currentTrick: GameState["currentTrick"],
+  trump: Trump,
+  state: GameState
+): Card | null {
+  const losers = legal.filter((c) => !cardWinsTrick(c, hand, currentTrick, trump));
+  if (losers.length === 0) return null;
+  return [...losers].sort(
+    (a, b) => dumpDanger(b, hand, trump, state) - dumpDanger(a, hand, trump, state)
+  )[0];
+}
+
+function pickCheapestWinner(
+  legal: Card[],
+  hand: Card[],
+  currentTrick: GameState["currentTrick"],
+  trump: Trump
+): Card | null {
+  const winners = legal.filter((c) => cardWinsTrick(c, hand, currentTrick, trump));
+  if (winners.length === 0) return null;
+  const nonTrump = winners.filter((c) => !isTrump(c, trump));
+  if (nonTrump.length > 0) return lowest(nonTrump);
+  return lowest(winners);
+}
+
+function needsMoreTricks(goal: TrickGoal): boolean {
+  return !goal.shouldDump && (goal.needed > 0 || goal.recoverFromZero);
+}
+
+/** Ruff only when we still need tricks and don't already have enough cash winners. */
+function shouldRuff(goal: TrickGoal, hand: Card[], trump: Trump): boolean {
+  if (!needsMoreTricks(goal)) return false;
+  if (goal.mustWinEvery || goal.recoverFromZero) return true;
+  return countSureWinners(hand, trump) < goal.needed;
+}
+
+function pickDumpLead(hand: Card[], trump: Trump, state: GameState): Card {
+  const hasTrump = trump !== "NT" && hand.some((c) => c.suit === trump);
+  let best: { card: Card; score: number } | null = null;
+
+  for (const suit of SUITS) {
+    const suitCards = hand.filter((c) => c.suit === suit);
+    if (suitCards.length === 0) continue;
+
+    const low = lowest(suitCards);
+    let score = 0;
+
+    if (isTrump(low, trump)) score -= 30;
+    score += suitCards.length * 4;
+    score -= RANK_VALUE[low.rank];
+
+    if (low.rank === "A") score -= 20;
+    if (low.rank === "K") score -= 12;
+    if (low.rank === "Q") score -= 6;
+
+    if (hasTrump && suitCards.length === 1 && !isTrump(low, trump)) {
+      score -= 14;
     }
+
+    if (!best || score > best.score) best = { card: low, score };
   }
 
-  if (goal.shouldDump) {
-    const candidates = hand.filter((c) => {
-      if (trump !== "NT" && c.suit === trump) return false;
-      return RANK_VALUE[c.rank] >= 10 || suitLength(hand, c.suit) === 1;
-    });
-    if (candidates.length > 0) {
-      return sortByRank(candidates, false)[0];
+  return best?.card ?? lowest(hand);
+}
+
+function pickWinLead(hand: Card[], trump: Trump, goal: TrickGoal, state: GameState): Card {
+  if (goal.mustWinEvery || goal.recoverFromZero) {
+    for (const suit of SUITS) {
+      const ace = hand.find((c) => c.suit === suit && c.rank === "A");
+      if (ace) return ace;
     }
+    if (trump !== "NT") {
+      const trumps = hand.filter((c) => c.suit === trump);
+      if (trumps.length > 0) return highest(trumps);
+    }
+    return highest(hand);
   }
 
-  if (goal.needed > 0) {
-    for (const suit of SUITS) {
-      const len = suitLength(hand, suit);
-      if (len < 4) continue;
-      const hasAce = hasRank(hand, suit, "A");
-      const hasKing = hasRank(hand, suit, "K");
-      if (hasAce && hasKing) {
-        const king = hand.find((c) => c.suit === suit && c.rank === "K");
-        if (king) return king;
-      }
-      if (hasAce) {
-        return hand.find((c) => c.suit === suit && c.rank === "A")!;
-      }
+  for (const suit of SUITS) {
+    const len = suitLength(hand, suit);
+    if (len < 4) continue;
+    const hasAce = hasRank(hand, suit, "A");
+    const hasKing = hasRank(hand, suit, "K");
+    if (hasAce && hasKing) {
+      const king = hand.find((c) => c.suit === suit && c.rank === "K");
+      if (king) return king;
+    }
+    if (hasAce) {
+      return hand.find((c) => c.suit === suit && c.rank === "A")!;
     }
   }
 
@@ -249,21 +364,22 @@ function pickLeadCard(hand: Card[], trump: Trump, goal: TrickGoal, state: GameSt
   for (const suit of SUITS) {
     const suitCards = hand.filter((c) => c.suit === suit);
     if (suitCards.length === 0) continue;
-
-    const remaining = estimateSuitRemaining(state, suit, hand);
+    const remainingOpp =
+      13 -
+      suitCards.length -
+      playedCards(state).filter((c) => c.suit === suit).length;
     const hasAce = hasRank(hand, suit, "A");
 
     for (const card of suitCards) {
       let score = 0;
       if (card.rank === "A" && goal.needed > 0) score += 12;
       else if (card.rank === "K" && hasAce && goal.needed > 0) score += 9;
-      else if (card.rank === "K" && goal.shouldDump) score += 6;
-      else if (card.rank === "2" || card.rank === "3") score += goal.shouldDump ? 5 : 3;
+      else if (card.rank === "2" || card.rank === "3") score += 3;
       else if (card.rank === "4" || card.rank === "5") score += 2;
 
       if (suitCards.length >= 5) score += 2;
-      if (remaining <= 3 && !hasAce) score -= 2;
-      if (trump !== "NT" && suit === trump && goal.shouldDump) score -= 4;
+      if (remainingOpp <= 3 && !hasAce) score -= 2;
+      if (isTrump(card, trump) && goal.needed <= 0) score -= 8;
 
       if (!best || score > best.score) best = { card, score };
     }
@@ -272,88 +388,78 @@ function pickLeadCard(hand: Card[], trump: Trump, goal: TrickGoal, state: GameSt
   return best?.card ?? hand[0];
 }
 
+function pickLeadCard(hand: Card[], trump: Trump, goal: TrickGoal, state: GameState): Card {
+  if (goal.shouldDump) {
+    return pickDumpLead(hand, trump, state);
+  }
+  return pickWinLead(hand, trump, goal, state);
+}
+
 function pickFollowCard(
   hand: Card[],
   currentTrick: GameState["currentTrick"],
   trump: Trump,
-  goal: TrickGoal
+  goal: TrickGoal,
+  state: GameState
 ): Card {
   const legal = getLegalPlays(hand, currentTrick, trump);
   if (legal.length === 0) return hand[0];
 
-  const winners = legal.filter((c) => cardWinsTrick(c, hand, currentTrick, trump));
-  const losers = legal.filter((c) => !winners.includes(c));
-
-  if (goal.mustWinEvery || goal.needed > 0) {
-    if (winners.length > 0) {
-      return pickFromLegal(winners, true);
-    }
-    return pickFromLegal(losers, true);
+  if (!needsMoreTricks(goal)) {
+    const dump = pickSafestLoser(legal, hand, currentTrick, trump, state);
+    if (dump) return dump;
+    return pickCheapestWinner(legal, hand, currentTrick, trump) ?? lowest(legal);
   }
 
-  if (goal.shouldDump) {
-    if (losers.length > 0) {
-      return pickFromLegal(losers, false);
-    }
-    if (winners.length > 0) {
-      return pickFromLegal(winners, true);
-    }
-  }
-
-  if (goal.needed > 0 && winners.length > 0) {
-    return pickFromLegal(winners, true);
-  }
-
-  if (losers.length > 0) {
-    return pickFromLegal(losers, true);
-  }
-
-  return pickFromLegal(winners, true);
+  const cheapWin = pickCheapestWinner(legal, hand, currentTrick, trump);
+  if (cheapWin) return cheapWin;
+  return lowest(legal);
 }
 
 function pickDiscardOrTrump(
   hand: Card[],
   currentTrick: GameState["currentTrick"],
   trump: Trump,
-  goal: TrickGoal
+  goal: TrickGoal,
+  state: GameState
 ): Card {
   const legal = getLegalPlays(hand, currentTrick, trump);
   if (legal.length === 0) return hand[0];
 
   const ledSuit = currentTrick[0].card.suit;
   if (hand.some((c) => c.suit === ledSuit)) {
-    return pickFollowCard(hand, currentTrick, trump, goal);
+    return pickFollowCard(hand, currentTrick, trump, goal, state);
   }
 
-  if (trump !== "NT") {
-    const trumpCards = legal.filter((c) => c.suit === trump);
-    const offSuit = legal.filter((c) => c.suit !== trump);
+  const trumpCards = trump === "NT" ? [] : legal.filter((c) => c.suit === trump);
+  const offSuit = legal.filter((c) => !isTrump(c, trump));
 
-    if (goal.mustWinEvery || goal.needed > 0) {
-      const winningTrumps = trumpCards.filter((c) => cardWinsTrick(c, hand, currentTrick, trump));
-      if (winningTrumps.length > 0) {
-        return pickFromLegal(winningTrumps, true);
-      }
-    }
-
-    if (goal.shouldDump && offSuit.length > 0) {
-      return pickFromLegal(offSuit, false);
-    }
-
-    if (trumpCards.length > 0 && (goal.mustWinEvery || goal.needed > 0)) {
-      const winningTrumps = trumpCards.filter((c) => cardWinsTrick(c, hand, currentTrick, trump));
-      if (winningTrumps.length > 0) {
-        return pickFromLegal(winningTrumps, true);
-      }
-    }
-
+  if (!shouldRuff(goal, hand, trump)) {
     if (offSuit.length > 0) {
-      return pickFromLegal(offSuit, goal.shouldDump ? false : true);
+      return [...offSuit].sort(
+        (a, b) => dumpDanger(b, hand, trump, state) - dumpDanger(a, hand, trump, state)
+      )[0];
     }
+    const losingTrump = pickSafestLoser(trumpCards, hand, currentTrick, trump, state);
+    if (losingTrump) return losingTrump;
+    return lowest(trumpCards.length > 0 ? trumpCards : legal);
+  }
 
-    if (trumpCards.length > 0) {
-      return pickFromLegal(trumpCards, !goal.shouldDump);
-    }
+  const winningTrumps = trumpCards.filter((c) =>
+    cardWinsTrick(c, hand, currentTrick, trump)
+  );
+  if (winningTrumps.length > 0) {
+    return lowest(winningTrumps);
+  }
+
+  if (offSuit.length > 0) {
+    return [...offSuit].sort(
+      (a, b) => dumpDanger(b, hand, trump, state) - dumpDanger(a, hand, trump, state)
+    )[0];
+  }
+
+  if (trumpCards.length > 0) {
+    return lowest(trumpCards);
   }
 
   const sorted = [...legal].sort((a, b) => {
@@ -377,31 +483,52 @@ export function choosePlayCard(state: GameState): Card | null {
     return pickLeadCard(player.hand, state.trump, goal, state);
   }
 
-  return pickDiscardOrTrump(player.hand, state.currentTrick, state.trump, goal);
+  return pickDiscardOrTrump(player.hand, state.currentTrick, state.trump, goal, state);
 }
 
 export function chooseCardExchange(hand: Card[], minContractTricks: number): string[] {
   const analyses = analyzeHand(hand, minContractTricks);
-  const weakest = analyses[analyses.length - 1]?.trump;
-  const avoidTrump = weakest !== "NT" ? weakest : undefined;
+  const bestTrump = analyses[0]?.trump;
+  const keepSuit: Suit | undefined =
+    bestTrump && bestTrump !== "NT"
+      ? bestTrump
+      : analyses.find((a) => a.trump !== "NT")?.trump;
 
   const scored = hand.map((card) => {
-    let score = RANK_VALUE[card.rank];
     const len = suitLength(hand, card.suit);
-    if (len <= 2) score -= 4;
-    if (avoidTrump && card.suit === avoidTrump) score -= 3;
-    if (card.rank === "A" || card.rank === "K") score += 6;
-    if (len >= 5) score += 2;
-    return { card, score };
+    const v = RANK_VALUE[card.rank];
+    let passScore = 0;
+
+    if (keepSuit && card.suit === keepSuit) passScore -= 10;
+    if (card.rank === "A") passScore -= 14;
+    if (len >= 5 && keepSuit && card.suit === keepSuit) passScore -= 6;
+
+    const unsupportedHonor =
+      (card.rank === "K" || card.rank === "Q" || card.rank === "J") &&
+      len <= 2 &&
+      !hasRank(hand, card.suit, "A");
+    if (unsupportedHonor) passScore += 12;
+
+    if (len === 1 && v >= 11) passScore += 8;
+    if (len === 2 && v >= 12 && !hasRank(hand, card.suit, "A")) passScore += 7;
+    if (v <= 7 && len >= 4 && card.suit !== keepSuit) passScore += 3;
+
+    passScore -= v * 0.1;
+    return { card, passScore };
   });
 
-  scored.sort((a, b) => a.score - b.score);
+  scored.sort((a, b) => b.passScore - a.passScore);
   return scored.slice(0, 3).map((s) => s.card.id);
 }
 
-export function refinePersonalTrickEstimate(hand: Card[], trump: Trump, contractTricks: number): number {
+export function refinePersonalTrickEstimate(
+  hand: Card[],
+  trump: Trump,
+  contractTricks: number
+): number {
   let estimate = estimatePersonalTricks(hand, trump);
   const hcp = countHighCardPoints(hand);
+  const sure = countSureWinners(hand, trump);
 
   if (trump !== "NT") {
     const trumpLen = suitLength(hand, trump);
@@ -413,5 +540,6 @@ export function refinePersonalTrickEstimate(hand: Card[], trump: Trump, contract
     estimate = Math.max(0, estimate - 1);
   }
 
+  estimate = Math.max(estimate, sure);
   return Math.max(0, Math.min(9, estimate));
 }

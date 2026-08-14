@@ -5,7 +5,13 @@ import { fetchRoom } from "@/lib/api/client";
 import { createClient } from "@/lib/supabase/client";
 import type { Room } from "@/lib/types";
 
-const POLL_MS = 2000;
+const POLL_SUBSCRIBED_MS = 5000;
+const POLL_UNSUBSCRIBED_MS = 2000;
+
+function fingerprint(room: Room | null): string {
+  if (!room) return "";
+  return `${room.code}:${room.status}:${room.hostId}:${room.players.map((p) => p.id).join(",")}`;
+}
 
 export function useRoomRealtime(code: string, onRoom: (room: Room | null) => void) {
   const handlerRef = useRef(onRoom);
@@ -14,14 +20,38 @@ export function useRoomRealtime(code: string, onRoom: (room: Room | null) => voi
   useEffect(() => {
     const normalized = code.toUpperCase();
     let cancelled = false;
+    let inFlight = false;
+    let subscribed = false;
+    let lastPrint = "";
+    let pollId = 0;
+
+    function emit(room: Room | null) {
+      const print = fingerprint(room);
+      if (print === lastPrint) return;
+      lastPrint = print;
+      handlerRef.current(room);
+    }
 
     async function load() {
+      if (cancelled || inFlight) return;
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      inFlight = true;
       try {
         const room = await fetchRoom(normalized);
-        if (!cancelled) handlerRef.current(room);
+        if (!cancelled) emit(room);
       } catch {
-        if (!cancelled) handlerRef.current(null);
+        if (!cancelled) emit(null);
+      } finally {
+        inFlight = false;
       }
+    }
+
+    function startPoll() {
+      window.clearInterval(pollId);
+      const ms = subscribed ? POLL_SUBSCRIBED_MS : POLL_UNSUBSCRIBED_MS;
+      pollId = window.setInterval(() => {
+        void load();
+      }, ms);
     }
 
     void load();
@@ -44,15 +74,12 @@ export function useRoomRealtime(code: string, onRoom: (room: Room | null) => voi
         }
       )
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          void load();
-        }
+        subscribed = status === "SUBSCRIBED";
+        startPoll();
+        if (subscribed) void load();
       });
 
-    // Fallback when Realtime is flaky / silent (common with SSR browser clients)
-    const pollId = window.setInterval(() => {
-      void load();
-    }, POLL_MS);
+    startPoll();
 
     const onVisible = () => {
       if (document.visibilityState === "visible") void load();

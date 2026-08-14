@@ -160,13 +160,11 @@ export async function applyGameAction(
     case "contract": {
       assertTurn(state, seatIndex);
       next = submitContractAction(state, seatIndex, action.contractAction);
-      runBotsAfter = true;
       break;
     }
     case "trickBid": {
       assertTurn(state, seatIndex);
       next = submitTrickBid(state, seatIndex, action.bid);
-      runBotsAfter = true;
       break;
     }
     case "cardExchange": {
@@ -177,7 +175,6 @@ export async function applyGameAction(
     case "playCard": {
       assertTurn(state, seatIndex);
       next = playCard(state, seatIndex, action.cardId);
-      runBotsAfter = true;
       break;
     }
     case "finalizeTrickCollect": {

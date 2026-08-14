@@ -75,7 +75,7 @@ export default function GamePage() {
 
     const timer = setTimeout(() => {
       void runAction({ type: "finalizeTrickCollect" });
-    }, 900);
+    }, 520);
 
     return () => clearTimeout(timer);
   }, [state?.awaitingTrickCollect]);
@@ -85,7 +85,7 @@ export default function GamePage() {
 
     const timer = setTimeout(() => {
       void runAction({ type: "clearCompletedTrick" });
-    }, 1500);
+    }, 720);
 
     return () => clearTimeout(timer);
   }, [state?.completedTrickDisplay]);
@@ -102,7 +102,7 @@ export default function GamePage() {
       if (humanReady && pendingBot) {
         const timer = setTimeout(() => {
           void runAction({ type: "runBots" });
-        }, 450);
+        }, 180);
         return () => clearTimeout(timer);
       }
       return;
@@ -113,12 +113,12 @@ export default function GamePage() {
 
     const delay =
       state.phase === "bidding_contract"
-        ? 950
+        ? 380
         : state.phase === "bidding_tricks"
-          ? 750
+          ? 280
           : state.currentTrick.length > 0
-            ? 800
-            : 650;
+            ? 380
+            : 260;
 
     const timer = setTimeout(() => {
       void runAction({ type: "runBots" });

@@ -2,13 +2,17 @@
 
 let audioCtx: AudioContext | null = null;
 let unlocked = false;
+let rustleBuffer: AudioBuffer | null = null;
 
 function getContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  const Ctor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  const Ctor =
+    window.AudioContext ||
+    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!Ctor) return null;
   if (!audioCtx || audioCtx.state === "closed") {
     audioCtx = new Ctor();
+    rustleBuffer = null;
   }
   return audioCtx;
 }
@@ -19,20 +23,38 @@ export function unlockCardAudio(): void {
   if (!ctx) return;
   void ctx.resume().then(() => {
     unlocked = ctx.state === "running";
+    if (unlocked) rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.28);
   });
 }
 
-function makeNoiseBuffer(ctx: AudioContext, seconds: number): AudioBuffer {
+function makePinkNoise(ctx: AudioContext, seconds: number): AudioBuffer {
   const length = Math.max(1, Math.floor(ctx.sampleRate * seconds));
   const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
   const data = buffer.getChannelData(0);
+  let b0 = 0;
+  let b1 = 0;
+  let b2 = 0;
+  let b3 = 0;
+  let b4 = 0;
+  let b5 = 0;
+  let b6 = 0;
   for (let i = 0; i < length; i++) {
-    data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    const white = Math.random() * 2 - 1;
+    b0 = 0.99886 * b0 + white * 0.0555179;
+    b1 = 0.99332 * b1 + white * 0.0750759;
+    b2 = 0.969 * b2 + white * 0.153852;
+    b3 = 0.8665 * b3 + white * 0.3104856;
+    b4 = 0.55 * b4 + white * 0.5329522;
+    b5 = -0.7616 * b5 - white * 0.016898;
+    const envelope = Math.sin((Math.PI * i) / length);
+    data[i] =
+      (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.08 * envelope;
+    b6 = white * 0.115926;
   }
   return buffer;
 }
 
-/** Short felt-slide + soft land — plays when a card is thrown to the table. */
+/** Soft paper rustle + light felt tap when a card lands on the table. */
 export function playCardSlide(): void {
   const ctx = getContext();
   if (!ctx) return;
@@ -46,43 +68,53 @@ export function playCardSlide(): void {
 
 function startSlide(ctx: AudioContext): void {
   const now = ctx.currentTime;
-  const slideDur = 0.2 + Math.random() * 0.05;
-  const startFreq = 1600 + Math.random() * 500;
-  const endFreq = 380 + Math.random() * 80;
+  rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.28);
 
-  const noise = ctx.createBufferSource();
-  noise.buffer = makeNoiseBuffer(ctx, slideDur);
+  const rustle = ctx.createBufferSource();
+  rustle.buffer = rustleBuffer;
+  rustle.playbackRate.value = 0.92 + Math.random() * 0.12;
 
-  const filter = ctx.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.Q.value = 0.85;
-  filter.frequency.setValueAtTime(startFreq, now);
-  filter.frequency.exponentialRampToValueAtTime(endFreq, now + slideDur);
+  const band = ctx.createBiquadFilter();
+  band.type = "bandpass";
+  band.Q.value = 1.15;
+  band.frequency.setValueAtTime(720, now);
+  band.frequency.exponentialRampToValueAtTime(380, now + 0.18);
 
-  const slideGain = ctx.createGain();
-  slideGain.gain.setValueAtTime(0.0001, now);
-  slideGain.gain.exponentialRampToValueAtTime(0.16, now + 0.018);
-  slideGain.gain.exponentialRampToValueAtTime(0.0001, now + slideDur);
+  const highcut = ctx.createBiquadFilter();
+  highcut.type = "lowpass";
+  highcut.frequency.value = 1800;
+  highcut.Q.value = 0.5;
 
-  noise.connect(filter);
-  filter.connect(slideGain);
-  slideGain.connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + slideDur + 0.02);
+  const rustleGain = ctx.createGain();
+  rustleGain.gain.setValueAtTime(0.0001, now);
+  rustleGain.gain.exponentialRampToValueAtTime(0.045, now + 0.03);
+  rustleGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
-  const landAt = now + slideDur * 0.55;
-  const thud = ctx.createOscillator();
-  thud.type = "sine";
-  thud.frequency.setValueAtTime(150, landAt);
-  thud.frequency.exponentialRampToValueAtTime(68, landAt + 0.1);
+  rustle.connect(band);
+  band.connect(highcut);
+  highcut.connect(rustleGain);
+  rustleGain.connect(ctx.destination);
+  rustle.start(now);
+  rustle.stop(now + 0.22);
 
-  const thudGain = ctx.createGain();
-  thudGain.gain.setValueAtTime(0.0001, landAt);
-  thudGain.gain.exponentialRampToValueAtTime(0.07, landAt + 0.012);
-  thudGain.gain.exponentialRampToValueAtTime(0.0001, landAt + 0.11);
+  const tapAt = now + 0.09;
+  const tap = ctx.createOscillator();
+  tap.type = "sine";
+  tap.frequency.setValueAtTime(210, tapAt);
+  tap.frequency.exponentialRampToValueAtTime(120, tapAt + 0.07);
 
-  thud.connect(thudGain);
-  thudGain.connect(ctx.destination);
-  thud.start(landAt);
-  thud.stop(landAt + 0.12);
+  const tapFilter = ctx.createBiquadFilter();
+  tapFilter.type = "lowpass";
+  tapFilter.frequency.value = 420;
+
+  const tapGain = ctx.createGain();
+  tapGain.gain.setValueAtTime(0.0001, tapAt);
+  tapGain.gain.exponentialRampToValueAtTime(0.018, tapAt + 0.012);
+  tapGain.gain.exponentialRampToValueAtTime(0.0001, tapAt + 0.08);
+
+  tap.connect(tapFilter);
+  tapFilter.connect(tapGain);
+  tapGain.connect(ctx.destination);
+  tap.start(tapAt);
+  tap.stop(tapAt + 0.09);
 }

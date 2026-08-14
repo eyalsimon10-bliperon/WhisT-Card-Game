@@ -6,7 +6,24 @@ import { normalizeGameState } from "@/lib/game/normalize-state";
 import type { GameState } from "@/lib/game/types";
 import { createClient } from "@/lib/supabase/client";
 
-const POLL_MS = 1500;
+const POLL_SUBSCRIBED_MS = 4000;
+const POLL_UNSUBSCRIBED_MS = 1200;
+
+function fingerprint(state: GameState | null): string {
+  if (!state) return "";
+  return [
+    state.phase,
+    state.currentPlayerIndex,
+    state.tricksPlayed,
+    state.currentTrick.length,
+    state.awaitingTrickCollect ?? "",
+    state.completedTrickDisplay ? "1" : "0",
+    state.trickBidStep,
+    state.currentHighBid ? `${state.currentHighBid.tricks}${state.currentHighBid.trump}` : "",
+    state.trickBids.join(","),
+    state.players.map((p) => `${p.hand.length}:${p.tricksWon}:${p.totalScore}`).join("|"),
+  ].join("~");
+}
 
 export function useGameRealtime(code: string, onState: (state: GameState | null) => void) {
   const handlerRef = useRef(onState);
@@ -15,14 +32,38 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
   useEffect(() => {
     const normalized = code.toUpperCase();
     let cancelled = false;
+    let inFlight = false;
+    let subscribed = false;
+    let lastPrint = "";
+    let pollId = 0;
+
+    function emit(state: GameState | null) {
+      const print = fingerprint(state);
+      if (print === lastPrint) return;
+      lastPrint = print;
+      handlerRef.current(state);
+    }
 
     async function load() {
+      if (cancelled || inFlight) return;
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      inFlight = true;
       try {
         const state = await fetchGameState(normalized);
-        if (!cancelled) handlerRef.current(state ? normalizeGameState(state) : null);
+        if (!cancelled) emit(state ? normalizeGameState(state) : null);
       } catch {
-        if (!cancelled) handlerRef.current(null);
+        if (!cancelled) emit(null);
+      } finally {
+        inFlight = false;
       }
+    }
+
+    function startPoll() {
+      window.clearInterval(pollId);
+      const ms = subscribed ? POLL_SUBSCRIBED_MS : POLL_UNSUBSCRIBED_MS;
+      pollId = window.setInterval(() => {
+        void load();
+      }, ms);
     }
 
     void load();
@@ -41,21 +82,19 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
         (payload) => {
           const row = payload.new as { state?: GameState } | null;
           if (row?.state && !cancelled) {
-            handlerRef.current(normalizeGameState(row.state));
+            emit(normalizeGameState(row.state));
             return;
           }
           void load();
         }
       )
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          void load();
-        }
+        subscribed = status === "SUBSCRIBED";
+        startPoll();
+        if (subscribed) void load();
       });
 
-    const pollId = window.setInterval(() => {
-      void load();
-    }, POLL_MS);
+    startPoll();
 
     const onVisible = () => {
       if (document.visibilityState === "visible") void load();

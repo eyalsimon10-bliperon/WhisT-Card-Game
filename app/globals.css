@@ -110,15 +110,15 @@
   }
 
   .trick-card-play {
-    animation: trick-card-play 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: trick-card-play 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   .trick-card-collect {
-    animation: trick-card-collect 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: trick-card-collect 0.58s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .trick-card-winner {
-    animation: trick-card-collect-winner 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: trick-card-collect-winner 0.58s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .trick-card-pending-winner {
@@ -126,7 +126,7 @@
   }
 
   .trick-winner-banner {
-    animation: trick-winner-banner 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+    animation: trick-winner-banner 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
   }
 
   .contract-pass-badge {
