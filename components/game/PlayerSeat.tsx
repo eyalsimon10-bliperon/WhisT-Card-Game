@@ -372,7 +372,7 @@ export function PlayField({
   ];
 
   return (
-    <div className="play-field">
+    <div className="play-field" dir="ltr">
       {positions.map(({ offset, area }) => {
         const seatIndex = getRelativeSeat(offset, mySeat);
         const player = state.players.find((p) => p.seatIndex === seatIndex);

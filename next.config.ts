@@ -1,12 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? "dev",
+  },
   webpack: (config, { dev }) => {
     if (dev) {
-      // Avoid corrupted webpack cache on Windows after file changes
       config.cache = false;
     }
     return config;
+  },
+  experimental: {
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
   },
   async headers() {
     return [
@@ -20,6 +28,10 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/join/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
+        source: "/_next/data/:path*",
         headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
       },
     ];

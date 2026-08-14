@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { CacheBust } from "@/components/CacheBust";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 
@@ -8,10 +9,20 @@ const heebo = Heebo({
   display: "swap",
 });
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "WhisT — משחק קלפים מרובה משתתפים",
   description: "משחק WhisT (Mini-Bridge) ל-4 שחקנים — צור חדר, הצטרף עם קוד, או שחק כאורח.",
   applicationName: "WhisT",
+  appleWebApp: {
+    capable: false,
+    title: "WhisT",
+  },
+  other: {
+    "cache-control": "no-store",
+  },
 };
 
 export const viewport: Viewport = {
@@ -29,7 +40,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${heebo.variable} font-sans`}>{children}</body>
+      <head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+      </head>
+      <body className={`${heebo.variable} font-sans`}>
+        <CacheBust />
+        {children}
+      </body>
     </html>
   );
 }
