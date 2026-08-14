@@ -11,6 +11,7 @@ const heebo = Heebo({
 export const metadata: Metadata = {
   title: "WhisT — משחק קלפים מרובה משתתפים",
   description: "משחק WhisT (Mini-Bridge) ל-4 שחקנים — צור חדר, הצטרף עם קוד, או שחק כאורח.",
+  applicationName: "WhisT",
 };
 
 export const viewport: Viewport = {

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="WhisT">
+  <defs>
+    <linearGradient id="felt" x1="64" y1="8" x2="64" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1a5233"/>
+      <stop offset="1" stop-color="#0d2818"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="64" y1="8" x2="64" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f5d76e"/>
+      <stop offset="0.55" stop-color="#e8c547"/>
+      <stop offset="1" stop-color="#c9a227"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="22" fill="url(#felt)"/>
+  <rect x="8" y="8" width="112" height="112" rx="22" fill="none" stroke="url(#gold)" stroke-width="4"/>
+  <rect x="16" y="16" width="96" height="96" rx="16" fill="none" stroke="#e8c547" stroke-opacity="0.28" stroke-width="1.5"/>
+  <text x="28" y="40" fill="url(#gold)" font-family="Georgia, Times, serif" font-size="22" font-weight="700" text-anchor="middle">W</text>
+  <g transform="rotate(180 100 96)">
+    <text x="100" y="104" fill="url(#gold)" font-family="Georgia, Times, serif" font-size="22" font-weight="700" text-anchor="middle">W</text>
+  </g>
+  <path fill="url(#gold)" d="M64 34c0 0-24 24-24 40a16 16 0 0 0 24 14 16 16 0 0 0 24-14c0-16-24-40-24-40z"/>
+  <path fill="url(#gold)" d="M64 84 54 108h20L64 84z"/>
+</svg>

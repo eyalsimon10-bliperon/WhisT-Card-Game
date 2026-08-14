@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CardFan } from "@/components/PlayingCard";
+import { WhistLogo, WhistWordmark } from "@/components/brand/WhistLogo";
 import { NameInput } from "@/components/NameInput";
 import { fetchOpenRoomsCount, postRoomsAction } from "@/lib/api/client";
 import { getOrCreateGuestSession } from "@/lib/session/guest";
@@ -142,8 +142,10 @@ export default function LandingPage() {
 
       <div className="relative mx-auto flex min-h-dvh max-w-md flex-col px-5 py-8 portrait-phone:px-4 portrait-phone:py-6 landscape-phone:max-w-none landscape-phone:px-6 landscape-phone:py-4">
         <header className="mb-8 text-center landscape-phone:mb-4">
-          <CardFan />
-          <h1 className="mt-4 text-4xl font-bold tracking-tight text-gold-400 landscape-phone:mt-2 landscape-phone:text-3xl">WhisT</h1>
+          <WhistLogo className="mx-auto h-20 w-20 drop-shadow-lg landscape-phone:h-14 landscape-phone:w-14" />
+          <h1 className="mt-3 text-4xl landscape-phone:mt-1.5 landscape-phone:text-3xl">
+            <WhistWordmark />
+          </h1>
           <p className="mt-2 text-sm text-white/60">משחק קלפים ל-4 שחקנים</p>
           <p className="mt-1 text-xs text-white/40">Mini-Bridge • מובייל ראשון</p>
         </header>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { NameInput } from "@/components/NameInput";
+import { WhistLogo } from "@/components/brand/WhistLogo";
 import { fetchRoom, postRoomsAction } from "@/lib/api/client";
 import { getOrCreateGuestSession } from "@/lib/session/guest";
 
@@ -85,6 +86,7 @@ export default function JoinPage() {
         {roomExists ? (
           <>
             <header className="mb-8 text-center">
+              <WhistLogo className="mx-auto mb-3 h-14 w-14" />
               <p className="text-sm text-white/60">הוזמנת להצטרף לחדר</p>
               <p className="mt-2 font-mono text-3xl font-bold tracking-widest text-gold-400">{code}</p>
             </header>
