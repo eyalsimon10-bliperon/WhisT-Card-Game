@@ -447,6 +447,18 @@ export function clearCompletedTrickDisplay(state: GameState): GameState {
   return { ...state, completedTrickDisplay: null };
 }
 
+/** Finish the visible trick in one step so the client can animate, then resume play. */
+export function resolveCompletedTrick(state: GameState): GameState {
+  let next = state;
+  if (next.awaitingTrickCollect != null) {
+    next = finalizeTrickCollect(next);
+  }
+  if (next.completedTrickDisplay) {
+    next = clearCompletedTrickDisplay(next);
+  }
+  return next;
+}
+
 export function getHumanSeatIndex(state: GameState, humanPlayerId: string): number {
   return state.players.find((p) => p.id === humanPlayerId)?.seatIndex ?? 0;
 }

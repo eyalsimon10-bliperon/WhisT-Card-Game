@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   CardExchangePanel,
@@ -33,6 +33,8 @@ export default function GamePage() {
   const [error, setError] = useState("");
   const [isBotRoom, setIsBotRoom] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [trickCollecting, setTrickCollecting] = useState(false);
+  const actionLock = useRef(false);
 
   const session = typeof window !== "undefined" ? getGuestSession() : null;
   const humanId = session?.playerId ?? "";
@@ -71,24 +73,21 @@ export default function GamePage() {
   }, [code, router, humanId]);
 
   useEffect(() => {
-    if (state?.awaitingTrickCollect == null) return;
+    if (state?.awaitingTrickCollect == null) {
+      setTrickCollecting(false);
+      return;
+    }
 
-    const timer = setTimeout(() => {
-      void runAction({ type: "finalizeTrickCollect" });
-    }, 520);
+    const hold = window.setTimeout(() => setTrickCollecting(true), 280);
+    const done = window.setTimeout(() => {
+      void runAction({ type: "resolveTrick" });
+    }, 640);
 
-    return () => clearTimeout(timer);
+    return () => {
+      window.clearTimeout(hold);
+      window.clearTimeout(done);
+    };
   }, [state?.awaitingTrickCollect]);
-
-  useEffect(() => {
-    if (!state?.completedTrickDisplay) return;
-
-    const timer = setTimeout(() => {
-      void runAction({ type: "clearCompletedTrick" });
-    }, 720);
-
-    return () => clearTimeout(timer);
-  }, [state?.completedTrickDisplay]);
 
   useEffect(() => {
     if (!state || !humanId) return;
@@ -113,12 +112,12 @@ export default function GamePage() {
 
     const delay =
       state.phase === "bidding_contract"
-        ? 380
+        ? 320
         : state.phase === "bidding_tricks"
-          ? 280
+          ? 220
           : state.currentTrick.length > 0
-            ? 380
-            : 260;
+            ? 260
+            : 140;
 
     const timer = setTimeout(() => {
       void runAction({ type: "runBots" });
@@ -128,15 +127,18 @@ export default function GamePage() {
   }, [state, humanId]);
 
   async function runAction(action: Parameters<typeof postGameAction>[2]) {
-    if (!humanId || actionLoading) return;
-    setActionLoading(true);
+    if (!humanId || actionLock.current) return;
+    actionLock.current = true;
+    const silent = action.type === "resolveTrick" || action.type === "runBots";
+    if (!silent) setActionLoading(true);
     try {
       const result = await postGameAction(code, humanId, action);
       if (result.state) setState(result.state);
     } catch (err) {
       setError(err instanceof Error ? err.message : "שגיאה בפעולה");
     } finally {
-      setActionLoading(false);
+      actionLock.current = false;
+      if (!silent) setActionLoading(false);
     }
   }
 
@@ -236,7 +238,7 @@ export default function GamePage() {
             <div className="relative flex h-full min-h-0 flex-col">
               <OpponentSeats state={state} mySeat={mySeat} />
               <div className="game-table-zone landscape-phone:px-[4.25rem] portrait-phone:px-0">
-                <TrickArea state={state} mySeat={mySeat} />
+                <TrickArea state={state} mySeat={mySeat} collecting={trickCollecting} />
               </div>
             </div>
           ) : (
@@ -287,6 +289,7 @@ export default function GamePage() {
                     <div className="mobile-panel-fit flex flex-col justify-end">
                       <GameOverPanel
                       state={state}
+                      humanPlayerId={humanId}
                       isBotRoom={isBotRoom}
                       onExit={() => void handleExit()}
                       onPlayAgain={isBotRoom ? () => void handlePlayAgainBots() : undefined}

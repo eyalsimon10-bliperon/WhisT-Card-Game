@@ -118,3 +118,59 @@ function startSlide(ctx: AudioContext): void {
   tap.start(tapAt);
   tap.stop(tapAt + 0.09);
 }
+
+function playTone(
+  ctx: AudioContext,
+  freq: number,
+  start: number,
+  duration: number,
+  peak: number,
+  type: OscillatorType = "sine"
+): void {
+  const osc = ctx.createOscillator();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = Math.min(2800, freq * 4);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(peak, start + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+}
+
+let lastResultKey = "";
+
+/** Short fanfare for the winner, softer descending chime for everyone else. */
+export function playMatchResult(didWin: boolean, key: string): void {
+  if (lastResultKey === key) return;
+  lastResultKey = key;
+
+  const ctx = getContext();
+  if (!ctx) return;
+
+  void ctx.resume().then(() => {
+    if (ctx.state !== "running") return;
+    unlocked = true;
+    const now = ctx.currentTime;
+    if (didWin) {
+      playTone(ctx, 523.25, now, 0.22, 0.045, "triangle");
+      playTone(ctx, 659.25, now + 0.11, 0.24, 0.05, "triangle");
+      playTone(ctx, 783.99, now + 0.22, 0.28, 0.055, "sine");
+      playTone(ctx, 1046.5, now + 0.36, 0.55, 0.06, "sine");
+      playTone(ctx, 1318.5, now + 0.36, 0.4, 0.02, "triangle");
+    } else {
+      playTone(ctx, 392.0, now, 0.28, 0.035, "sine");
+      playTone(ctx, 329.63, now + 0.16, 0.32, 0.03, "sine");
+      playTone(ctx, 261.63, now + 0.34, 0.48, 0.028, "triangle");
+    }
+  });
+}

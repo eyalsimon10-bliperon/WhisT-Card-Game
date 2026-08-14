@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
-import { playCardSlide, unlockCardAudio } from "@/lib/audio/card-sounds";
+import { playCardSlide } from "@/lib/audio/card-sounds";
 import { sortHand } from "@/lib/game/cards";
+import { useHandFanLayout } from "@/lib/hooks/useHandFanLayout";
 import { scalePx, useTrickLayoutScale } from "@/lib/hooks/useTrickLayoutScale";
 import type { Card, TrickPlay } from "@/lib/game/types";
 import type { GameState } from "@/lib/game/types";
@@ -11,6 +12,7 @@ import type { GameState } from "@/lib/game/types";
 interface TrickAreaProps {
   state: GameState;
   mySeat: number;
+  collecting?: boolean;
 }
 
 /** Card positions around center (relative seat 0=me, 1=right, 2=top, 3=left) */
@@ -47,7 +49,6 @@ interface TrickCardProps {
   play: TrickPlay;
   mySeat: number;
   playerName: string;
-  isNew: boolean;
   isCollecting: boolean;
   isAwaitingCollect: boolean;
   isWinner: boolean;
@@ -60,7 +61,6 @@ function TrickCard({
   play,
   mySeat,
   playerName,
-  isNew,
   isCollecting,
   isAwaitingCollect,
   isWinner,
@@ -75,9 +75,25 @@ function TrickCard({
   const layoutX = scalePx(layout.x, layoutScale);
   const layoutY = scalePx(layout.y, layoutScale);
 
+  const [arrived, setArrived] = useState(false);
+
+  useEffect(() => {
+    playCardSlide();
+    const timer = window.setTimeout(() => setArrived(true), 280);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const motionClass = isCollecting
+    ? isWinner
+      ? "trick-card-winner"
+      : "trick-card-collect"
+    : arrived
+      ? ""
+      : "trick-card-play";
+
   return (
     <div
-      className={`absolute left-1/2 top-1/2 ${isNew ? "trick-card-play" : ""} ${isCollecting ? "trick-card-collect" : ""} ${isWinner && isCollecting ? "trick-card-winner" : ""} ${isWinner && isAwaitingCollect ? "trick-card-pending-winner" : ""}`}
+      className={`trick-card ${motionClass} ${isWinner && isAwaitingCollect && !isCollecting ? "trick-card-pending-winner" : ""}`}
       style={{
         zIndex: isWinner ? 50 : zIndex,
         ["--from-x" as string]: scalePx(parseInt(flyFrom.x, 10), layoutScale),
@@ -87,10 +103,6 @@ function TrickCard({
         ["--layout-x" as string]: layoutX,
         ["--layout-y" as string]: layoutY,
         ["--layout-rotate" as string]: `${layout.rotate}deg`,
-        transform:
-          isCollecting || isNew
-            ? undefined
-            : `translate(calc(-50% + ${layoutX}), calc(-50% + ${layoutY})) rotate(${layout.rotate}deg)`,
       }}
     >
       <div className="flex flex-col items-center gap-0.5 landscape-phone:gap-0">
@@ -109,46 +121,19 @@ function TrickCard({
   );
 }
 
-export function TrickArea({ state, mySeat }: TrickAreaProps) {
+export function TrickArea({ state, mySeat, collecting = false }: TrickAreaProps) {
   const layoutScale = useTrickLayoutScale();
-  const prevTrickLen = useRef(0);
-  const primed = useRef(false);
-  const newCardKey = useRef<string | null>(null);
 
-  const isCollecting = !!state.completedTrickDisplay;
   const isAwaitingCollect = state.awaitingTrickCollect !== null;
-  const displayPlays: TrickPlay[] = isCollecting
-    ? state.completedTrickDisplay!.plays
+  const isCollecting = collecting || !!state.completedTrickDisplay;
+  const displayPlays: TrickPlay[] = state.completedTrickDisplay
+    ? state.completedTrickDisplay.plays
     : state.currentTrick;
 
   const winnerSeat =
     state.completedTrickDisplay?.winnerSeat ?? state.awaitingTrickCollect ?? null;
   const winnerName = winnerSeat !== null ? getPlayerName(state, winnerSeat) : null;
   const winnerRelative = winnerSeat !== null ? relativeSeat(winnerSeat, mySeat) : 0;
-
-  useEffect(() => {
-    if (!primed.current) {
-      primed.current = true;
-      prevTrickLen.current = isCollecting ? 0 : state.currentTrick.length;
-      return;
-    }
-
-    if (!isCollecting && state.currentTrick.length > prevTrickLen.current) {
-      playCardSlide();
-      const latest = state.currentTrick[state.currentTrick.length - 1];
-      newCardKey.current = `${latest.seatIndex}-${latest.card.id}`;
-      const timer = setTimeout(() => {
-        newCardKey.current = null;
-      }, 500);
-      prevTrickLen.current = state.currentTrick.length;
-      return () => clearTimeout(timer);
-    }
-    if (isCollecting) {
-      prevTrickLen.current = 0;
-    } else {
-      prevTrickLen.current = state.currentTrick.length;
-    }
-  }, [state.currentTrick, isCollecting]);
 
   return (
     <div className="trick-zone mx-auto px-1">
@@ -164,14 +149,12 @@ export function TrickArea({ state, mySeat }: TrickAreaProps) {
 
         {displayPlays.map((play, i) => {
           const key = `${play.seatIndex}-${play.card.id}`;
-          const isNew = key === newCardKey.current;
           return (
             <TrickCard
               key={key}
               play={play}
               mySeat={mySeat}
               playerName={getPlayerName(state, play.seatIndex)}
-              isNew={isNew}
               isCollecting={isCollecting}
               isAwaitingCollect={isAwaitingCollect}
               isWinner={winnerSeat === play.seatIndex}
@@ -235,21 +218,12 @@ export function PlayerHand({
   const cards = sortHand(hand);
   const count = cards.length;
   const multiSelected = new Set(selectedCardIds ?? []);
+  const { ref, style, spread } = useHandFanLayout(count);
 
   return (
-    <div className="game-hand-dock-hand w-full min-w-0">
+    <div ref={ref} className="game-hand-dock-hand w-full min-w-0" style={style}>
       <div
-        className="game-hand-fan game-hand-fan--bbo game-hand-fan--slots touch-scroll-x px-0.5"
-        style={
-          {
-            ["--hand-visible-strip" as string]:
-              count <= 6
-                ? "max(2.15rem, calc(var(--card-hand-w) * 0.58))"
-                : count <= 10
-                  ? "max(2rem, calc(var(--card-hand-w) * 0.52))"
-                  : "max(1.85rem, calc(var(--card-hand-w) * 0.48))",
-          } as CSSProperties
-        }
+        className={`game-hand-fan game-hand-fan--bbo game-hand-fan--slots ${spread ? "is-spread" : ""}`}
       >
         {cards.map((card, index) => {
           const isLegal = legalCardIds.has(card.id);

@@ -109,20 +109,34 @@
     @apply w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-base text-white outline-none transition placeholder:text-white/40 focus:border-gold-500/60 focus:ring-2 focus:ring-gold-500/20;
   }
 
+  .trick-card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(calc(-50% + var(--layout-x)), calc(-50% + var(--layout-y)))
+      rotate(var(--layout-rotate));
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
   .trick-card-play {
-    animation: trick-card-play 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: trick-card-play 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   .trick-card-collect {
-    animation: trick-card-collect 0.58s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: trick-card-collect 0.36s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   .trick-card-winner {
-    animation: trick-card-collect-winner 0.58s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: trick-card-collect-winner 0.36s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
-  .trick-card-pending-winner {
-    filter: drop-shadow(0 0 10px rgba(232, 197, 71, 0.55));
+  .trick-card-pending-winner .playing-card-shell {
+    box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.9), 0 6px 16px rgba(232, 197, 71, 0.35);
+  }
+
+  .trick-card .playing-card-shell {
+    transition: none;
   }
 
   .trick-winner-banner {
@@ -181,6 +195,7 @@
     align-items: flex-end;
     padding-top: 0.85rem;
     padding-bottom: 0.2rem;
+    overflow-x: hidden;
   }
 
   .game-hand-fan--slots > * + * {
@@ -213,18 +228,19 @@
     bottom: 0.15rem;
   }
 
+  .game-hand-fan--slots.is-spread > .hand-slot,
+  .game-hand-fan--slots.is-spread > .hand-slot.is-last {
+    flex-basis: var(--card-hand-w) !important;
+    width: var(--card-hand-w) !important;
+  }
+
+  .game-hand-fan--slots.is-spread > .hand-slot + .hand-slot {
+    margin-left: var(--hand-slot-gap, 1mm) !important;
+  }
+
   @media (orientation: landscape) and (max-height: 520px) {
     .game-hand-fan--slots {
       padding-top: 0.55rem;
-    }
-
-    .game-hand-fan--slots > .hand-slot {
-      flex-basis: var(--card-hand-w) !important;
-      width: var(--card-hand-w) !important;
-    }
-
-    .game-hand-fan--slots > .hand-slot + .hand-slot {
-      margin-left: 1mm !important;
     }
   }
 
@@ -1050,6 +1066,226 @@
   .touch-scroll-x::-webkit-scrollbar {
     display: none;
   }
+
+  .game-over-panel {
+    position: relative;
+    overflow: hidden;
+    animation: game-over-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    border: 1px solid rgba(232, 197, 71, 0.28);
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(232, 197, 71, 0.18), transparent 55%),
+      linear-gradient(180deg, rgba(26, 82, 51, 0.55) 0%, rgba(13, 40, 24, 0.92) 100%);
+    box-shadow:
+      0 18px 40px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .game-over-panel::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: -40% 20%;
+    background: linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(245, 215, 110, 0.16) 48%,
+      transparent 62%
+    );
+    animation: game-over-shine 1.8s ease-out 0.25s both;
+  }
+
+  .game-over-kicker {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(245, 215, 110, 0.7);
+  }
+
+  .game-over-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #f5d76e;
+    text-shadow: 0 2px 16px rgba(232, 197, 71, 0.35);
+  }
+
+  .game-over-title.is-loss {
+    color: #e8e4d8;
+    text-shadow: none;
+  }
+
+  .game-over-sub {
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .game-over-board {
+    overflow: hidden;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  .game-over-board-head {
+    display: grid;
+    grid-template-columns: 2.1rem minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    padding: 0.45rem 0.85rem 0.35rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+    text-align: start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .game-over-board-head span:last-child {
+    text-align: end;
+  }
+
+  .game-over-row {
+    display: grid;
+    grid-template-columns: 2.1rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.72rem 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    animation: game-over-row-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .game-over-row:nth-child(2) { animation-delay: 0.08s; }
+  .game-over-row:nth-child(3) { animation-delay: 0.16s; }
+  .game-over-row:nth-child(4) { animation-delay: 0.24s; }
+  .game-over-row:nth-child(5) { animation-delay: 0.32s; }
+
+  .game-over-row:last-child {
+    border-bottom: none;
+  }
+
+  .game-over-row.is-winner {
+    background: linear-gradient(90deg, rgba(232, 197, 71, 0.2), rgba(232, 197, 71, 0.05));
+  }
+
+  .game-over-row.is-you:not(.is-winner) {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .game-over-rank {
+    display: flex;
+    height: 2.05rem;
+    width: 2.05rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #0d2818;
+    background: #94a3b8;
+  }
+
+  .game-over-rank.is-1 {
+    background: linear-gradient(180deg, #f5d76e, #c9a227);
+    box-shadow: 0 0 12px rgba(232, 197, 71, 0.45);
+  }
+
+  .game-over-rank.is-2 {
+    background: linear-gradient(180deg, #e8edf3, #9aa7b5);
+  }
+
+  .game-over-rank.is-3 {
+    background: linear-gradient(180deg, #e0b07a, #a36b3a);
+  }
+
+  .game-over-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: start;
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .game-over-meta {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .game-over-score {
+    font-size: 1.2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #f5d76e;
+  }
+
+  .game-over-score.is-plus {
+    color: #34d399;
+  }
+
+  .game-over-score.is-minus {
+    color: #fb7185;
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .game-over-title {
+      font-size: 1.45rem;
+    }
+
+    .game-over-row {
+      padding: 0.62rem 0.7rem;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .game-over-panel {
+      padding: 0.65rem 0.7rem !important;
+    }
+
+    .game-over-title {
+      font-size: 1.15rem;
+    }
+
+    .game-over-sub,
+    .game-over-kicker {
+      font-size: 0.62rem;
+    }
+
+    .game-over-row {
+      gap: 0.45rem;
+      padding: 0.32rem 0.5rem;
+    }
+
+    .game-over-board-head {
+      gap: 0.45rem;
+      padding: 0.28rem 0.5rem 0.2rem;
+      font-size: 0.5rem;
+    }
+
+    .game-over-rank {
+      height: 1.45rem;
+      width: 1.45rem;
+      font-size: 0.72rem;
+    }
+
+    .game-over-name {
+      font-size: 0.78rem;
+    }
+
+    .game-over-score {
+      font-size: 0.88rem;
+    }
+
+    .game-over-meta {
+      font-size: 0.55rem;
+    }
+  }
 }
 
 @keyframes trick-card-play {
@@ -1114,5 +1350,41 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes game-over-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes game-over-shine {
+  0% {
+    transform: translateX(-120%) rotate(18deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(180%) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes game-over-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

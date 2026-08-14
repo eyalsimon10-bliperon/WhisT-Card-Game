@@ -6,6 +6,7 @@ import {
   createInitialGameState,
   finalizeTrickCollect,
   playCard,
+  resolveCompletedTrick,
   submitCardExchange,
   submitContractAction,
   submitTrickBid,
@@ -104,6 +105,7 @@ export type GameActionPayload =
   | { type: "playCard"; cardId: string }
   | { type: "finalizeTrickCollect" }
   | { type: "clearCompletedTrick" }
+  | { type: "resolveTrick" }
   | { type: "advanceRound" }
   | { type: "runBots" }
   | { type: "playAgainBots"; totalRounds?: number }
@@ -180,13 +182,16 @@ export async function applyGameAction(
     case "finalizeTrickCollect": {
       if (state.awaitingTrickCollect == null) return state;
       next = finalizeTrickCollect(state);
-      runBotsAfter = true;
       break;
     }
     case "clearCompletedTrick": {
       if (!state.completedTrickDisplay) return state;
       next = clearCompletedTrickDisplay(state);
-      runBotsAfter = true;
+      break;
+    }
+    case "resolveTrick": {
+      if (state.awaitingTrickCollect == null && !state.completedTrickDisplay) return state;
+      next = resolveCompletedTrick(state);
       break;
     }
     case "advanceRound": {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { playMatchResult } from "@/lib/audio/card-sounds";
 import {
   formatContractBid,
   getBidProgress,
@@ -682,49 +683,6 @@ export function RoundSummary({ state, onContinue }: RoundSummaryProps) {
           </div>
         )}
 
-        {history.length > 0 && (
-          <section className="space-y-2">
-            <h4 className="text-sm font-semibold text-white/70 landscape-phone:text-xs">קלפים שנלקחו</h4>
-            <div className="space-y-2.5 landscape-phone:space-y-1.5">
-              {state.players.map((player) => {
-                const wonTricks = history.filter((trick) => trick.winnerSeat === player.seatIndex);
-                return (
-                  <div
-                    key={player.id}
-                    className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-2 landscape-phone:px-2 landscape-phone:py-1.5"
-                  >
-                    <div className="mb-1.5 flex items-center justify-between gap-2 landscape-phone:mb-1">
-                      <p className="truncate text-sm font-bold text-white landscape-phone:text-xs">
-                        {player.name}
-                      </p>
-                      <p className="shrink-0 text-xs font-semibold text-white/50 landscape-phone:text-[10px]">
-                        {wonTricks.length} לקיחות
-                      </p>
-                    </div>
-                    {wonTricks.length === 0 ? (
-                      <p className="text-xs text-white/35">לא לקח/ה לקיחות</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5 landscape-phone:gap-1">
-                        {wonTricks.map((trick, trickIndex) => (
-                          <div key={`${player.id}-${trickIndex}`} className="recap-won-trick">
-                            {trick.plays.map((play) => (
-                              <RecapMiniCard
-                                key={play.card.id}
-                                card={play.card}
-                                winner={play.seatIndex === trick.winnerSeat}
-                              />
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
         <section className="overflow-hidden rounded-xl border border-white/10 bg-black/20">
           <table className="recap-score-table">
             <thead>
@@ -782,6 +740,49 @@ export function RoundSummary({ state, onContinue }: RoundSummaryProps) {
             </tbody>
           </table>
         </section>
+
+        {history.length > 0 && (
+          <section className="space-y-2">
+            <h4 className="text-sm font-semibold text-white/70 landscape-phone:text-xs">קלפים שנלקחו</h4>
+            <div className="space-y-2.5 landscape-phone:space-y-1.5">
+              {state.players.map((player) => {
+                const wonTricks = history.filter((trick) => trick.winnerSeat === player.seatIndex);
+                return (
+                  <div
+                    key={player.id}
+                    className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-2 landscape-phone:px-2 landscape-phone:py-1.5"
+                  >
+                    <div className="mb-1.5 flex items-center justify-between gap-2 landscape-phone:mb-1">
+                      <p className="truncate text-sm font-bold text-white landscape-phone:text-xs">
+                        {player.name}
+                      </p>
+                      <p className="shrink-0 text-xs font-semibold text-white/50 landscape-phone:text-[10px]">
+                        {wonTricks.length} לקיחות
+                      </p>
+                    </div>
+                    {wonTricks.length === 0 ? (
+                      <p className="text-xs text-white/35">לא לקח/ה לקיחות</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 landscape-phone:gap-1">
+                        {wonTricks.map((trick, trickIndex) => (
+                          <div key={`${player.id}-${trickIndex}`} className="recap-won-trick">
+                            {trick.plays.map((play) => (
+                              <RecapMiniCard
+                                key={play.card.id}
+                                card={play.card}
+                                winner={play.seatIndex === trick.winnerSeat}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
 
       <div className="round-recap-actions">
@@ -795,38 +796,88 @@ export function RoundSummary({ state, onContinue }: RoundSummaryProps) {
 
 interface GameOverPanelProps {
   state: GameState;
+  humanPlayerId?: string;
   isBotRoom?: boolean;
   onExit: () => void;
   onPlayAgain?: () => void;
 }
 
-export function GameOverPanel({ state, isBotRoom, onExit, onPlayAgain }: GameOverPanelProps) {
+export function GameOverPanel({
+  state,
+  humanPlayerId,
+  isBotRoom,
+  onExit,
+  onPlayAgain,
+}: GameOverPanelProps) {
   const sorted = [...state.players].sort((a, b) => b.totalScore - a.totalScore);
-  const winner = sorted[0];
+  const topScore = sorted[0]?.totalScore ?? 0;
+  const winners = sorted.filter((p) => p.totalScore === topScore);
+  const me = state.players.find((p) => p.id === humanPlayerId);
+  const didWin = !!me && me.totalScore === topScore;
+  const winnerNames = winners.map((p) => (p.id === humanPlayerId ? "את/ה" : p.name));
+
+  const resultKey = `${state.roomCode}:${sorted.map((p) => `${p.id}:${p.totalScore}`).join("|")}`;
+
+  useEffect(() => {
+    playMatchResult(didWin, resultKey);
+  }, [didWin, resultKey]);
 
   return (
-    <div className="card-surface space-y-3 p-4 text-center portrait-phone:space-y-2 portrait-phone:p-3 landscape-phone:space-y-1.5 landscape-phone:p-2">
-      <h2 className="text-xl font-bold text-gold-400 landscape-phone:text-base portrait-phone:text-lg">המשחק הסתיים!</h2>
-      <p className="text-sm text-white/60">
-        המנצח/ת: <span className="font-semibold text-white">{winner.name}</span> ({winner.totalScore} נק&apos;)
-      </p>
-      <div className="space-y-1 portrait-phone:space-y-0.5 landscape-phone:space-y-0.5">
-        {sorted.map((p, i) => (
-          <div key={p.id} className="flex justify-between rounded-lg bg-white/5 px-2.5 py-1.5 text-xs portrait-phone:px-2 portrait-phone:py-1 landscape-phone:px-2 landscape-phone:py-1 landscape-phone:text-[10px]">
-            <span>
-              {i + 1}. {p.name}
-              {i === 0 && <span className="mr-1 text-gold-400"> ★</span>}
-              {i === sorted.length - 1 && sorted[0].totalScore !== p.totalScore && (
-                <span className="mr-1 text-slate-400"> · אחרון</span>
-              )}
-            </span>
-            <span className={p.totalScore > 0 ? "text-emerald-400" : p.totalScore < 0 ? "text-rose-400" : "text-gold-300"}>
-              {p.totalScore}
-            </span>
-          </div>
-        ))}
+    <div className="game-over-panel card-surface space-y-4 p-4 text-center portrait-phone:space-y-3 portrait-phone:p-3.5 landscape-phone:space-y-1.5 landscape-phone:p-2">
+      <header className="relative z-[1] space-y-1.5 landscape-phone:space-y-0.5">
+        <p className="game-over-kicker">תוצאות המשחק</p>
+        <h2 className={`game-over-title ${didWin ? "" : "is-loss"}`}>
+          {didWin ? "ניצחת!" : "המשחק הסתיים"}
+        </h2>
+        <p className="game-over-sub">
+          {winners.length > 1
+            ? `תיקו במקום הראשון: ${winnerNames.join(" · ")}`
+            : `המנצח/ת: ${winnerNames[0]}`}
+          <span className="text-white/40"> · </span>
+          {state.totalRounds} סיבובים
+        </p>
+      </header>
+
+      <div className="game-over-board relative z-[1]" role="table" aria-label="טבלת ניקוד סופית">
+        <div className="game-over-board-head" role="row">
+          <span>מקום</span>
+          <span>שחקן</span>
+          <span>ניקוד</span>
+        </div>
+        {sorted.map((p, i) => {
+          const isWinner = p.totalScore === topScore;
+          const isYou = p.id === humanPlayerId;
+          const place = i + 1;
+          const scoreClass =
+            p.totalScore > 0 ? "is-plus" : p.totalScore < 0 ? "is-minus" : "";
+          const scoreLabel = `${p.totalScore > 0 ? "+" : ""}${p.totalScore}`;
+
+          return (
+            <div
+              key={p.id}
+              role="row"
+              className={`game-over-row ${isWinner ? "is-winner" : ""} ${isYou ? "is-you" : ""}`}
+            >
+              <span className={`game-over-rank is-${place}`} aria-label={`מקום ${place}`}>
+                {place}
+              </span>
+              <div className="min-w-0 text-start">
+                <p className="game-over-name">{isYou ? "את/ה" : p.name}</p>
+                <span className="game-over-meta">
+                  {isWinner
+                    ? "מקום ראשון"
+                    : place === sorted.length
+                      ? "מקום אחרון"
+                      : `מקום ${place}`}
+                </span>
+              </div>
+              <span className={`game-over-score ${scoreClass}`}>{scoreLabel}</span>
+            </div>
+          );
+        })}
       </div>
-      <div className="space-y-2">
+
+      <div className="relative z-[1] space-y-2 landscape-phone:space-y-1">
         {isBotRoom && onPlayAgain && (
           <button type="button" className="btn-primary w-full" onClick={onPlayAgain}>
             שחק שוב נגד בוטים

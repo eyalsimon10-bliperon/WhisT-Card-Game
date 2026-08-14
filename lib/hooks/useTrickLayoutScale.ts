@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+function readTrickLayoutScale(): number {
+  if (typeof window === "undefined") return 1;
+  if (window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches) return 0.62;
+  if (window.matchMedia("(orientation: portrait) and (max-width: 640px)").matches) return 0.82;
+  return 1;
+}
+
 /** Scales trick-card fly/collect offsets for smaller phone viewports. */
 export function useTrickLayoutScale(): number {
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(readTrickLayoutScale);
 
   useEffect(() => {
     function update() {
