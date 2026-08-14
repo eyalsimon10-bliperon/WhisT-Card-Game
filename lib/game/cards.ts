@@ -31,14 +31,14 @@ export function dealCards(deck: Card[], playerCount: number): Card[][] {
 }
 
 export function sortHand(hand: Card[]): Card[] {
-  // Left-to-right: diamonds, clubs, hearts, spades (red suits separated)
-  const suitOrder: Record<Suit, number> = { diamonds: 0, clubs: 1, hearts: 2, spades: 3 };
+  // Left-to-right: spades → hearts → clubs → diamonds, high card first
+  const suitOrder: Record<Suit, number> = { spades: 0, hearts: 1, clubs: 2, diamonds: 3 };
   return [...hand].sort((a, b) => {
     if (suitOrder[a.suit] !== suitOrder[b.suit]) {
       return suitOrder[a.suit] - suitOrder[b.suit];
     }
     const rankOrder = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-    return rankOrder.indexOf(a.rank) - rankOrder.indexOf(b.rank);
+    return rankOrder.indexOf(b.rank) - rankOrder.indexOf(a.rank);
   });
 }
 

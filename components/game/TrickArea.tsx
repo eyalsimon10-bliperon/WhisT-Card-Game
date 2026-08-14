@@ -3,6 +3,7 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
 import { playCardSlide, unlockCardAudio } from "@/lib/audio/card-sounds";
+import { sortHand } from "@/lib/game/cards";
 import { scalePx, useTrickLayoutScale } from "@/lib/hooks/useTrickLayoutScale";
 import type { Card, TrickPlay } from "@/lib/game/types";
 import type { GameState } from "@/lib/game/types";
@@ -227,7 +228,8 @@ export function PlayerHand({
   onPlayCard,
   canPlay,
 }: PlayerHandProps) {
-  const count = hand.length;
+  const cards = sortHand(hand);
+  const count = cards.length;
 
   return (
     <div className="game-hand-dock-hand w-full min-w-0">
@@ -245,7 +247,7 @@ export function PlayerHand({
           } as CSSProperties
         }
       >
-        {hand.map((card, index) => {
+        {cards.map((card, index) => {
           const isLegal = legalCardIds.has(card.id);
           const isSelected = selectedCardId === card.id;
           const isUnplayable = canPlay && !isLegal;
