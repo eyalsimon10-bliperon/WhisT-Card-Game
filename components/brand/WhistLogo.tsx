@@ -1,10 +1,11 @@
 import type { SVGProps } from "react";
+import { SUIT_SYMBOL } from "@/lib/game/types";
 
 type WhistLogoProps = SVGProps<SVGSVGElement> & {
   title?: string;
 };
 
-/** Playing-card mark: gold W + spade on felt — used in the app header and favicon. */
+/** Playing-card mark: gold W + the same ♠ used in trump bidding. */
 export function WhistLogo({ title = "WhisT", className, ...props }: WhistLogoProps) {
   const uid = "whist-logo";
 
@@ -69,13 +70,16 @@ export function WhistLogo({ title = "WhisT", className, ...props }: WhistLogoPro
         </text>
       </g>
 
-      {/* Classic spade: pointed top, two round lobes, narrow stem */}
-      <g fill={`url(#${uid}-gold)`}>
-        <path d="M64 28 L88 76 H40 Z" />
-        <circle cx="48" cy="74" r="16" />
-        <circle cx="80" cy="74" r="16" />
-        <path d="M61 84 L56 108 H72 L67 84 Z" />
-      </g>
+      <text
+        x="64"
+        y="86"
+        fill={`url(#${uid}-gold)`}
+        fontFamily="var(--font-heebo), ui-sans-serif, system-ui, 'Segoe UI Symbol', 'Apple Symbols', sans-serif"
+        fontSize="64"
+        textAnchor="middle"
+      >
+        {SUIT_SYMBOL.spades}
+      </text>
     </svg>
   );
 }

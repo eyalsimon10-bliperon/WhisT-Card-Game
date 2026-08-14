@@ -17,10 +17,5 @@
   <g transform="rotate(180 100 96)">
     <text x="100" y="104" fill="url(#gold)" font-family="Georgia, Times, serif" font-size="22" font-weight="700" text-anchor="middle">W</text>
   </g>
-  <g fill="url(#gold)">
-    <path d="M64 28 L88 76 H40 Z"/>
-    <circle cx="48" cy="74" r="16"/>
-    <circle cx="80" cy="74" r="16"/>
-    <path d="M61 84 L56 108 H72 L67 84 Z"/>
-  </g>
+  <text x="64" y="86" fill="url(#gold)" font-family="Segoe UI Symbol, Apple Symbols, Noto Sans Symbols 2, Times New Roman, sans-serif" font-size="64" text-anchor="middle">♠</text>
 </svg>
