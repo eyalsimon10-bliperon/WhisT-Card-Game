@@ -9,6 +9,7 @@ export function normalizeGameState(state: GameState): GameState {
     completedTrickDisplay: state.completedTrickDisplay ?? null,
     contractPassSeats: state.contractPassSeats ?? [],
     contractConfirmPending: state.contractConfirmPending ?? false,
+    lastContractCalls: state.lastContractCalls?.length === 4 ? state.lastContractCalls : [null, null, null, null],
     trickHistory: state.trickHistory ?? [],
   };
 

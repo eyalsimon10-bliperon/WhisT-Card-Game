@@ -16,6 +16,7 @@ function normalizeGameState(state: GameState): GameState {
     contractPassSeats: state.contractPassSeats ?? [],
     contractConfirmPending: state.contractConfirmPending ?? false,
     trickHistory: state.trickHistory ?? [],
+    lastContractCalls: state.lastContractCalls?.length === 4 ? state.lastContractCalls : [null, null, null, null],
   };
 
   if (

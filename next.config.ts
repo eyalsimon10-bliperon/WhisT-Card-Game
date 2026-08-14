@@ -8,6 +8,22 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  async headers() {
+    return [
+      {
+        source: "/",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
+        source: "/room/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
+        source: "/join/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

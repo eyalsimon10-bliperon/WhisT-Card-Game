@@ -138,8 +138,8 @@ export function TrickArea({ state, mySeat, collecting = false }: TrickAreaProps)
   return (
     <div className="trick-zone mx-auto px-1">
       <div className="trick-zone-inner relative mx-auto w-full">
-        <div className="absolute inset-1.5 rounded-[45%] border-2 border-gold-500/25 bg-gradient-to-b from-felt-700/80 to-felt-900/90 shadow-[inset_0_4px_24px_rgba(0,0,0,0.5),0_0_40px_rgba(232,197,71,0.08)] portrait-phone:inset-1 landscape-phone:inset-0.5" />
-        <div className="absolute inset-4 rounded-[45%] border border-white/5 portrait-phone:inset-2.5 landscape-phone:inset-2" />
+        <div className="absolute inset-[6%] rounded-[1.15rem] border-[3px] border-gold-500/55 bg-gradient-to-b from-felt-700/90 to-felt-900 shadow-[inset_0_6px_28px_rgba(0,0,0,0.45),0_0_28px_rgba(232,197,71,0.12)] portrait-phone:inset-[5%] landscape-phone:inset-[4%]" />
+        <div className="absolute inset-[11%] rounded-[0.85rem] border border-gold-500/20 portrait-phone:inset-[9%] landscape-phone:inset-[8%]" />
 
         {displayPlays.length === 0 && !isCollecting && (
           <p className="absolute inset-0 flex items-center justify-center text-xs text-white/25 portrait-phone:text-[10px] landscape-phone:text-[9px]">
@@ -178,9 +178,26 @@ export function TrickArea({ state, mySeat, collecting = false }: TrickAreaProps)
         )}
 
         {state.contractBid && (
-          <div className="absolute top-1 left-1/2 z-[5] -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-2.5 py-0.5 text-[11px] text-gold-300 backdrop-blur-sm landscape-phone:top-0 landscape-phone:text-[10px]">
-            {state.contractBid.tricks}{" "}
-            {state.contractBid.trump === "NT" ? "NT" : state.contractBid.trump}
+          <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center opacity-[0.12]">
+            {state.contractBid.trump === "NT" ? (
+              <span className="text-4xl font-black tracking-tight text-gold-300 landscape-phone:text-3xl">NT</span>
+            ) : (
+              <span
+                className={`text-6xl landscape-phone:text-5xl ${
+                  state.contractBid.trump === "hearts" || state.contractBid.trump === "diamonds"
+                    ? "text-[#c41e3a]"
+                    : "text-black"
+                }`}
+              >
+                {state.contractBid.trump === "spades"
+                  ? "♠"
+                  : state.contractBid.trump === "hearts"
+                    ? "♥"
+                    : state.contractBid.trump === "diamonds"
+                      ? "♦"
+                      : "♣"}
+              </span>
+            )}
           </div>
         )}
       </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { playMatchResult } from "@/lib/audio/card-sounds";
+import { BidMark, PassMark, SuitGlyph } from "@/components/game/BidMark";
+import { playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
 import {
   formatContractBid,
   getBidProgress,
@@ -24,18 +25,10 @@ function getContractSeatDisplay(state: GameState, seatIndex: number): ContractSe
   if (state.phase === "bidding_contract" && state.currentPlayerIndex === seatIndex) {
     return "thinking";
   }
-  if (state.contractPassSeats.includes(seatIndex)) {
-    return "pass";
-  }
-  if (state.highBidderIndex === seatIndex && state.currentHighBid) {
-    return "bid";
-  }
+  const call = state.lastContractCalls?.[seatIndex];
+  if (call?.type === "pass") return "pass";
+  if (call?.type === "bid") return "bid";
   return "waiting";
-}
-
-function trumpBadge(trump: Trump): string {
-  if (trump === "NT") return "NT";
-  return SUIT_SYMBOL[trump];
 }
 
 interface ContractBiddingTrackerProps {
@@ -45,7 +38,6 @@ interface ContractBiddingTrackerProps {
 
 export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTrackerProps) {
   const seats = [0, 1, 2, 3].map((offset) => (mySeat + offset) % 4);
-  const seatLabels = ["את/ה", "ימין", "מול", "שמאל"];
 
   return (
     <div className="shrink-0 px-0.5 landscape-phone:mb-0 portrait-phone:mb-1.5 mb-1.5">
@@ -53,23 +45,25 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
         מעקב הכרזות
       </p>
       <div className="grid grid-cols-4 gap-1.5 landscape-phone:gap-1 portrait-phone:gap-1.5">
-        {seats.map((seatIndex, i) => {
+        {seats.map((seatIndex) => {
           const player = state.players.find((p) => p.seatIndex === seatIndex);
           if (!player) return null;
 
           const display = getContractSeatDisplay(state, seatIndex);
+          const call = state.lastContractCalls?.[seatIndex] ?? null;
           const isMe = seatIndex === mySeat;
+          const bid = call?.type === "bid" ? call.bid : display === "confirm" ? state.currentHighBid : null;
 
           return (
             <div
               key={seatIndex}
-              className={`relative flex flex-col items-center rounded-xl border px-1.5 py-2 transition-all duration-300 portrait-phone:rounded-xl portrait-phone:px-1 portrait-phone:py-1.5 landscape-phone:rounded-lg landscape-phone:px-1 landscape-phone:py-1 ${
+              className={`relative flex flex-col items-center rounded-xl border px-1 py-2 transition-all duration-300 portrait-phone:px-1 portrait-phone:py-1.5 landscape-phone:rounded-lg landscape-phone:px-1 landscape-phone:py-1 ${
                 display === "thinking" || display === "confirm"
                   ? "border-gold-400/70 bg-gold-500/15 shadow-lg shadow-gold-500/20"
                   : display === "pass"
                     ? "border-white/10 bg-white/5"
                     : display === "bid"
-                      ? "border-emerald-400/40 bg-emerald-500/10"
+                      ? "border-gold-400/35 bg-black/30"
                       : "border-white/5 bg-black/20"
               }`}
             >
@@ -79,46 +73,22 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
                 </span>
               )}
 
-              <div
-                className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold portrait-phone:mb-0.5 portrait-phone:h-7 portrait-phone:w-7 portrait-phone:text-[11px] landscape-phone:mb-0.5 landscape-phone:h-6 landscape-phone:w-6 landscape-phone:text-[10px] ${
-                  isMe ? "bg-gold-500/30 text-gold-200" : "bg-white/10 text-white/70"
-                }`}
-              >
-                {player.name.charAt(0)}
-              </div>
-
-              <p className="max-w-full truncate text-[11px] font-semibold text-white/90 portrait-phone:text-[11px] landscape-phone:text-[10px]">
+              <p className="max-w-full truncate text-xs font-extrabold text-white portrait-phone:text-[12px] landscape-phone:text-[11px]">
                 {isMe ? "את/ה" : player.name}
               </p>
-              <p className="text-[8px] text-white/30 portrait-phone:hidden landscape-phone:hidden">{seatLabels[i]}</p>
 
-              <div className="mt-1 flex min-h-[1.25rem] items-center justify-center portrait-phone:mt-0.5 portrait-phone:min-h-[1.2rem] landscape-phone:mt-0.5 landscape-phone:min-h-[1.1rem]">
-                {display === "pass" && (
-                  <span className="contract-pass-badge rounded-md bg-white/10 px-2 py-0.5 text-xs font-bold tracking-wide text-white/70 landscape-phone:text-[11px]">
-                    PASS
-                  </span>
-                )}
-                {display === "bid" && state.currentHighBid && (
-                  <span className="text-center text-sm font-bold text-emerald-300 landscape-phone:text-xs">
-                    {state.currentHighBid.tricks}
-                    <span className="mx-0.5">{trumpBadge(state.currentHighBid.trump)}</span>
-                  </span>
-                )}
-                {display === "confirm" && state.currentHighBid && (
-                  <span className="text-center text-sm font-bold text-gold-300 landscape-phone:text-xs">
-                    {state.currentHighBid.tricks}
-                    <span className="mx-0.5">{trumpBadge(state.currentHighBid.trump)}</span>
-                  </span>
-                )}
-                {display === "thinking" && (
+              <div className="mt-1.5 flex min-h-[2.1rem] items-center justify-center portrait-phone:mt-1 portrait-phone:min-h-[2rem] landscape-phone:mt-0.5 landscape-phone:min-h-[1.7rem]">
+                {call?.type === "pass" && <PassMark size="md" />}
+                {bid && <BidMark bid={bid} size="lg" />}
+                {display === "thinking" && !call && (
                   <span className="flex gap-0.5">
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gold-400 [animation-delay:0ms]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gold-400 [animation-delay:150ms]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gold-400 [animation-delay:300ms]" />
                   </span>
                 )}
-                {display === "waiting" && (
-                  <span className="text-xs text-white/25">—</span>
+                {display === "waiting" && !call && !bid && (
+                  <span className="text-sm text-white/25">—</span>
                 )}
               </div>
             </div>
@@ -127,12 +97,13 @@ export function ContractBiddingTracker({ state, mySeat }: ContractBiddingTracker
       </div>
 
       {state.contractConfirmPending && state.currentHighBid && (
-        <p className="mt-1.5 text-center text-[11px] text-gold-300/90 portrait-phone:text-[11px] landscape-phone:mt-1 landscape-phone:text-[10px]">
-          3 PASS —{" "}
+        <p className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-gold-300/90 portrait-phone:text-[11px] landscape-phone:mt-1 landscape-phone:text-[10px]">
+          3 PASS —
           <span className="font-semibold">
             {state.players.find((p) => p.seatIndex === state.highBidderIndex)?.name}
-          </span>{" "}
-          מאשר/ת את {formatContractBid(state.currentHighBid)}
+          </span>
+          מאשר/ת
+          <BidMark bid={state.currentHighBid} size="sm" />
         </p>
       )}
     </div>
@@ -239,8 +210,9 @@ export function ContractBiddingPanel({
         {isConfirmPhase ? (
           <p className="mt-1 text-sm font-semibold text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">אישור חוזה סופי</p>
         ) : state.currentHighBid ? (
-          <p className="mt-1 text-sm text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">
-            הכרזה גבוהה: {formatContractBid(state.currentHighBid)}
+          <p className="mt-1.5 flex items-center justify-center gap-2 text-sm text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">
+            הכרזה גבוהה
+            <BidMark bid={state.currentHighBid} size="md" />
           </p>
         ) : (
           <p className="mt-1 text-sm text-white/60 portrait-phone:text-sm landscape-phone:text-xs">מינימום: {state.minContractTricks} לקיחות</p>
@@ -264,7 +236,7 @@ export function ContractBiddingPanel({
                   {isConfirmPhase ? "בחר שליט" : "בחר שליט"}
                 </p>
                 <div className="bid-trump-grid">
-                  {TRUMP_OPTIONS.map(({ trump, symbol, label, isRed }) => {
+                  {TRUMP_OPTIONS.map(({ trump, label }) => {
                     const available = isTrumpAvailable(trump);
                     const selected = selectedTrump === trump;
                     return (
@@ -278,16 +250,16 @@ export function ContractBiddingPanel({
                         }}
                         className={`bid-trump-btn ${
                           selected
-                            ? "border-gold-400 bg-gold-500/25 shadow-md shadow-gold-500/20"
+                            ? "is-selected"
                             : available
-                              ? "border-white/15 bg-white/10 hover:border-white/30"
-                              : "cursor-not-allowed border-white/5 bg-white/5 opacity-30"
+                              ? ""
+                              : "is-disabled"
                         }`}
                       >
-                        <span className={`bid-trump-symbol ${isRed ? "text-red-400" : "text-white"}`}>
-                          {symbol}
+                        <span className="bid-trump-face">
+                          <SuitGlyph trump={trump} className="bid-trump-suit" />
                         </span>
-                        <span className="mt-1 hidden text-[10px] text-white/70 sm:block">{label}</span>
+                        <span className="bid-trump-caption">{label}</span>
                       </button>
                     );
                   })}
@@ -390,8 +362,9 @@ export function TrickBiddingPanel({
           חלק ב&apos; — הכרזת לקיחות
         </p>
         {state.contractBid && (
-          <p className="mt-1 text-sm text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">
-            {contractPlayer?.name}: {formatContractBid(state.contractBid)}
+          <p className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-gold-300 portrait-phone:text-sm landscape-phone:text-xs">
+            <span>{contractPlayer?.name}</span>
+            <BidMark bid={state.contractBid} size="md" />
           </p>
         )}
         <div className="mt-1.5 flex justify-center">
@@ -819,6 +792,7 @@ export function GameOverPanel({
   const resultKey = `${state.roomCode}:${sorted.map((p) => `${p.id}:${p.totalScore}`).join("|")}`;
 
   useEffect(() => {
+    unlockCardAudio();
     playMatchResult(didWin, resultKey);
   }, [didWin, resultKey]);
 

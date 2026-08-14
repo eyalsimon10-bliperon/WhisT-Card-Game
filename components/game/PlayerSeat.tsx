@@ -1,9 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
+
+import { BidMark } from "@/components/game/BidMark";
+import { getBidProgress } from "@/lib/game/bidding";
+import { getRelativeSeat } from "@/lib/game/engine";
 import type { GamePlayer, GameState, Trump } from "@/lib/game/types";
 import { SUIT_SYMBOL } from "@/lib/game/types";
-import { getRelativeSeat } from "@/lib/game/engine";
-import { getBidProgress } from "@/lib/game/bidding";
 
 interface PlayerHudProps {
   player: GamePlayer;
@@ -13,30 +16,18 @@ interface PlayerHudProps {
   compact?: boolean;
 }
 
-function TrumpIcon({ trump, size = "md" }: { trump: Trump; size?: "sm" | "md" | "lg" }) {
-  const sizeClass = size === "lg" ? "h-9 w-9 text-2xl" : size === "md" ? "h-7 w-7 text-lg" : "h-5 w-5 text-sm";
+function TrumpTile({ trump, size = "md" }: { trump: Trump; size?: "md" | "lg" }) {
   const isRed = trump === "hearts" || trump === "diamonds";
 
-  if (trump === "NT") {
-    return (
-      <span
-        className={`inline-flex ${sizeClass} items-center justify-center rounded-lg border border-white/20 bg-gradient-to-br from-slate-600/80 to-slate-800/90 text-[10px] font-black tracking-tight text-white shadow-inner`}
-        aria-label="NT"
-      >
-        NT
-      </span>
-    );
-  }
-
   return (
-    <span
-      className={`inline-flex ${sizeClass} items-center justify-center rounded-lg border border-white/15 bg-white/10 font-bold shadow-inner ${
-        isRed ? "text-red-400" : "text-white"
-      }`}
-      aria-hidden
-    >
-      {SUIT_SYMBOL[trump]}
-    </span>
+    <div className={`trump-tile is-${size}`} title={trump === "NT" ? "ללא שליט" : trump}>
+      {trump === "NT" ? (
+        <span className="trump-tile-nt">NT</span>
+      ) : (
+        <span className={`trump-tile-suit ${isRed ? "is-red" : "is-black"}`}>{SUIT_SYMBOL[trump]}</span>
+      )}
+      <span className="trump-tile-label">שליט</span>
+    </div>
   );
 }
 
@@ -94,7 +85,7 @@ function StatPill({
   );
 }
 
-function OpponentChip({
+function OpponentPlaque({
   player,
   state,
   isActive,
@@ -104,42 +95,39 @@ function OpponentChip({
   isActive: boolean;
 }) {
   const trickBid = state.trickBids[player.seatIndex];
-  const showStats =
-    state.phase === "playing" ||
-    (state.phase === "bidding_tricks" && trickBid !== null && trickBid !== undefined);
+  const call = state.lastContractCalls?.[player.seatIndex] ?? null;
   const progress = state.phase === "playing" ? getBidProgress(player.tricksWon, trickBid) : null;
   const bidTone =
     progress === "made"
-      ? "text-emerald-300"
+      ? "is-made"
       : progress === "overbid"
-        ? "text-rose-300"
-        : "text-gold-300";
+        ? "is-over"
+        : "";
+  const isContractWinner = state.contractWinnerIndex === player.seatIndex;
 
   return (
-    <div
-      className={`flex max-w-[8.75rem] items-center gap-1.5 rounded-full border px-2 py-1 backdrop-blur-md landscape-phone:max-w-[7.75rem] landscape-phone:gap-1 landscape-phone:px-1.5 landscape-phone:py-0.5 ${
-        isActive
-          ? "border-gold-400/60 bg-gold-500/20 shadow-sm shadow-gold-500/20"
-          : "border-white/10 bg-black/55"
-      }`}
-    >
-      <span
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold landscape-phone:h-6 landscape-phone:w-6 landscape-phone:text-[10px] ${
-          isActive ? "bg-gold-500 text-felt-900" : "bg-white/10 text-white/80"
-        }`}
-      >
-        {player.name.charAt(0)}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-white landscape-phone:text-[11px]">
-        {player.name}
-      </span>
-      {showStats && trickBid !== null && trickBid !== undefined ? (
-        <span className={`shrink-0 tabular-nums text-[11px] font-bold landscape-phone:text-[10px] ${bidTone}`}>
-          {player.tricksWon}/{trickBid}
-        </span>
+    <div className={`seat-plaque ${isActive ? "is-turn" : ""} ${isContractWinner ? "is-declarer" : ""}`}>
+      <p className="seat-plaque-name">{player.name}</p>
+      {state.phase === "playing" && trickBid !== null && trickBid !== undefined ? (
+        <p className={`seat-plaque-tricks ${bidTone}`}>
+          <span className="seat-plaque-tricks-num">
+            {player.tricksWon}/{trickBid}
+          </span>
+          <span className="seat-plaque-tricks-label">לקיחות</span>
+        </p>
+      ) : call?.type === "bid" ? (
+        <BidMark bid={call.bid} size="sm" />
+      ) : call?.type === "pass" ? (
+        <span className="pass-mark is-sm">PASS</span>
+      ) : trickBid !== null && trickBid !== undefined ? (
+        <p className="seat-plaque-tricks">
+          <span className="seat-plaque-tricks-num">{trickBid}</span>
+          <span className="seat-plaque-tricks-label">הכרזה</span>
+        </p>
       ) : (
-        <span className="shrink-0 text-[11px] text-white/50 landscape-phone:text-[10px]">🃏{player.hand.length}</span>
+        <p className="seat-plaque-waiting">{isActive ? "תור" : "—"}</p>
       )}
+      {isActive && <span className="seat-plaque-turn">תור</span>}
     </div>
   );
 }
@@ -256,17 +244,17 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
                   tone={bidTone}
                   micro
                 />
-                {showTrump && state.trump && <TrumpIcon trump={state.trump} size="sm" />}
+                {showTrump && state.trump && <TrumpTile trump={state.trump} size="md" />}
               </div>
             )}
           </div>
 
           {showTrump && state.trump && !isMe && (
-            <TrumpIcon trump={state.trump} size={compact ? "sm" : "md"} />
+            <TrumpTile trump={state.trump} size="md" />
           )}
           {showTrump && state.trump && isMe && (
             <div className="portrait-phone:hidden landscape-phone:hidden">
-              <TrumpIcon trump={state.trump} size={compact ? "sm" : "md"} />
+              <TrumpTile trump={state.trump} size="md" />
             </div>
           )}
         </div>
@@ -319,32 +307,6 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
   );
 }
 
-interface PlayerSeatProps {
-  player: GamePlayer;
-  state: GameState;
-  position: "top" | "left" | "right";
-  isActive: boolean;
-}
-
-const positionClasses = {
-  top: "top-0 left-1/2 -translate-x-1/2 portrait-phone:top-0 landscape-phone:top-0",
-  left: "left-0 top-[3.75rem] portrait-phone:left-0 portrait-phone:top-[3.25rem] landscape-phone:left-0.5 landscape-phone:top-1/2 landscape-phone:-translate-y-1/2",
-  right: "right-0 top-[3.75rem] portrait-phone:right-0 portrait-phone:top-[3.25rem] landscape-phone:right-0.5 landscape-phone:top-1/2 landscape-phone:-translate-y-1/2",
-};
-
-export function PlayerSeat({ player, state, position, isActive }: PlayerSeatProps) {
-  return (
-    <div className={`absolute ${positionClasses[position]} transition-transform duration-300`}>
-      <div className="hidden portrait-phone:block landscape-phone:block">
-        <OpponentChip player={player} state={state} isActive={isActive} />
-      </div>
-      <div className="portrait-phone:hidden landscape-phone:hidden">
-        <PlayerHud player={player} state={state} isActive={isActive} compact />
-      </div>
-    </div>
-  );
-}
-
 export function HumanPlayerHud({
   player,
   state,
@@ -362,37 +324,25 @@ export function HumanPlayerHud({
   if (state.phase === "playing") {
     return (
       <div className="px-0.5 pb-0.5 portrait-phone:px-0 landscape-phone:px-0">
-        <div
-          className={`game-hud-slim ${isActive ? "border-gold-400/50 bg-gold-500/10" : ""}`}
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            <span
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold landscape-phone:h-6 landscape-phone:w-6 landscape-phone:text-[11px] ${
-                isActive ? "bg-gold-500 text-felt-900" : "bg-white/10 text-white/80"
-              }`}
-            >
-              {player.name.charAt(0)}
-            </span>
-            <span className="truncate text-sm font-semibold text-white landscape-phone:text-xs">את/ה</span>
-            {isActive && (
-              <span className="rounded-md bg-gold-500/25 px-1.5 py-0.5 text-[10px] font-bold text-gold-300">
-                תור
-              </span>
-            )}
+        <div className={`game-hud-bar ${isActive ? "is-turn" : ""}`}>
+          <div className="game-hud-bar-who">
+            <span className="game-hud-bar-name">את/ה</span>
+            {isActive && <span className="game-hud-bar-turn">התור שלך</span>}
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <StatPill label="הכרזה" value={trickBid ?? "—"} micro />
-            <StatPill
-              label="לקיחות"
-              value={
-                trickBid !== null && trickBid !== undefined
+          <div className="game-hud-bar-stats">
+            <div className="game-hud-stat">
+              <span className="game-hud-stat-label">הכרזה</span>
+              <span className="game-hud-stat-value">{trickBid ?? "—"}</span>
+            </div>
+            <div className={`game-hud-stat ${bidTone ? `is-${bidTone}` : ""}`}>
+              <span className="game-hud-stat-label">לקיחות</span>
+              <span className="game-hud-stat-value">
+                {trickBid !== null && trickBid !== undefined
                   ? `${player.tricksWon}/${trickBid}`
-                  : player.tricksWon
-              }
-              tone={bidTone}
-              micro
-            />
-            {showTrump && state.trump && <TrumpIcon trump={state.trump} size="sm" />}
+                  : player.tricksWon}
+              </span>
+            </div>
+            {showTrump && state.trump && <TrumpTile trump={state.trump} size="lg" />}
           </div>
         </div>
       </div>
@@ -406,38 +356,40 @@ export function HumanPlayerHud({
   );
 }
 
-export function OpponentSeats({
+export function PlayField({
   state,
   mySeat,
+  children,
 }: {
   state: GameState;
   mySeat: number;
+  children: ReactNode;
 }) {
-  const positions: Array<{ offset: number; pos: "top" | "left" | "right" }> = [
-    { offset: 1, pos: "right" },
-    { offset: 2, pos: "top" },
-    { offset: 3, pos: "left" },
+  const positions: Array<{ offset: number; area: "top" | "left" | "right" }> = [
+    { offset: 2, area: "top" },
+    { offset: 3, area: "left" },
+    { offset: 1, area: "right" },
   ];
 
   return (
-    <>
-      {positions.map(({ offset, pos }) => {
+    <div className="play-field">
+      {positions.map(({ offset, area }) => {
         const seatIndex = getRelativeSeat(offset, mySeat);
         const player = state.players.find((p) => p.seatIndex === seatIndex);
-        if (!player || player.seatIndex === mySeat) return null;
-
+        if (!player) return null;
         return (
-          <PlayerSeat
-            key={seatIndex}
-            player={player}
-            state={state}
-            position={pos}
-            isActive={state.currentPlayerIndex === seatIndex}
-          />
+          <div key={area} className={`play-seat is-${area}`}>
+            <OpponentPlaque
+              player={player}
+              state={state}
+              isActive={state.currentPlayerIndex === seatIndex}
+            />
+          </div>
         );
       })}
-    </>
+      <div className="play-felt">{children}</div>
+    </div>
   );
 }
 
-export { TrumpIcon };
+export { TrumpTile };

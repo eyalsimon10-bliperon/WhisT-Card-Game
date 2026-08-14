@@ -93,6 +93,8 @@ export interface GameState {
   contractPassSeats: number[];
   /** High bidder must confirm (or adjust trump) after 3 passes */
   contractConfirmPending: boolean;
+  /** Last contract call per seat (kept after overcalls so the auction stays visible) */
+  lastContractCalls: (ContractAction | null)[];
   contractWinnerIndex: number | null;
   contractBid: ContractBid | null;
   trickBids: (number | null)[];

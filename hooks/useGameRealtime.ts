@@ -21,6 +21,9 @@ function fingerprint(state: GameState | null): string {
     state.trickBidStep,
     state.currentHighBid ? `${state.currentHighBid.tricks}${state.currentHighBid.trump}` : "",
     state.trickBids.join(","),
+    (state.lastContractCalls ?? []).map((c) =>
+      c?.type === "bid" ? `${c.bid.tricks}${c.bid.trump}` : c?.type ?? ""
+    ).join(","),
     state.players.map((p) => `${p.hand.length}:${p.tricksWon}:${p.totalScore}`).join("|"),
   ].join("~");
 }

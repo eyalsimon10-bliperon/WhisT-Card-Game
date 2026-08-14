@@ -288,10 +288,443 @@
 
   .trick-zone-inner {
     height: var(--trick-zone-h);
+    position: relative;
   }
 
   .game-hud-slim {
     @apply flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/45 px-2.5 py-1.5 backdrop-blur-md;
+  }
+
+  .play-field {
+    display: grid;
+    grid-template-columns: minmax(4.55rem, 5.85rem) minmax(0, 1fr) minmax(4.55rem, 5.85rem);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "top top top"
+      "left felt right";
+    min-height: 0;
+    height: 100%;
+    flex: 1;
+    gap: 0.3rem 0.25rem;
+    padding: 0.1rem 0;
+  }
+
+  .play-seat.is-top {
+    grid-area: top;
+    display: flex;
+    justify-content: center;
+  }
+
+  .play-seat.is-left {
+    grid-area: left;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-seat.is-right {
+    grid-area: right;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-felt {
+    grid-area: felt;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-felt .trick-zone {
+    width: min(100%, var(--trick-zone-w), var(--trick-zone-h));
+    max-height: 100%;
+    aspect-ratio: 1;
+    height: auto;
+  }
+
+  .play-felt .trick-zone-inner {
+    height: 100%;
+    width: 100%;
+  }
+
+  .seat-plaque {
+    width: 100%;
+    max-width: 7.4rem;
+    padding: 0.4rem 0.45rem 0.45rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(180deg, rgba(18, 48, 32, 0.92), rgba(8, 22, 14, 0.94));
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    text-align: center;
+  }
+
+  .seat-plaque.is-turn {
+    border-color: rgba(232, 197, 71, 0.7);
+    box-shadow: 0 0 0 1px rgba(232, 197, 71, 0.25), 0 8px 18px rgba(232, 197, 71, 0.18);
+  }
+
+  .seat-plaque.is-declarer {
+    border-color: rgba(232, 197, 71, 0.4);
+  }
+
+  .seat-plaque-name {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+  }
+
+  .seat-plaque-tricks {
+    margin: 0.28rem 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+  }
+
+  .seat-plaque-tricks-num {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: #f5d76e;
+  }
+
+  .seat-plaque-tricks.is-made .seat-plaque-tricks-num {
+    color: #34d399;
+  }
+
+  .seat-plaque-tricks.is-over .seat-plaque-tricks-num {
+    color: #fb7185;
+  }
+
+  .seat-plaque-tricks-label,
+  .seat-plaque-waiting {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .seat-plaque-waiting {
+    margin: 0.35rem 0 0;
+  }
+
+  .seat-plaque-turn {
+    display: inline-block;
+    margin-top: 0.28rem;
+    border-radius: 999px;
+    background: #e8c547;
+    padding: 0.08rem 0.45rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #0d2818;
+  }
+
+  .game-hud-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(180deg, rgba(18, 48, 32, 0.95), rgba(8, 22, 14, 0.96));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  .game-hud-bar.is-turn {
+    border-color: rgba(232, 197, 71, 0.65);
+    box-shadow: 0 0 0 1px rgba(232, 197, 71, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .game-hud-bar-who {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .game-hud-bar-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .game-hud-bar-turn {
+    border-radius: 999px;
+    background: #e8c547;
+    padding: 0.12rem 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #0d2818;
+  }
+
+  .game-hud-bar-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .game-hud-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 2.6rem;
+    padding: 0.12rem 0.4rem;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  .game-hud-stat-label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .game-hud-stat-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: #f5d76e;
+  }
+
+  .game-hud-stat.is-made .game-hud-stat-value {
+    color: #34d399;
+  }
+
+  .game-hud-stat.is-overbid .game-hud-stat-value {
+    color: #fb7185;
+  }
+
+  .trump-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.55rem;
+    background: #f7f4ee;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  .trump-tile.is-md {
+    height: 2.35rem;
+    width: 1.75rem;
+  }
+
+  .trump-tile.is-lg {
+    height: 3.05rem;
+    width: 2.2rem;
+  }
+
+  .trump-tile-suit {
+    font-size: 1.45rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .trump-tile.is-lg .trump-tile-suit {
+    font-size: 1.85rem;
+  }
+
+  .trump-tile-suit.is-red {
+    color: #c41e3a;
+  }
+
+  .trump-tile-suit.is-black {
+    color: #111;
+  }
+
+  .trump-tile-nt {
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: #1e3a5f;
+  }
+
+  .trump-tile-label {
+    font-size: 0.48rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: rgba(17, 17, 17, 0.55);
+  }
+
+  .bid-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12em;
+    border-radius: 0.45rem;
+    background: #f7f4ee;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    color: #111;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .bid-mark.is-sm {
+    padding: 0.12rem 0.32rem;
+    font-size: 0.95rem;
+  }
+
+  .bid-mark.is-md {
+    padding: 0.18rem 0.42rem;
+    font-size: 1.2rem;
+  }
+
+  .bid-mark.is-lg {
+    padding: 0.22rem 0.48rem;
+    font-size: 1.45rem;
+  }
+
+  .bid-mark-num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bid-mark-suit {
+    font-size: 1.15em;
+  }
+
+  .bid-mark-suit.is-red {
+    color: #c41e3a;
+  }
+
+  .bid-mark-suit.is-black {
+    color: #111;
+  }
+
+  .bid-mark-nt {
+    font-size: 0.62em;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    color: #1e3a5f;
+  }
+
+  .pass-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.4rem;
+    background: rgba(255, 255, 255, 0.12);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .pass-mark.is-sm {
+    padding: 0.12rem 0.35rem;
+    font-size: 0.62rem;
+  }
+
+  .pass-mark.is-md {
+    padding: 0.18rem 0.42rem;
+    font-size: 0.72rem;
+  }
+
+  .pass-mark.is-lg {
+    padding: 0.22rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .bid-trump-btn {
+    @apply flex min-h-[3.5rem] flex-col items-center justify-center gap-1 rounded-xl border border-white/15 bg-white/5 px-1 py-1.5 transition active:scale-95;
+  }
+
+  .bid-trump-btn.is-selected {
+    border-color: rgba(232, 197, 71, 0.75);
+    background: rgba(232, 197, 71, 0.16);
+    box-shadow: 0 0 0 1px rgba(232, 197, 71, 0.2);
+  }
+
+  .bid-trump-btn.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+
+  .bid-trump-face {
+    display: flex;
+    height: 2.35rem;
+    width: 1.7rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.35rem;
+    background: #f7f4ee;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .bid-trump-suit {
+    font-size: 1.55rem;
+    line-height: 1;
+  }
+
+  .bid-trump-caption {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .play-field {
+      grid-template-columns: 6.5rem minmax(0, 1fr) 6.5rem;
+      gap: 0.2rem;
+    }
+
+    .seat-plaque {
+      padding: 0.28rem 0.35rem;
+      max-width: 6.5rem;
+    }
+
+    .seat-plaque-name {
+      font-size: 0.78rem;
+    }
+
+    .seat-plaque-tricks-num {
+      font-size: 0.95rem;
+    }
+
+    .game-hud-bar {
+      padding: 0.22rem 0.4rem;
+    }
+
+    .game-hud-bar-name {
+      font-size: 0.88rem;
+    }
+
+    .trump-tile.is-lg {
+      height: 2.35rem;
+      width: 1.7rem;
+    }
+
+    .trump-tile.is-lg .trump-tile-suit {
+      font-size: 1.4rem;
+    }
+
+    .bid-trump-btn {
+      min-height: 2.6rem;
+      padding: 0.25rem 0.2rem;
+    }
+
+    .bid-trump-face {
+      height: 1.7rem;
+      width: 1.25rem;
+    }
+
+    .bid-trump-suit {
+      font-size: 1.15rem;
+    }
+
+    .bid-mark.is-lg {
+      font-size: 1.15rem;
+      padding: 0.12rem 0.32rem;
+    }
   }
 
   @media (orientation: landscape) and (max-height: 520px) {
@@ -616,36 +1049,6 @@
 
   .bid-trump-grid {
     @apply grid w-full grid-cols-5 gap-2;
-  }
-
-  .bid-trump-btn {
-    @apply flex min-h-[3.25rem] flex-col items-center justify-center rounded-xl border px-1 py-2 transition active:scale-95;
-  }
-
-  @media (orientation: portrait) and (max-width: 640px) {
-    .bid-trump-btn {
-      @apply min-h-[3.75rem] py-2.5;
-    }
-  }
-
-  @media (orientation: landscape) and (max-height: 520px) {
-    .bid-trump-btn {
-      @apply min-h-[2.35rem] py-1;
-    }
-
-    .bid-trump-symbol {
-      @apply text-xl;
-    }
-  }
-
-  .bid-trump-symbol {
-    @apply text-2xl font-bold leading-none;
-  }
-
-  @media (orientation: portrait) and (max-width: 640px) {
-    .bid-trump-symbol {
-      @apply text-3xl;
-    }
   }
 
   .bid-number-grid {

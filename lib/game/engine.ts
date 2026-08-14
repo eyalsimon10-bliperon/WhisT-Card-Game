@@ -24,6 +24,20 @@ function playerName(seatIndex: number, players: GamePlayer[]): string {
   return players.find((p) => p.seatIndex === seatIndex)?.name ?? `שחקן ${seatIndex + 1}`;
 }
 
+function emptyContractCalls(): (ContractAction | null)[] {
+  return [null, null, null, null];
+}
+
+function setContractCall(
+  calls: (ContractAction | null)[] | undefined,
+  seatIndex: number,
+  call: ContractAction
+): (ContractAction | null)[] {
+  const next = calls?.length === 4 ? [...calls] : emptyContractCalls();
+  next[seatIndex] = call;
+  return next;
+}
+
 function addLog(state: GameState, message: string): string[] {
   return [...state.bidLog.slice(-8), message];
 }
@@ -75,6 +89,7 @@ export function createInitialGameState(
     cardExchangeReady: {},
     roundScores: null,
     bidLog: [],
+    lastContractCalls: emptyContractCalls(),
   };
 
   return dealNewRound(state);
@@ -116,6 +131,7 @@ function dealNewRound(state: GameState): GameState {
     cardExchange: {},
     cardExchangeReady: {},
     roundScores: null,
+    lastContractCalls: emptyContractCalls(),
     bidLog: addLog(state, `סיבוב ${state.currentRound} — מתחילים בהכרזות`),
   };
 }
@@ -138,6 +154,7 @@ export function submitContractAction(
     next.currentHighBid = bid;
     next.contractConfirmPending = false;
     next.contractPassSeats = [];
+    next.lastContractCalls = setContractCall(next.lastContractCalls, seatIndex, { type: "bid", bid });
     next.bidLog = addLog(next, `${playerName(seatIndex, next.players)} — אישור: ${formatContractBid(bid)}`);
     return finishContractBidding(next);
   }
@@ -145,6 +162,7 @@ export function submitContractAction(
   if (action.type === "pass") {
     next.consecutivePasses += 1;
     next.contractPassSeats = [...next.contractPassSeats, seatIndex];
+    next.lastContractCalls = setContractCall(next.lastContractCalls, seatIndex, { type: "pass" });
     next.bidLog = addLog(next, `${playerName(seatIndex, next.players)} — PASS`);
 
     if (next.currentHighBid === null && next.consecutivePasses >= MAX_PLAYERS) {
@@ -175,6 +193,7 @@ export function submitContractAction(
   next.consecutivePasses = 0;
   next.contractPassSeats = [];
   next.contractConfirmPending = false;
+  next.lastContractCalls = setContractCall(next.lastContractCalls, seatIndex, { type: "bid", bid });
   next.bidLog = addLog(next, `${playerName(seatIndex, next.players)} — ${formatContractBid(bid)}`);
   next.currentPlayerIndex = nextSeat(seatIndex);
   return next;
@@ -218,6 +237,7 @@ function startCardExchange(state: GameState): GameState {
     minContractTricks: state.minContractTricks + 1,
     currentHighBid: null,
     highBidderIndex: null,
+    lastContractCalls: emptyContractCalls(),
     cardExchange: {},
     cardExchangeReady: Object.fromEntries(state.players.map((p) => [p.id, false])),
     bidLog: addLog(state, `4 PASS — החלפת 3 קלפים (מינימום ${state.minContractTricks + 1})`),
@@ -278,6 +298,7 @@ function executeCardExchange(state: GameState): GameState {
     consecutivePasses: 0,
     contractPassSeats: [],
     contractConfirmPending: false,
+    lastContractCalls: emptyContractCalls(),
     cardExchange: {},
     cardExchangeReady: {},
     bidLog: addLog(state, `החלפה הושלמה — הכרזות מ-${state.minContractTricks}`),

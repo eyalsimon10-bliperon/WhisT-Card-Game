@@ -11,7 +11,7 @@ import {
   Scoreboard,
   TrickBiddingPanel,
 } from "@/components/game/BiddingPanels";
-import { HumanPlayerHud, OpponentSeats } from "@/components/game/PlayerSeat";
+import { HumanPlayerHud, PlayField } from "@/components/game/PlayerSeat";
 import { getMySeat, PlayerHand, TrickArea } from "@/components/game/TrickArea";
 import { useGameRealtime } from "@/hooks/useGameRealtime";
 import { unlockCardAudio } from "@/lib/audio/card-sounds";
@@ -236,10 +236,9 @@ export default function GamePage() {
         <div className="relative min-h-0 flex-1">
           {state.phase === "playing" ? (
             <div className="relative flex h-full min-h-0 flex-col">
-              <OpponentSeats state={state} mySeat={mySeat} />
-              <div className="game-table-zone landscape-phone:px-[4.25rem] portrait-phone:px-0">
+              <PlayField state={state} mySeat={mySeat}>
                 <TrickArea state={state} mySeat={mySeat} collecting={trickCollecting} />
-              </div>
+              </PlayField>
             </div>
           ) : (
             <div className="flex h-full min-h-0 flex-col">
@@ -286,7 +285,7 @@ export default function GamePage() {
                   )}
 
                   {state.phase === "game_over" && (
-                    <div className="mobile-panel-fit flex flex-col justify-end">
+                    <div className="mobile-panel-fit flex min-h-0 flex-col overflow-y-auto">
                       <GameOverPanel
                       state={state}
                       humanPlayerId={humanId}
