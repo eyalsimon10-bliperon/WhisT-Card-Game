@@ -272,14 +272,13 @@ export default function GamePage() {
                       state={state}
                       humanPlayerId={humanId}
                       selectedCardIds={exchangeSelection}
-                      onToggleCard={handleToggleExchange}
                       onConfirm={handleConfirmExchange}
                       />
                     </div>
                   )}
 
                   {state.phase === "round_scoring" && (
-                    <div className="mobile-panel-fit flex flex-col justify-end">
+                    <div className="mobile-panel-fit flex min-h-0 flex-col">
                       <RoundSummary state={state} onContinue={handleContinueRound} />
                     </div>
                   )}
@@ -314,13 +313,21 @@ export default function GamePage() {
           </footer>
         )}
 
-        {(state.phase === "bidding_contract" || state.phase === "bidding_tricks") && (
+        {(state.phase === "bidding_contract" ||
+          state.phase === "bidding_tricks" ||
+          state.phase === "card_exchange") && (
           <footer className="game-hand-dock bidding-hand-dock">
             <PlayerHand
               hand={me.hand}
-              legalCardIds={new Set(me.hand.map((c) => c.id))}
-              selectedCardId={selectedCardId}
+              legalCardIds={
+                state.phase === "card_exchange" && exchangeSelection.length >= 3
+                  ? new Set(exchangeSelection)
+                  : new Set(me.hand.map((c) => c.id))
+              }
+              selectedCardId={state.phase === "card_exchange" ? null : selectedCardId}
+              selectedCardIds={state.phase === "card_exchange" ? exchangeSelection : undefined}
               onSelectCard={setSelectedCardId}
+              onToggleCard={state.phase === "card_exchange" ? handleToggleExchange : undefined}
               canPlay={false}
             />
           </footer>

@@ -214,8 +214,10 @@ export function TrickArea({ state, mySeat }: TrickAreaProps) {
 interface PlayerHandProps {
   hand: Card[];
   legalCardIds: Set<string>;
-  selectedCardId: string | null;
-  onSelectCard: (cardId: string) => void;
+  selectedCardId?: string | null;
+  selectedCardIds?: string[];
+  onSelectCard?: (cardId: string) => void;
+  onToggleCard?: (cardId: string) => void;
   onPlayCard?: (cardId: string) => void;
   canPlay: boolean;
 }
@@ -223,55 +225,78 @@ interface PlayerHandProps {
 export function PlayerHand({
   hand,
   legalCardIds,
-  selectedCardId,
+  selectedCardId = null,
+  selectedCardIds,
   onSelectCard,
+  onToggleCard,
   onPlayCard,
   canPlay,
 }: PlayerHandProps) {
   const cards = sortHand(hand);
   const count = cards.length;
+  const multiSelected = new Set(selectedCardIds ?? []);
 
   return (
     <div className="game-hand-dock-hand w-full min-w-0">
       <div
-        className="game-hand-fan game-hand-fan--bbo touch-scroll-x px-0.5 py-0.5"
+        className="game-hand-fan game-hand-fan--bbo game-hand-fan--slots touch-scroll-x px-0.5"
         style={
           {
-            /* Portrait overlap strip only — landscape uses CSS 1mm gap */
             ["--hand-visible-strip" as string]:
               count <= 6
-                ? "max(1.9rem, calc(var(--card-hand-w) * 0.55))"
+                ? "max(2.15rem, calc(var(--card-hand-w) * 0.58))"
                 : count <= 10
-                  ? "max(1.7rem, calc(var(--card-hand-w) * 0.48))"
-                  : "max(1.55rem, calc(var(--card-hand-w) * 0.45))",
+                  ? "max(2rem, calc(var(--card-hand-w) * 0.52))"
+                  : "max(1.85rem, calc(var(--card-hand-w) * 0.48))",
           } as CSSProperties
         }
       >
         {cards.map((card, index) => {
           const isLegal = legalCardIds.has(card.id);
-          const isSelected = selectedCardId === card.id;
-          const isUnplayable = canPlay && !isLegal;
+          const isSelected = selectedCardIds
+            ? multiSelected.has(card.id)
+            : selectedCardId === card.id;
+          const isUnplayable = onToggleCard ? !isLegal : canPlay && !isLegal;
+          const isLast = index === cards.length - 1;
+
+          function handlePick() {
+            if (onToggleCard) {
+              if (!isUnplayable || isSelected) onToggleCard(card.id);
+              return;
+            }
+            if (canPlay && isLegal && onPlayCard) {
+              onPlayCard(card.id);
+              return;
+            }
+            if (!isUnplayable && onSelectCard) {
+              onSelectCard(card.id);
+            }
+          }
 
           return (
             <div
               key={card.id}
-              className="relative shrink-0"
+              className={`hand-slot ${isLast ? "is-last" : ""} ${isSelected ? "is-selected" : ""} ${isUnplayable ? "is-disabled" : ""}`}
               style={{ zIndex: isSelected ? 50 : index + 1 }}
+              role="button"
+              tabIndex={isUnplayable && !isSelected ? -1 : 0}
+              aria-label={`${card.rank} ${card.suit}`}
+              aria-pressed={isSelected}
+              onClick={handlePick}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handlePick();
+                }
+              }}
             >
               <PlayingCard
                 card={card}
                 size="hand"
                 elevated
                 selected={isSelected}
-                disabled={isUnplayable}
+                disabled={isUnplayable && !isSelected}
                 playable={canPlay && isLegal}
-                onClick={() => {
-                  if (canPlay && isLegal && onPlayCard) {
-                    onPlayCard(card.id);
-                  } else if (!isUnplayable) {
-                    onSelectCard(card.id);
-                  }
-                }}
               />
             </div>
           );

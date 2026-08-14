@@ -103,6 +103,8 @@ export interface GameState {
   /** Winner seat while 4 trick cards remain visible before collect animation */
   awaitingTrickCollect: number | null;
   completedTrickDisplay: CompletedTrickDisplay | null;
+  /** All completed tricks this round, in order — used for round recap */
+  trickHistory: CompletedTrickDisplay[];
   trickLeaderIndex: number;
   tricksPlayed: number;
   cardExchange: Record<string, string[]>;

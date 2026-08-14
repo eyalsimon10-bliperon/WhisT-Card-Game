@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlayingCard } from "@/components/PlayingCard";
-import { sortHand } from "@/lib/game/cards";
 import {
   formatContractBid,
+  getBidProgress,
+  getRoundShape,
+  getTotalTrickBids,
   isContractBidLegal,
   isContractConfirmLegal,
 } from "@/lib/game/bidding";
-import type { ContractBid, ContractSeatDisplay, GameState, Trump } from "@/lib/game/types";
+import type { Card, ContractBid, ContractSeatDisplay, GameState, Trump } from "@/lib/game/types";
 import { SUIT_LABEL, SUIT_SYMBOL } from "@/lib/game/types";
 
 function getContractSeatDisplay(state: GameState, seatIndex: number): ContractSeatDisplay {
@@ -392,6 +393,9 @@ export function TrickBiddingPanel({
             {contractPlayer?.name}: {formatContractBid(state.contractBid)}
           </p>
         )}
+        <div className="mt-1.5 flex justify-center">
+          <RoundShapeBadge trickBids={state.trickBids} size="lg" />
+        </div>
         {!isMyTurn && (
           <p className="mt-1 text-xs text-amber-300 animate-pulse portrait-phone:text-[11px] landscape-phone:text-[10px]">
             ממתין לשחקן אחר...
@@ -447,7 +451,6 @@ interface CardExchangePanelProps {
   state: GameState;
   humanPlayerId: string;
   selectedCardIds: string[];
-  onToggleCard: (cardId: string) => void;
   onConfirm: () => void;
 }
 
@@ -455,7 +458,6 @@ export function CardExchangePanel({
   state,
   humanPlayerId,
   selectedCardIds,
-  onToggleCard,
   onConfirm,
 }: CardExchangePanelProps) {
   const player = state.players.find((p) => p.id === humanPlayerId);
@@ -471,33 +473,14 @@ export function CardExchangePanel({
       </div>
 
       {!isReady && player && (
-        <>
-          <div className="game-hand-fan game-hand-fan--bbo game-hand-fan-mini touch-scroll-x overflow-hidden px-0.5">
-            {sortHand(player.hand).map((card, index) => {
-              const selected = selectedCardIds.includes(card.id);
-              const full = selectedCardIds.length >= 3 && !selected;
-              return (
-                <div key={card.id} className="relative shrink-0" style={{ zIndex: selected ? 20 : index + 1 }}>
-                  <PlayingCard
-                    card={card}
-                    size="hand"
-                    selected={selected}
-                    disabled={full}
-                    onClick={() => onToggleCard(card.id)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={selectedCardIds.length !== 3}
-            onClick={onConfirm}
-          >
-            אשר העברה
-          </button>
-        </>
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={selectedCardIds.length !== 3}
+          onClick={onConfirm}
+        >
+          אשר העברה
+        </button>
       )}
 
       {isReady && (
@@ -507,6 +490,81 @@ export function CardExchangePanel({
   );
 }
 
+function RoundShapeBadge({
+  trickBids,
+  size = "sm",
+}: {
+  trickBids: (number | null)[];
+  size?: "sm" | "lg";
+}) {
+  const shape = getRoundShape(trickBids);
+  if (!shape) return null;
+  const total = getTotalTrickBids(trickBids);
+  const label = shape === "over" ? "OVER" : "UNDER";
+
+  if (size === "lg") {
+    return (
+      <span className={`game-round-shape-lg is-${shape} ${shape === "over" ? "bg-amber-400 text-felt-900" : "bg-sky-300 text-sky-950"}`}>
+        {label}
+        <span className="font-semibold opacity-80">({total})</span>
+      </span>
+    );
+  }
+
+  return <span className={`game-round-shape is-${shape}`}>{label}</span>;
+}
+
+function scoreToneClass(score: number): string {
+  if (score > 0) return "is-plus";
+  if (score < 0) return "is-minus";
+  return "";
+}
+
+function getScorePlaces(players: { id?: string; seatIndex?: number; totalScore: number }[]): {
+  leaderIds: Set<string>;
+  lastIds: Set<string>;
+  leaderSeats: Set<number>;
+  lastSeats: Set<number>;
+} {
+  const empty = {
+    leaderIds: new Set<string>(),
+    lastIds: new Set<string>(),
+    leaderSeats: new Set<number>(),
+    lastSeats: new Set<number>(),
+  };
+  if (players.length < 2) return empty;
+
+  const scores = players.map((p) => p.totalScore);
+  const max = Math.max(...scores);
+  const min = Math.min(...scores);
+  if (max === min) return empty;
+
+  const leaderIds = new Set<string>();
+  const lastIds = new Set<string>();
+  const leaderSeats = new Set<number>();
+  const lastSeats = new Set<number>();
+
+  for (const p of players) {
+    if (p.totalScore === max) {
+      if (p.id) leaderIds.add(p.id);
+      if (p.seatIndex != null) leaderSeats.add(p.seatIndex);
+    }
+    if (p.totalScore === min) {
+      if (p.id) lastIds.add(p.id);
+      if (p.seatIndex != null) lastSeats.add(p.seatIndex);
+    }
+  }
+
+  return { leaderIds, lastIds, leaderSeats, lastSeats };
+}
+
+function bidProgressClass(progress: ReturnType<typeof getBidProgress>): string {
+  if (progress === "made") return "is-made text-emerald-400";
+  if (progress === "overbid") return "is-overbid text-rose-400";
+  if (progress === "short") return "is-short text-amber-300";
+  return "";
+}
+
 interface ScoreboardProps {
   state: GameState;
   phaseLabel?: string;
@@ -514,14 +572,19 @@ interface ScoreboardProps {
 }
 
 export function Scoreboard({ state, phaseLabel, humanPlayerId }: ScoreboardProps) {
+  const roundShape = getRoundShape(state.trickBids);
+  const showPlayProgress = state.phase === "playing" || state.phase === "round_scoring";
+  const { leaderIds, lastIds } = getScorePlaces(state.players);
+
   return (
     <div className="game-scoreboard">
-      <div className="game-scoreboard-round">
+      <div className={`game-scoreboard-round ${roundShape ? `is-${roundShape}` : ""}`}>
         <span className="game-scoreboard-round-num">
           {state.currentRound}/{state.totalRounds}
         </span>
         <span className="game-scoreboard-round-label">סיבוב</span>
-        {phaseLabel && <span className="game-scoreboard-phase">{phaseLabel}</span>}
+        <RoundShapeBadge trickBids={state.trickBids} />
+        {phaseLabel && !roundShape && <span className="game-scoreboard-phase">{phaseLabel}</span>}
       </div>
       <div className="game-scoreboard-players">
         {state.players.map((p) => {
@@ -529,22 +592,26 @@ export function Scoreboard({ state, phaseLabel, humanPlayerId }: ScoreboardProps
           const showBid = bid !== null && bid !== undefined;
           const isYou = humanPlayerId != null && p.id === humanPlayerId;
           const isTurn = state.currentPlayerIndex === p.seatIndex;
-          const bidMet = showBid && state.phase === "playing" ? p.tricksWon >= bid : null;
+          const isLead = leaderIds.has(p.id);
+          const isLast = lastIds.has(p.id);
+          const progress = showPlayProgress ? getBidProgress(p.tricksWon, bid) : null;
+          const liveProgress = progress === "short" ? null : progress;
 
           return (
             <div
               key={p.id}
-              className={`game-score-cell ${isYou ? "is-you" : ""} ${isTurn ? "is-turn" : ""}`}
+              className={`game-score-cell ${isYou ? "is-you" : ""} ${isTurn ? "is-turn" : ""} ${isLead ? "is-lead" : ""} ${isLast ? "is-last" : ""}`}
             >
               <p className="game-score-name">{isYou ? "את/ה" : p.name}</p>
-              <p className="game-score-value">{p.totalScore}</p>
+              {(isLead || isLast) && (
+                <span className={`game-score-place ${isLead ? "is-lead" : "is-last"}`}>
+                  {isLead ? "★ מוביל" : "אחרון"}
+                </span>
+              )}
+              <p className={`game-score-value ${scoreToneClass(p.totalScore)}`}>{p.totalScore}</p>
               {showBid && (
-                <p
-                  className={`game-score-bid ${
-                    bidMet === true ? "is-met" : bidMet === false && p.tricksWon > 0 ? "is-short" : ""
-                  }`}
-                >
-                  {state.phase === "playing" ? `${p.tricksWon}/${bid}` : `הכרזה ${bid}`}
+                <p className={`game-score-bid ${bidProgressClass(liveProgress)}`}>
+                  {showPlayProgress ? `${p.tricksWon}/${bid}` : `הכרזה ${bid}`}
                 </p>
               )}
             </div>
@@ -560,46 +627,168 @@ interface RoundSummaryProps {
   onContinue: () => void;
 }
 
+function RecapMiniCard({ card, winner }: { card: Card; winner?: boolean }) {
+  const isRed = card.suit === "hearts" || card.suit === "diamonds";
+  return (
+    <div
+      className={`recap-mini-card ${isRed ? "is-red" : ""} ${winner ? "is-winner" : ""}`}
+      title={`${card.rank}${SUIT_SYMBOL[card.suit]}`}
+    >
+      <span className="recap-mini-rank">{card.rank}</span>
+      <span className="recap-mini-suit">{SUIT_SYMBOL[card.suit]}</span>
+    </div>
+  );
+}
+
 export function RoundSummary({ state, onContinue }: RoundSummaryProps) {
   if (!state.roundScores) return null;
 
   const isVoidRound = state.roundScores[0]?.voidRound ?? false;
+  const history = state.trickHistory ?? [];
+  const lastRound = state.currentRound >= state.totalRounds;
+  const contractLabel = state.contractBid ? formatContractBid(state.contractBid) : null;
+  const contractWinner = state.players.find((p) => p.seatIndex === state.contractWinnerIndex);
+  const { leaderSeats, lastSeats } = getScorePlaces(
+    state.roundScores.map((entry) => ({
+      seatIndex: entry.seatIndex,
+      totalScore: entry.totalScore,
+    }))
+  );
 
   return (
-    <div className="card-surface space-y-3 p-4 portrait-phone:space-y-2 portrait-phone:p-2.5 landscape-phone:space-y-1.5 landscape-phone:p-2">
-      <h3 className="text-center text-sm font-semibold text-gold-300 landscape-phone:text-xs portrait-phone:text-xs">
-        סיכום סיבוב {state.currentRound}
-      </h3>
-
-      {isVoidRound && (
-        <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-200">
-          סיבוב ללא ניקוד — כולם לא עמדו בהכרזה. הסיבוב נספר, 0 נק&apos; לכולם.
-        </div>
-      )}
-
-      <div className="space-y-1.5 portrait-phone:space-y-1 landscape-phone:space-y-1">
-        {state.roundScores.map((entry) => {
-          const metBid = entry.trickBid === entry.tricksWon;
-          return (
-            <div
-              key={entry.seatIndex}
-              className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 text-xs portrait-phone:px-2 portrait-phone:py-1 portrait-phone:text-[11px] landscape-phone:px-2 landscape-phone:py-1 landscape-phone:text-[10px]"
-            >
-              <span>{entry.name}</span>
-              <span className={`text-white/60 ${!metBid && isVoidRound ? "text-amber-300" : ""}`}>
-                {entry.trickBid} → {entry.tricksWon}
-                {!metBid && isVoidRound && " ✗"}
+    <div className="round-recap">
+      <div className="round-recap-scroll">
+        <header className="space-y-2 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40 landscape-phone:text-[9px]">
+            סיבוב {state.currentRound} מתוך {state.totalRounds}
+          </p>
+          <h3 className="text-2xl font-bold text-gold-300 portrait-phone:text-xl landscape-phone:text-lg">
+            סיכום הסיבוב
+          </h3>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <RoundShapeBadge trickBids={state.trickBids} size="lg" />
+            {contractLabel && (
+              <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-white/80 landscape-phone:text-[10px]">
+                חוזה {contractLabel}
+                {contractWinner ? ` · ${contractWinner.name}` : ""}
               </span>
-              <span className={isVoidRound ? "text-white/50" : entry.roundScore >= 0 ? "text-emerald-400" : "text-red-400"}>
-                {isVoidRound ? "0" : `${entry.roundScore > 0 ? "+" : ""}${entry.roundScore}`}
-              </span>
+            )}
+          </div>
+        </header>
+
+        {isVoidRound && (
+          <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2.5 text-center text-sm text-amber-200 landscape-phone:py-1.5 landscape-phone:text-xs">
+            סיבוב ללא ניקוד — כולם לא עמדו בהכרזה. 0 נק&apos; לכולם.
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <section className="space-y-2">
+            <h4 className="text-sm font-semibold text-white/70 landscape-phone:text-xs">קלפים שנלקחו</h4>
+            <div className="space-y-2.5 landscape-phone:space-y-1.5">
+              {state.players.map((player) => {
+                const wonTricks = history.filter((trick) => trick.winnerSeat === player.seatIndex);
+                return (
+                  <div
+                    key={player.id}
+                    className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-2 landscape-phone:px-2 landscape-phone:py-1.5"
+                  >
+                    <div className="mb-1.5 flex items-center justify-between gap-2 landscape-phone:mb-1">
+                      <p className="truncate text-sm font-bold text-white landscape-phone:text-xs">
+                        {player.name}
+                      </p>
+                      <p className="shrink-0 text-xs font-semibold text-white/50 landscape-phone:text-[10px]">
+                        {wonTricks.length} לקיחות
+                      </p>
+                    </div>
+                    {wonTricks.length === 0 ? (
+                      <p className="text-xs text-white/35">לא לקח/ה לקיחות</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 landscape-phone:gap-1">
+                        {wonTricks.map((trick, trickIndex) => (
+                          <div key={`${player.id}-${trickIndex}`} className="recap-won-trick">
+                            {trick.plays.map((play) => (
+                              <RecapMiniCard
+                                key={play.card.id}
+                                card={play.card}
+                                winner={play.seatIndex === trick.winnerSeat}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </section>
+        )}
+
+        <section className="overflow-hidden rounded-xl border border-white/10 bg-black/20">
+          <table className="recap-score-table">
+            <thead>
+              <tr>
+                <th>שחקן</th>
+                <th>הכרזה</th>
+                <th>לקיחות</th>
+                <th>סיבוב</th>
+                <th>סה״כ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {state.roundScores.map((entry) => {
+                const progress = getBidProgress(entry.tricksWon, entry.trickBid);
+                const isLead = leaderSeats.has(entry.seatIndex);
+                const isLast = lastSeats.has(entry.seatIndex);
+                const roundClass = isVoidRound
+                  ? "text-white/45"
+                  : entry.roundScore > 0
+                    ? "text-emerald-400"
+                    : entry.roundScore < 0
+                      ? "text-rose-400"
+                      : "text-white/70";
+                const totalClass =
+                  entry.totalScore > 0
+                    ? "text-emerald-400"
+                    : entry.totalScore < 0
+                      ? "text-rose-400"
+                      : "text-gold-300";
+
+                return (
+                  <tr key={entry.seatIndex} className={isLead ? "is-lead" : isLast ? "is-last" : ""}>
+                    <td className="text-white">
+                      <span className="inline-flex items-center gap-1">
+                        {isLead && <span className="text-gold-400" aria-hidden>★</span>}
+                        {entry.name}
+                        {isLead && <span className="text-[10px] font-extrabold text-gold-400">מוביל</span>}
+                        {isLast && <span className="text-[10px] font-extrabold text-slate-400">אחרון</span>}
+                      </span>
+                    </td>
+                    <td className="text-white/80">{entry.trickBid}</td>
+                    <td className={bidProgressClass(progress)}>
+                      {entry.tricksWon}
+                      <span className="ms-0.5 text-[11px] font-semibold opacity-80">
+                        {progress === "overbid" ? "+" : progress === "made" ? "✓" : "✗"}
+                      </span>
+                    </td>
+                    <td className={roundClass}>
+                      {isVoidRound ? "0" : `${entry.roundScore > 0 ? "+" : ""}${entry.roundScore}`}
+                    </td>
+                    <td className={totalClass}>{entry.totalScore}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
       </div>
-      <button type="button" className="btn-primary" onClick={onContinue}>
-        {state.currentRound >= state.totalRounds ? "סיום" : "סיבוב הבא"}
-      </button>
+
+      <div className="round-recap-actions">
+        <button type="button" className="btn-primary" onClick={onContinue}>
+          {lastRound ? "סיום המשחק" : "סיבוב הבא"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -626,8 +815,14 @@ export function GameOverPanel({ state, isBotRoom, onExit, onPlayAgain }: GameOve
           <div key={p.id} className="flex justify-between rounded-lg bg-white/5 px-2.5 py-1.5 text-xs portrait-phone:px-2 portrait-phone:py-1 landscape-phone:px-2 landscape-phone:py-1 landscape-phone:text-[10px]">
             <span>
               {i + 1}. {p.name}
+              {i === 0 && <span className="mr-1 text-gold-400"> ★</span>}
+              {i === sorted.length - 1 && sorted[0].totalScore !== p.totalScore && (
+                <span className="mr-1 text-slate-400"> · אחרון</span>
+              )}
             </span>
-            <span className="text-gold-300">{p.totalScore}</span>
+            <span className={p.totalScore > 0 ? "text-emerald-400" : p.totalScore < 0 ? "text-rose-400" : "text-gold-300"}>
+              {p.totalScore}
+            </span>
           </div>
         ))}
       </div>

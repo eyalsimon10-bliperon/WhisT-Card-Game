@@ -4,6 +4,7 @@ import { applyRoundScores, calculateRoundScores } from "./scoring";
 import { getLegalPlays, getTrickWinner } from "./trick";
 import type {
   Card,
+  CompletedTrickDisplay,
   ContractAction,
   ContractBid,
   GamePhase,
@@ -67,6 +68,7 @@ export function createInitialGameState(
     currentTrick: [],
     awaitingTrickCollect: null,
     completedTrickDisplay: null,
+    trickHistory: [],
     trickLeaderIndex: firstBidderIndex,
     tricksPlayed: 0,
     cardExchange: {},
@@ -108,6 +110,7 @@ function dealNewRound(state: GameState): GameState {
     currentTrick: [],
     awaitingTrickCollect: null,
     completedTrickDisplay: null,
+    trickHistory: [],
     trickLeaderIndex: state.firstBidderIndex,
     tricksPlayed: 0,
     cardExchange: {},
@@ -380,11 +383,14 @@ export function finalizeTrickCollect(state: GameState): GameState {
   const winner = state.awaitingTrickCollect;
   const plays = state.currentTrick;
 
+  const trickRecord: CompletedTrickDisplay = { plays: [...plays], winnerSeat: winner };
+
   let next: GameState = {
     ...state,
     currentTrick: [],
     awaitingTrickCollect: null,
-    completedTrickDisplay: { plays, winnerSeat: winner },
+    completedTrickDisplay: trickRecord,
+    trickHistory: [...(state.trickHistory ?? []), trickRecord],
     tricksPlayed: state.tricksPlayed + 1,
   };
 
@@ -405,16 +411,6 @@ function finishRound(state: GameState): GameState {
     roundScores
   );
 
-  if (state.currentRound >= state.totalRounds) {
-    return {
-      ...state,
-      players,
-      roundScores,
-      phase: "game_over",
-      bidLog: addLog(state, "המשחק הסתיים!"),
-    };
-  }
-
   return {
     ...state,
     players,
@@ -426,6 +422,14 @@ function finishRound(state: GameState): GameState {
 
 export function advanceToNextRound(state: GameState): GameState {
   if (state.phase !== "round_scoring") return state;
+
+  if (state.currentRound >= state.totalRounds) {
+    return {
+      ...state,
+      phase: "game_over",
+      bidLog: addLog(state, "המשחק הסתיים!"),
+    };
+  }
 
   const nextFirstBidder = nextSeat(state.firstBidderIndex);
   const nextState: GameState = {

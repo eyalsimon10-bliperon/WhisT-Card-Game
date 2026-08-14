@@ -177,10 +177,53 @@
     margin-left: var(--hand-fan-overlap) !important;
   }
 
+  .game-hand-fan--slots {
+    align-items: flex-end;
+    padding-top: 0.85rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .game-hand-fan--slots > * + * {
+    margin-left: 0 !important;
+  }
+
+  .hand-slot {
+    position: relative;
+    flex: 0 0 var(--hand-visible-strip);
+    width: var(--hand-visible-strip);
+    height: calc(var(--card-hand-h) + 0.55rem);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .hand-slot.is-last {
+    flex-basis: var(--card-hand-w);
+    width: var(--card-hand-w);
+  }
+
+  .hand-slot.is-disabled {
+    cursor: not-allowed;
+  }
+
+  .hand-slot .playing-card-shell {
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    bottom: 0.15rem;
+  }
+
   @media (orientation: landscape) and (max-height: 520px) {
-    .game-hand-fan > * + *,
-    .game-hand-fan--bbo > * + *,
-    .game-hand-fan-mini > * + * {
+    .game-hand-fan--slots {
+      padding-top: 0.55rem;
+    }
+
+    .game-hand-fan--slots > .hand-slot {
+      flex-basis: var(--card-hand-w) !important;
+      width: var(--card-hand-w) !important;
+    }
+
+    .game-hand-fan--slots > .hand-slot + .hand-slot {
       margin-left: 1mm !important;
     }
   }
@@ -313,9 +356,43 @@
     box-shadow: inset 0 0 0 1px rgba(232, 197, 71, 0.22);
   }
 
+  .game-score-cell.is-lead {
+    background: rgba(232, 197, 71, 0.2);
+    box-shadow: inset 0 0 0 1.5px rgba(232, 197, 71, 0.65);
+  }
+
+  .game-score-cell.is-last {
+    background: rgba(100, 116, 139, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.4);
+  }
+
   .game-score-cell.is-turn {
     box-shadow: inset 0 0 0 1.5px rgba(232, 197, 71, 0.55);
+  }
+
+  .game-score-cell.is-turn:not(.is-last):not(.is-lead) {
     background: rgba(232, 197, 71, 0.16);
+  }
+
+  .game-score-cell.is-lead.is-turn {
+    box-shadow: inset 0 0 0 1.5px rgba(232, 197, 71, 0.85);
+  }
+
+  .game-score-place {
+    display: block;
+    margin-top: 0.08rem;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .game-score-place.is-lead {
+    color: #f0d060;
+  }
+
+  .game-score-place.is-last {
+    color: #94a3b8;
   }
 
   .game-score-name {
@@ -337,6 +414,14 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .game-score-value.is-plus {
+    color: #6ee7b7;
+  }
+
+  .game-score-value.is-minus {
+    color: #fb7185;
+  }
+
   .game-score-bid {
     margin-top: 0.12rem;
     font-size: 0.7rem;
@@ -346,12 +431,57 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .game-score-bid.is-met {
+  .game-score-bid.is-made {
     color: #6ee7b7;
+  }
+
+  .game-score-bid.is-overbid {
+    color: #fb7185;
   }
 
   .game-score-bid.is-short {
     color: #fcd34d;
+  }
+
+  .game-scoreboard-round.is-over {
+    border-color: rgba(251, 191, 36, 0.45);
+    background: rgba(251, 191, 36, 0.14);
+  }
+
+  .game-scoreboard-round.is-under {
+    border-color: rgba(125, 211, 252, 0.45);
+    background: rgba(125, 211, 252, 0.12);
+  }
+
+  .game-round-shape {
+    margin-top: 0.18rem;
+    padding: 0.08rem 0.28rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+  }
+
+  .game-round-shape.is-over {
+    color: #1c1917;
+    background: #fbbf24;
+  }
+
+  .game-round-shape.is-under {
+    color: #0c4a6e;
+    background: #7dd3fc;
+  }
+
+  .game-round-shape-lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
@@ -405,8 +535,18 @@
       display: none;
     }
 
+    .game-round-shape {
+      margin-top: 0.1rem;
+      font-size: 0.55rem;
+      padding: 0.05rem 0.22rem;
+    }
+
     .game-score-name {
       font-size: 0.68rem;
+    }
+
+    .game-score-place {
+      font-size: 0.5rem;
     }
 
     .game-score-value {
@@ -534,6 +674,155 @@
   @media (orientation: landscape) and (max-height: 520px) {
     .bid-trick-btn {
       @apply min-h-[2.35rem] text-sm;
+    }
+  }
+
+  .round-recap {
+    @apply card-surface flex min-h-0 flex-1 flex-col overflow-hidden p-0;
+  }
+
+  .round-recap-scroll {
+    @apply min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-3 py-3;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .round-recap-actions {
+    @apply shrink-0 border-t border-white/10 bg-felt-900/90 px-3 py-2.5 backdrop-blur-sm;
+  }
+
+  .recap-mini-card {
+    display: flex;
+    height: 2.4rem;
+    width: calc(2.4rem * 5 / 7);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.28rem;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    color: #111;
+    font-weight: 800;
+    line-height: 0.9;
+  }
+
+  .recap-mini-card.is-red {
+    color: #b30000;
+  }
+
+  .recap-mini-card.is-winner {
+    box-shadow: 0 0 0 1.5px #e8c547, 0 2px 8px rgba(232, 197, 71, 0.45);
+  }
+
+  .recap-mini-rank {
+    font-size: 0.7rem;
+  }
+
+  .recap-mini-suit {
+    font-size: 0.72rem;
+  }
+
+  .recap-won-trick {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 0.4rem;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .recap-score-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .recap-score-table th {
+    padding: 0.45rem 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .recap-score-table th:first-child,
+  .recap-score-table td:first-child {
+    text-align: start;
+  }
+
+  .recap-score-table td {
+    padding: 0.7rem 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .recap-score-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .recap-score-table tbody tr.is-lead td {
+    background: rgba(232, 197, 71, 0.12);
+  }
+
+  .recap-score-table tbody tr.is-last td {
+    background: rgba(100, 116, 139, 0.12);
+  }
+
+  @media (orientation: portrait) and (max-width: 640px) {
+    .round-recap-scroll {
+      @apply space-y-3.5 px-3.5 py-3.5;
+    }
+
+    .recap-mini-card {
+      height: 2.65rem;
+      width: calc(2.65rem * 5 / 7);
+    }
+
+    .recap-mini-rank {
+      font-size: 0.78rem;
+    }
+
+    .recap-mini-suit {
+      font-size: 0.8rem;
+    }
+
+    .recap-score-table td {
+      font-size: 1.05rem;
+      padding: 0.8rem 0.3rem;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) {
+    .round-recap-scroll {
+      @apply space-y-2 px-2.5 py-2;
+    }
+
+    .round-recap-actions {
+      @apply py-1.5;
+    }
+
+    .recap-mini-card {
+      height: 1.85rem;
+      width: calc(1.85rem * 5 / 7);
+    }
+
+    .recap-mini-rank,
+    .recap-mini-suit {
+      font-size: 0.58rem;
+    }
+
+    .recap-score-table th {
+      padding: 0.25rem 0.25rem;
+      font-size: 0.55rem;
+    }
+
+    .recap-score-table td {
+      padding: 0.4rem 0.25rem;
+      font-size: 0.8rem;
     }
   }
 

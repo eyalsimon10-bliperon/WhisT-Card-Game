@@ -3,6 +3,7 @@
 import type { GamePlayer, GameState, Trump } from "@/lib/game/types";
 import { SUIT_SYMBOL } from "@/lib/game/types";
 import { getRelativeSeat } from "@/lib/game/engine";
+import { getBidProgress } from "@/lib/game/bidding";
 
 interface PlayerHudProps {
   player: GamePlayer;
@@ -44,32 +45,49 @@ function StatPill({
   value,
   highlight,
   warn,
+  tone,
   micro,
 }: {
   label: string;
   value: string | number;
   highlight?: boolean;
   warn?: boolean;
+  tone?: "made" | "overbid" | "short";
   micro?: boolean;
 }) {
+  const box =
+    tone === "made"
+      ? "bg-emerald-500/15 ring-1 ring-emerald-400/40"
+      : tone === "overbid"
+        ? "bg-rose-500/15 ring-1 ring-rose-400/40"
+        : tone === "short"
+          ? "bg-amber-500/15 ring-1 ring-amber-400/30"
+          : highlight
+            ? "bg-gold-500/20 ring-1 ring-gold-400/40"
+            : warn
+              ? "bg-amber-500/15 ring-1 ring-amber-400/30"
+              : "bg-black/30 ring-1 ring-white/10";
+  const text =
+    tone === "made"
+      ? "text-emerald-300"
+      : tone === "overbid"
+        ? "text-rose-300"
+        : tone === "short"
+          ? "text-amber-300"
+          : highlight
+            ? "text-gold-300"
+            : warn
+              ? "text-amber-300"
+              : "text-white";
+
   return (
     <div
-      className={`flex flex-col items-center rounded-md px-2 py-0.5 portrait-phone:px-1.5 portrait-phone:py-0.5 landscape-phone:px-1.5 landscape-phone:py-0.5 ${
-        highlight
-          ? "bg-gold-500/20 ring-1 ring-gold-400/40"
-          : warn
-            ? "bg-amber-500/15 ring-1 ring-amber-400/30"
-            : "bg-black/30 ring-1 ring-white/10"
-      }`}
+      className={`flex flex-col items-center rounded-md px-2 py-0.5 portrait-phone:px-1.5 portrait-phone:py-0.5 landscape-phone:px-1.5 landscape-phone:py-0.5 ${box}`}
     >
       <span className={`font-medium uppercase tracking-wider text-white/50 ${micro ? "text-[8px]" : "text-[9px]"}`}>
         {label}
       </span>
-      <span
-        className={`font-bold tabular-nums leading-none ${micro ? "text-sm" : "text-base"} ${
-          highlight ? "text-gold-300" : warn ? "text-amber-300" : "text-white"
-        }`}
-      >
+      <span className={`font-bold tabular-nums leading-none ${micro ? "text-sm" : "text-base"} ${text}`}>
         {value}
       </span>
     </div>
@@ -89,6 +107,13 @@ function OpponentChip({
   const showStats =
     state.phase === "playing" ||
     (state.phase === "bidding_tricks" && trickBid !== null && trickBid !== undefined);
+  const progress = state.phase === "playing" ? getBidProgress(player.tricksWon, trickBid) : null;
+  const bidTone =
+    progress === "made"
+      ? "text-emerald-300"
+      : progress === "overbid"
+        ? "text-rose-300"
+        : "text-gold-300";
 
   return (
     <div
@@ -109,7 +134,7 @@ function OpponentChip({
         {player.name}
       </span>
       {showStats && trickBid !== null && trickBid !== undefined ? (
-        <span className="shrink-0 tabular-nums text-[11px] font-bold text-gold-300 landscape-phone:text-[10px]">
+        <span className={`shrink-0 tabular-nums text-[11px] font-bold landscape-phone:text-[10px] ${bidTone}`}>
           {player.tricksWon}/{trickBid}
         </span>
       ) : (
@@ -127,10 +152,11 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
     state.phase === "playing" ||
     (state.phase === "bidding_tricks" && trickBid !== null && trickBid !== undefined);
   const isContractWinner = state.contractWinnerIndex === player.seatIndex;
-  const bidMet =
+  const bidProgress =
     trickBid !== null && trickBid !== undefined && state.phase === "playing"
-      ? player.tricksWon >= trickBid
-      : null;
+      ? getBidProgress(player.tricksWon, trickBid)
+      : undefined;
+  const bidTone = bidProgress === "short" ? undefined : bidProgress ?? undefined;
 
   return (
     <div
@@ -227,8 +253,7 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
                       ? `${player.tricksWon}/${trickBid}`
                       : player.tricksWon
                   }
-                  warn={bidMet === false && player.tricksWon > 0}
-                  highlight={bidMet === true}
+                  tone={bidTone}
                   micro
                 />
                 {showTrump && state.trump && <TrumpIcon trump={state.trump} size="sm" />}
@@ -264,8 +289,7 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
                   ? `${player.tricksWon}/${trickBid}`
                   : player.tricksWon
               }
-              warn={bidMet === false && player.tricksWon > 0}
-              highlight={bidMet === true}
+              tone={bidTone}
             />
           </div>
         )}
@@ -279,10 +303,10 @@ export function PlayerHud({ player, state, isActive, isMe, compact }: PlayerHudP
             <div className="h-1 overflow-hidden rounded-full bg-black/40">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
-                  player.tricksWon >= trickBid
-                    ? "bg-emerald-400"
-                    : player.tricksWon >= trickBid - 1
-                      ? "bg-amber-400"
+                  bidProgress === "overbid"
+                    ? "bg-rose-400"
+                    : bidProgress === "made"
+                      ? "bg-emerald-400"
                       : "bg-gold-500"
                 }`}
                 style={{ width: `${Math.min(100, (player.tricksWon / Math.max(trickBid, 1)) * 100)}%` }}
@@ -332,10 +356,8 @@ export function HumanPlayerHud({
 }) {
   const trickBid = state.trickBids[player.seatIndex];
   const showTrump = state.phase === "playing" && state.trump;
-  const bidMet =
-    trickBid !== null && trickBid !== undefined
-      ? player.tricksWon >= trickBid
-      : null;
+  const bidProgress = getBidProgress(player.tricksWon, trickBid);
+  const bidTone = bidProgress === "short" || bidProgress === null ? undefined : bidProgress;
 
   if (state.phase === "playing") {
     return (
@@ -367,8 +389,7 @@ export function HumanPlayerHud({
                   ? `${player.tricksWon}/${trickBid}`
                   : player.tricksWon
               }
-              warn={bidMet === false && player.tricksWon > 0}
-              highlight={bidMet === true}
+              tone={bidTone}
               micro
             />
             {showTrump && state.trump && <TrumpIcon trump={state.trump} size="sm" />}

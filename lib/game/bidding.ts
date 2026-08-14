@@ -102,3 +102,23 @@ export function isOver(totalBids: number): boolean {
 export function isUnder(totalBids: number): boolean {
   return totalBids <= 12;
 }
+
+/** OVER / UNDER once all four trick bids are in. Null while bidding is open. */
+export function getRoundShape(trickBids: (number | null)[]): "over" | "under" | null {
+  if (trickBids.some((b) => b === null)) return null;
+  const total = getTotalTrickBids(trickBids);
+  if (isOver(total)) return "over";
+  if (isUnder(total)) return "under";
+  return null;
+}
+
+/** Exact bid vs overtricks vs still short — used for HUD colors during play. */
+export function getBidProgress(
+  tricksWon: number,
+  bid: number | null | undefined
+): "made" | "overbid" | "short" | null {
+  if (bid === null || bid === undefined) return null;
+  if (tricksWon > bid) return "overbid";
+  if (tricksWon === bid) return "made";
+  return "short";
+}
