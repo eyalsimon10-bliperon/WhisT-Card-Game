@@ -143,7 +143,7 @@ export default function LandingPage() {
       <div className="relative mx-auto flex min-h-dvh max-w-md flex-col px-5 py-8 portrait-phone:px-4 portrait-phone:py-6 landscape-phone:max-w-none landscape-phone:px-6 landscape-phone:py-4">
         <header className="mb-8 text-center landscape-phone:mb-4">
           <WhistLogo className="mx-auto h-20 w-20 drop-shadow-lg landscape-phone:h-14 landscape-phone:w-14" />
-          <h1 className="mt-3 text-4xl landscape-phone:mt-1.5 landscape-phone:text-3xl">
+          <h1 dir="ltr" className="mt-3 text-4xl landscape-phone:mt-1.5 landscape-phone:text-3xl">
             <WhistWordmark />
           </h1>
           <p className="mt-2 text-sm text-white/60">משחק קלפים ל-4 שחקנים</p>

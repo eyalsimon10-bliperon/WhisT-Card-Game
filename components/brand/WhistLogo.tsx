@@ -15,6 +15,7 @@ export function WhistLogo({ title = "WhisT", className, ...props }: WhistLogoPro
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label={title}
+      direction="ltr"
       className={className}
       {...props}
     >
@@ -68,20 +69,21 @@ export function WhistLogo({ title = "WhisT", className, ...props }: WhistLogoPro
         </text>
       </g>
 
-      <path
-        fill={`url(#${uid}-gold)`}
-        d="M64 34c0 0-24 24-24 40a16 16 0 0 0 24 14 16 16 0 0 0 24-14c0-16-24-40-24-40z"
-      />
-      <path fill={`url(#${uid}-gold)`} d="M64 84 54 108h20L64 84z" />
+      {/* Classic spade: pointed top, two round lobes, narrow stem */}
+      <g fill={`url(#${uid}-gold)`}>
+        <path d="M64 28 L88 76 H40 Z" />
+        <circle cx="48" cy="74" r="16" />
+        <circle cx="80" cy="74" r="16" />
+        <path d="M61 84 L56 108 H72 L67 84 Z" />
+      </g>
     </svg>
   );
 }
 
 export function WhistWordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`inline-flex items-baseline font-bold tracking-tight text-gold-400 ${className}`}>
-      Whis
-      <span className="text-gold-500">T</span>
+    <span dir="ltr" className={`inline-block font-bold tracking-tight text-gold-400 ${className}`}>
+      WhisT
     </span>
   );
 }
