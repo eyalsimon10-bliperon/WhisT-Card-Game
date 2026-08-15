@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { WhistLogo, WhistWordmark } from "@/components/brand/WhistLogo";
 import { NameInput } from "@/components/NameInput";
+import { InstallAppButton } from "@/components/InstallAppButton";
 import { fetchOpenRoomsCount, postRoomsAction } from "@/lib/api/client";
 import { getOrCreateGuestSession } from "@/lib/session/guest";
 import { ROOM_CODE_LENGTH } from "@/lib/types";
@@ -271,7 +272,9 @@ export default function LandingPage() {
           </div>
         )}
 
-        <footer className="mt-8 text-center text-xs text-white/30">
+        <InstallAppButton />
+
+        <footer className="mt-6 text-center text-xs text-white/30">
           מצב הדגמה — נתונים נשמרים מקומית בדפדפן
         </footer>
       </div>

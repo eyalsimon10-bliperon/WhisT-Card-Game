@@ -83,10 +83,13 @@ export default function GamePage() {
       return;
     }
 
-    const hold = window.setTimeout(() => setTrickCollecting(true), 280);
+    const flyInMs = 280;
+    const lookMs = 1000;
+    const collectMs = 400;
+    const hold = window.setTimeout(() => setTrickCollecting(true), flyInMs + lookMs);
     const done = window.setTimeout(() => {
       void runAction({ type: "resolveTrick" });
-    }, 640);
+    }, flyInMs + lookMs + collectMs);
 
     return () => {
       window.clearTimeout(hold);

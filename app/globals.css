@@ -64,6 +64,9 @@
 
   html {
     @apply scroll-smooth;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
   }
 
   body {
@@ -72,6 +75,9 @@
       env(safe-area-inset-left);
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
   }
 
   input::placeholder {
@@ -216,6 +222,7 @@
   .hand-slot.is-last {
     flex-basis: var(--card-hand-w);
     width: var(--card-hand-w);
+    overflow: visible;
   }
 
   .hand-slot.is-disabled {
@@ -1426,7 +1433,7 @@
   }
 
   .bbo-face[data-size="hand"] .bbo-index {
-    width: max(1.35rem, calc(var(--hand-visible-strip) * 0.82));
+    width: min(1.4rem, max(1.05rem, calc(var(--card-hand-w) * 0.3)));
   }
 
   .bbo-face[data-size="hand"] .bbo-rank {
@@ -1474,7 +1481,7 @@
   @media (orientation: landscape) and (max-height: 520px) {
     /* Match portrait hand index scale — cards are fully visible with 1mm gaps */
     .bbo-face[data-size="hand"] .bbo-index {
-      width: max(1.35rem, calc(var(--hand-visible-strip) * 0.82));
+      width: min(1.35rem, max(1.05rem, calc(var(--card-hand-w) * 0.3)));
     }
 
     .bbo-face[data-size="hand"] .bbo-rank {
