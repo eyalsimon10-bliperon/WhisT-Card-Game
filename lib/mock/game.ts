@@ -12,6 +12,7 @@ function normalizeGameState(state: GameState): GameState {
   let next: GameState = {
     ...state,
     awaitingTrickCollect: state.awaitingTrickCollect ?? null,
+    trickHoldUntil: state.trickHoldUntil ?? null,
     completedTrickDisplay: state.completedTrickDisplay ?? null,
     contractPassSeats: state.contractPassSeats ?? [],
     contractConfirmPending: state.contractConfirmPending ?? false,

@@ -104,6 +104,8 @@ export interface GameState {
   currentTrick: TrickPlay[];
   /** Winner seat while 4 trick cards remain visible before collect animation */
   awaitingTrickCollect: number | null;
+  /** Server timestamp — finalize/resolve must wait until this time so every client can see the 4th card */
+  trickHoldUntil: number | null;
   completedTrickDisplay: CompletedTrickDisplay | null;
   /** All completed tricks this round, in order — used for round recap */
   trickHistory: CompletedTrickDisplay[];

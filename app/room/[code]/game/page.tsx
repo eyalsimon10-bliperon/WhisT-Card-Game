@@ -17,10 +17,42 @@ import { useGameRealtime } from "@/hooks/useGameRealtime";
 import { playCardSlide, playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
 import { fetchRoom, postGameAction } from "@/lib/api/client";
 import { getDisabledTricksForCurrentBidder } from "@/lib/game/bots";
-import { getPhaseLabel } from "@/lib/game/engine";
+import { getPhaseLabel, TRICK_HOLD_MS } from "@/lib/game/engine";
 import { getLegalPlays } from "@/lib/game/trick";
-import type { ContractBid, GameState } from "@/lib/game/types";
+import type { ContractBid, GameState, TrickPlay } from "@/lib/game/types";
 import { getGuestSession } from "@/lib/session/guest";
+
+const TRICK_FLY_IN_MS = 280;
+const TRICK_COLLECT_MS = 400;
+
+type HeldTrick = {
+  key: string;
+  plays: TrickPlay[];
+  winner: number;
+  seenAt: number;
+};
+
+function trickKey(plays: TrickPlay[]): string {
+  return plays.map((p) => `${p.seatIndex}:${p.card.id}`).join("|");
+}
+
+/** Only one seat should drive collect — the player who put the 4th card, or the host/first human if a bot did. */
+function isTrickCollectLeader(
+  plays: TrickPlay[],
+  players: GameState["players"],
+  humanId: string,
+  hostId: string | null
+): boolean {
+  const last = plays[plays.length - 1];
+  if (!last) return false;
+  const lastPlayer = players.find((p) => p.seatIndex === last.seatIndex);
+  if (!lastPlayer) return false;
+  if (lastPlayer.id === humanId) return true;
+  if (!lastPlayer.isBot) return false;
+  if (hostId && hostId === humanId) return true;
+  const humans = [...players].filter((p) => !p.isBot).sort((a, b) => a.seatIndex - b.seatIndex);
+  return humans[0]?.id === humanId;
+}
 
 export default function GamePage() {
   const params = useParams();
@@ -32,9 +64,12 @@ export default function GamePage() {
   const [exchangeSelection, setExchangeSelection] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [isBotRoom, setIsBotRoom] = useState(false);
+  const [hostId, setHostId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [trickCollecting, setTrickCollecting] = useState(false);
+  const [heldTrick, setHeldTrick] = useState<HeldTrick | null>(null);
   const actionLock = useRef(false);
+  const heldTrickRef = useRef<HeldTrick | null>(null);
 
   const session = typeof window !== "undefined" ? getGuestSession() : null;
   const humanId = session?.playerId ?? "";
@@ -66,6 +101,7 @@ export default function GamePage() {
           return;
         }
         setIsBotRoom(room.isBotRoom ?? false);
+        setHostId(room.hostId);
         if (room.status !== "playing") {
           router.replace(`/room/${code}`);
         }
@@ -77,25 +113,144 @@ export default function GamePage() {
     void init();
   }, [code, router, humanId]);
 
+  // Keep a local snapshot of the finished trick so late realtime updates cannot erase the 4th card early.
   useEffect(() => {
-    if (state?.awaitingTrickCollect == null) {
+    if (!state) return;
+
+    if (state.awaitingTrickCollect != null && state.currentTrick.length === 4) {
+      const key = trickKey(state.currentTrick);
+      if (heldTrickRef.current?.key !== key) {
+        const nextHeld: HeldTrick = {
+          key,
+          plays: state.currentTrick,
+          winner: state.awaitingTrickCollect,
+          seenAt: Date.now(),
+        };
+        heldTrickRef.current = nextHeld;
+        setHeldTrick(nextHeld);
+        setTrickCollecting(false);
+      }
+      return;
+    }
+
+    if (state.completedTrickDisplay) {
+      const key = trickKey(state.completedTrickDisplay.plays);
+      if (!heldTrickRef.current || heldTrickRef.current.key !== key) {
+        const nextHeld: HeldTrick = {
+          key,
+          plays: state.completedTrickDisplay.plays,
+          winner: state.completedTrickDisplay.winnerSeat,
+          seenAt: heldTrickRef.current?.seenAt ?? Date.now(),
+        };
+        heldTrickRef.current = nextHeld;
+        setHeldTrick(nextHeld);
+      }
+      setTrickCollecting(true);
+      return;
+    }
+
+    const held = heldTrickRef.current;
+    if (!held) {
       setTrickCollecting(false);
       return;
     }
 
-    const flyInMs = 280;
-    const lookMs = 1000;
-    const collectMs = 400;
-    const hold = window.setTimeout(() => setTrickCollecting(true), flyInMs + lookMs);
-    const done = window.setTimeout(() => {
-      void runAction({ type: "resolveTrick" });
-    }, flyInMs + lookMs + collectMs);
+    const minShow = TRICK_FLY_IN_MS + TRICK_HOLD_MS + TRICK_COLLECT_MS;
+    const remaining = minShow - (Date.now() - held.seenAt);
+    if (remaining <= 0) {
+      heldTrickRef.current = null;
+      setHeldTrick(null);
+      setTrickCollecting(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      heldTrickRef.current = null;
+      setHeldTrick(null);
+      setTrickCollecting(false);
+    }, remaining);
+    return () => window.clearTimeout(timer);
+  }, [
+    state?.awaitingTrickCollect,
+    state?.completedTrickDisplay,
+    state?.currentTrick,
+    state?.tricksPlayed,
+  ]);
+
+  // One client finalizes after the hold; others only watch the local snapshot.
+  useEffect(() => {
+    if (!state || !humanId) return;
+    if (state.awaitingTrickCollect == null || state.currentTrick.length < 4) return;
+
+    const holdUntil = state.trickHoldUntil ?? Date.now() + TRICK_HOLD_MS;
+    const waitMs = Math.max(TRICK_FLY_IN_MS, holdUntil - Date.now());
+    const plays = state.currentTrick;
+    const lead = isTrickCollectLeader(plays, state.players, humanId, hostId);
+
+    const lookTimer = window.setTimeout(() => setTrickCollecting(true), waitMs);
+
+    if (!lead) {
+      return () => window.clearTimeout(lookTimer);
+    }
+
+    let cancelled = false;
+    const finalizeTimer = window.setTimeout(() => {
+      void (async () => {
+        for (let attempt = 0; attempt < 6 && !cancelled; attempt++) {
+          if (actionLock.current) {
+            await new Promise((r) => setTimeout(r, 120));
+            continue;
+          }
+          actionLock.current = true;
+          try {
+            const result = await postGameAction(code, humanId, { type: "finalizeTrickCollect" });
+            if (result.state) setState(result.state);
+            if (!result.state?.awaitingTrickCollect) return;
+            const retryIn = Math.max(
+              120,
+              (result.state.trickHoldUntil ?? Date.now()) - Date.now()
+            );
+            await new Promise((r) => setTimeout(r, retryIn));
+          } catch {
+            return;
+          } finally {
+            actionLock.current = false;
+          }
+        }
+      })();
+    }, waitMs);
 
     return () => {
-      window.clearTimeout(hold);
-      window.clearTimeout(done);
+      cancelled = true;
+      window.clearTimeout(lookTimer);
+      window.clearTimeout(finalizeTimer);
     };
-  }, [state?.awaitingTrickCollect]);
+  }, [
+    state?.awaitingTrickCollect,
+    state?.trickHoldUntil,
+    state?.currentTrick,
+    state?.players,
+    humanId,
+    hostId,
+    code,
+  ]);
+
+  // After cards are locked into completedTrickDisplay, clear them (collect animation).
+  useEffect(() => {
+    if (!state?.completedTrickDisplay || !humanId) return;
+
+    const plays = state.completedTrickDisplay.plays;
+    const lead = isTrickCollectLeader(plays, state.players, humanId, hostId);
+    setTrickCollecting(true);
+
+    if (!lead) return;
+
+    const timer = window.setTimeout(() => {
+      void runAction({ type: "clearCompletedTrick" });
+    }, TRICK_COLLECT_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [state?.completedTrickDisplay, state?.players, humanId, hostId]);
 
   useEffect(() => {
     if (!state || !humanId) return;
@@ -137,7 +292,11 @@ export default function GamePage() {
   async function runAction(action: Parameters<typeof postGameAction>[2]) {
     if (!humanId || actionLock.current) return;
     actionLock.current = true;
-    const silent = action.type === "resolveTrick" || action.type === "runBots";
+    const silent =
+      action.type === "resolveTrick" ||
+      action.type === "finalizeTrickCollect" ||
+      action.type === "clearCompletedTrick" ||
+      action.type === "runBots";
     if (!silent) setActionLoading(true);
     try {
       const result = await postGameAction(code, humanId, action);
@@ -170,7 +329,9 @@ export default function GamePage() {
   const me = state.players.find((p) => p.id === humanId)!;
   const isMyTurn = state.currentPlayerIndex === mySeat;
   const trickAnimating =
-    state.awaitingTrickCollect != null || state.completedTrickDisplay != null;
+    state.awaitingTrickCollect != null ||
+    state.completedTrickDisplay != null ||
+    heldTrick != null;
   const canPlay = isMyTurn && !trickAnimating && !actionLoading;
 
   const legalPlays =
@@ -254,7 +415,12 @@ export default function GamePage() {
           {state.phase === "playing" ? (
             <div className="relative flex h-full min-h-0 flex-col">
               <PlayField state={state} mySeat={mySeat}>
-                <TrickArea state={state} mySeat={mySeat} collecting={trickCollecting} />
+                <TrickArea
+                  state={state}
+                  mySeat={mySeat}
+                  collecting={trickCollecting}
+                  heldTrick={heldTrick}
+                />
               </PlayField>
             </div>
           ) : (

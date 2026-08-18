@@ -81,6 +81,7 @@ export function createInitialGameState(
     trump: null,
     currentTrick: [],
     awaitingTrickCollect: null,
+    trickHoldUntil: null,
     completedTrickDisplay: null,
     trickHistory: [],
     trickLeaderIndex: firstBidderIndex,
@@ -124,6 +125,7 @@ function dealNewRound(state: GameState): GameState {
     trump: null,
     currentTrick: [],
     awaitingTrickCollect: null,
+    trickHoldUntil: null,
     completedTrickDisplay: null,
     trickHistory: [],
     trickLeaderIndex: state.firstBidderIndex,
@@ -342,10 +344,14 @@ function startPlaying(state: GameState): GameState {
     trickLeaderIndex: leader,
     currentTrick: [],
     awaitingTrickCollect: null,
+    trickHoldUntil: null,
     completedTrickDisplay: null,
     bidLog: addLog(state, `משחק! ${playerName(leader, state.players)} פותח`),
   };
 }
+
+/** How long all four cards must stay visible before the trick may be collected. */
+export const TRICK_HOLD_MS = 1500;
 
 export function playCard(state: GameState, seatIndex: number, cardId: string): GameState {
   if (state.phase !== "playing") return state;
@@ -390,6 +396,7 @@ export function playCard(state: GameState, seatIndex: number, cardId: string): G
     players: updatedPlayers,
     currentTrick,
     awaitingTrickCollect: winner,
+    trickHoldUntil: Date.now() + TRICK_HOLD_MS,
     trickLeaderIndex: winner,
     currentPlayerIndex: winner,
     bidLog: addLog(next, `לקיחה ל-${playerName(winner, updatedPlayers)}`),
@@ -400,6 +407,7 @@ export function playCard(state: GameState, seatIndex: number, cardId: string): G
 
 export function finalizeTrickCollect(state: GameState): GameState {
   if (state.awaitingTrickCollect === null) return state;
+  if (state.trickHoldUntil != null && Date.now() < state.trickHoldUntil) return state;
 
   const winner = state.awaitingTrickCollect;
   const plays = state.currentTrick;
@@ -410,6 +418,7 @@ export function finalizeTrickCollect(state: GameState): GameState {
     ...state,
     currentTrick: [],
     awaitingTrickCollect: null,
+    trickHoldUntil: null,
     completedTrickDisplay: trickRecord,
     trickHistory: [...(state.trickHistory ?? []), trickRecord],
     tricksPlayed: state.tricksPlayed + 1,
@@ -468,11 +477,17 @@ export function clearCompletedTrickDisplay(state: GameState): GameState {
   return { ...state, completedTrickDisplay: null };
 }
 
-/** Finish the visible trick in one step so the client can animate, then resume play. */
+/**
+ * Finish the visible trick: first lock the four cards into completedTrickDisplay
+ * (so late clients still see them), then clear the display so play can resume.
+ * Early calls are ignored while trickHoldUntil is in the future.
+ */
 export function resolveCompletedTrick(state: GameState): GameState {
   let next = state;
   if (next.awaitingTrickCollect != null) {
-    next = finalizeTrickCollect(next);
+    const held = finalizeTrickCollect(next);
+    if (held === next) return next;
+    next = held;
   }
   if (next.completedTrickDisplay) {
     next = clearCompletedTrickDisplay(next);

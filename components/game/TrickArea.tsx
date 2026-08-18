@@ -13,6 +13,7 @@ interface TrickAreaProps {
   state: GameState;
   mySeat: number;
   collecting?: boolean;
+  heldTrick?: { plays: TrickPlay[]; winner: number } | null;
 }
 
 /** Card positions around center (relative seat 0=me, 1=right, 2=top, 3=left) */
@@ -121,17 +122,25 @@ function TrickCard({
   );
 }
 
-export function TrickArea({ state, mySeat, collecting = false }: TrickAreaProps) {
+export function TrickArea({
+  state,
+  mySeat,
+  collecting = false,
+  heldTrick = null,
+}: TrickAreaProps) {
   const layoutScale = useTrickLayoutScale();
 
-  const isAwaitingCollect = state.awaitingTrickCollect !== null;
+  const isAwaitingCollect = state.awaitingTrickCollect !== null || !!heldTrick;
   const isCollecting = collecting || !!state.completedTrickDisplay;
-  const displayPlays: TrickPlay[] = state.completedTrickDisplay
-    ? state.completedTrickDisplay.plays
-    : state.currentTrick;
+  const displayPlays: TrickPlay[] =
+    heldTrick?.plays ??
+    (state.completedTrickDisplay ? state.completedTrickDisplay.plays : state.currentTrick);
 
   const winnerSeat =
-    state.completedTrickDisplay?.winnerSeat ?? state.awaitingTrickCollect ?? null;
+    heldTrick?.winner ??
+    state.completedTrickDisplay?.winnerSeat ??
+    state.awaitingTrickCollect ??
+    null;
   const winnerName = winnerSeat !== null ? getPlayerName(state, winnerSeat) : null;
   const winnerRelative = winnerSeat !== null ? relativeSeat(winnerSeat, mySeat) : 0;
 

@@ -182,6 +182,8 @@ export async function applyGameAction(
     case "finalizeTrickCollect": {
       if (state.awaitingTrickCollect == null) return state;
       next = finalizeTrickCollect(state);
+      // Still holding — another client called too early or clock skew; keep waiting.
+      if (next === state) return state;
       break;
     }
     case "clearCompletedTrick": {
@@ -192,6 +194,7 @@ export async function applyGameAction(
     case "resolveTrick": {
       if (state.awaitingTrickCollect == null && !state.completedTrickDisplay) return state;
       next = resolveCompletedTrick(state);
+      if (next === state) return state;
       break;
     }
     case "advanceRound": {
