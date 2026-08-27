@@ -954,10 +954,10 @@
 
   .game-score-bid {
     margin-top: 0.12rem;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 800;
     line-height: 1;
-    color: rgba(255, 255, 255, 0.62);
+    color: rgba(255, 255, 255, 0.88);
     font-variant-numeric: tabular-nums;
   }
 
@@ -985,12 +985,13 @@
 
   .game-round-shape {
     margin-top: 0.18rem;
-    padding: 0.08rem 0.28rem;
+    padding: 0.14rem 0.4rem;
     border-radius: 999px;
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     line-height: 1.2;
+    white-space: nowrap;
   }
 
   .game-round-shape.is-over {
@@ -1003,15 +1004,115 @@
     background: #7dd3fc;
   }
 
+  .game-round-total,
+  .game-round-total-lg {
+    margin-top: 0.18rem;
+    padding: 0.14rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.12);
+    white-space: nowrap;
+  }
+
+  .game-round-total-lg {
+    margin-top: 0;
+    padding: 0.35rem 0.85rem;
+    font-size: 1rem;
+  }
+
+  .game-round-total-lg strong,
+  .game-round-total strong {
+    font-weight: 900;
+    color: #f5d76e;
+  }
+
   .game-round-shape-lg {
     display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.2rem 0.65rem;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.4rem 0.95rem;
     border-radius: 999px;
-    font-size: 0.75rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .game-round-shape-lg.is-over {
+    color: #1c1917;
+    background: #fbbf24;
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.35);
+  }
+
+  .game-round-shape-lg.is-under {
+    color: #0c4a6e;
+    background: #7dd3fc;
+    box-shadow: 0 4px 14px rgba(125, 211, 252, 0.3);
+  }
+
+  .game-round-shape-total {
+    font-size: 1.55rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .game-round-shape-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .trick-bid-board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .trick-bid-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    min-height: 3.4rem;
+    padding: 0.45rem 0.25rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  .trick-bid-chip.is-set {
+    border-color: rgba(232, 197, 71, 0.45);
+    background: rgba(232, 197, 71, 0.14);
+  }
+
+  .trick-bid-chip.is-turn {
+    border-color: rgba(232, 197, 71, 0.7);
+    box-shadow: 0 0 0 1px rgba(232, 197, 71, 0.25);
+  }
+
+  .trick-bid-chip-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .trick-bid-chip-value {
+    font-size: 1.55rem;
+    font-weight: 900;
+    line-height: 1;
+    color: #f5d76e;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trick-bid-chip:not(.is-set) .trick-bid-chip-value {
+    color: rgba(255, 255, 255, 0.28);
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
@@ -1037,7 +1138,7 @@
     }
 
     .game-score-bid {
-      font-size: 0.74rem;
+      font-size: 0.92rem;
     }
   }
 
@@ -1067,8 +1168,37 @@
 
     .game-round-shape {
       margin-top: 0.1rem;
-      font-size: 0.55rem;
+      font-size: 0.58rem;
       padding: 0.05rem 0.22rem;
+    }
+
+    .game-round-shape-lg {
+      padding: 0.28rem 0.7rem;
+    }
+
+    .game-round-shape-total {
+      font-size: 1.2rem;
+    }
+
+    .game-round-shape-label {
+      font-size: 0.78rem;
+    }
+
+    .trick-bid-board {
+      gap: 0.3rem;
+    }
+
+    .trick-bid-chip {
+      min-height: 2.6rem;
+      padding: 0.25rem 0.15rem;
+    }
+
+    .trick-bid-chip-name {
+      font-size: 0.6rem;
+    }
+
+    .trick-bid-chip-value {
+      font-size: 1.2rem;
     }
 
     .game-score-name {
@@ -1084,7 +1214,7 @@
     }
 
     .game-score-bid {
-      font-size: 0.66rem;
+      font-size: 0.78rem;
     }
   }
 

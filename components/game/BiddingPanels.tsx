@@ -357,6 +357,9 @@ export function TrickBiddingPanel({
   onBid,
 }: TrickBiddingPanelProps) {
   const contractPlayer = state.players.find((p) => p.seatIndex === state.contractWinnerIndex);
+  const totalBids = getTotalTrickBids(state.trickBids);
+  const shape = getRoundShape(state.trickBids);
+  const placedCount = state.trickBids.filter((b) => b !== null).length;
 
   return (
     <div className="bid-panel">
@@ -370,9 +373,14 @@ export function TrickBiddingPanel({
             <BidMark bid={state.contractBid} size="md" />
           </p>
         )}
-        <div className="mt-1.5 flex justify-center">
-          <RoundShapeBadge trickBids={state.trickBids} size="lg" />
+        <div className="mt-2 flex justify-center">
+          <RoundShapeBadge trickBids={state.trickBids} size="lg" alwaysShowTotal />
         </div>
+        {placedCount > 0 && placedCount < 4 && (
+          <p className="mt-1 text-xs text-white/50">
+            {placedCount}/4 הכריזו · סך ביניים {totalBids}
+          </p>
+        )}
         {!isMyTurn && (
           <p className="mt-1 text-xs text-amber-300 animate-pulse portrait-phone:text-[11px] landscape-phone:text-[10px]">
             ממתין לשחקן אחר...
@@ -409,17 +417,28 @@ export function TrickBiddingPanel({
         </div>
       )}
 
-      <div className="flex flex-wrap justify-center gap-1.5 portrait-phone:gap-1.5 landscape-phone:gap-1">
+      <div className="trick-bid-board">
         {state.players.map((p) => {
           const bid = state.trickBids[p.seatIndex];
-          if (bid === null) return null;
+          const isTurn = state.currentPlayerIndex === p.seatIndex;
+          const hasBid = bid !== null && bid !== undefined;
           return (
-            <span key={p.id} className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold portrait-phone:text-[11px] landscape-phone:px-2 landscape-phone:py-0.5 landscape-phone:text-[11px]">
-              {p.name}: {bid}
-            </span>
+            <div
+              key={p.id}
+              className={`trick-bid-chip ${hasBid ? "is-set" : ""} ${isTurn && !hasBid ? "is-turn" : ""}`}
+            >
+              <span className="trick-bid-chip-name">{p.name}</span>
+              <span className="trick-bid-chip-value">{hasBid ? bid : "—"}</span>
+            </div>
           );
         })}
       </div>
+
+      {shape && (
+        <p className="text-center text-sm font-bold text-white/80">
+          סך כל ההכרזות: {totalBids} · {shape === "over" ? "OVER" : "UNDER"}
+        </p>
+      )}
     </div>
   );
 }
@@ -470,25 +489,44 @@ export function CardExchangePanel({
 function RoundShapeBadge({
   trickBids,
   size = "sm",
+  alwaysShowTotal = false,
 }: {
   trickBids: (number | null)[];
   size?: "sm" | "lg";
+  /** Show running total even before all four bids are in */
+  alwaysShowTotal?: boolean;
 }) {
   const shape = getRoundShape(trickBids);
-  if (!shape) return null;
   const total = getTotalTrickBids(trickBids);
-  const label = shape === "over" ? "OVER" : "UNDER";
+  const allIn = trickBids.every((b) => b !== null);
 
-  if (size === "lg") {
+  if (!shape && !alwaysShowTotal && !allIn) return null;
+  if (!shape && total === 0 && !alwaysShowTotal) return null;
+
+  if (!shape) {
     return (
-      <span className={`game-round-shape-lg is-${shape} ${shape === "over" ? "bg-amber-400 text-felt-900" : "bg-sky-300 text-sky-950"}`}>
-        {label}
-        <span className="font-semibold opacity-80">({total})</span>
+      <span className={size === "lg" ? "game-round-total-lg" : "game-round-total"}>
+        סך הכרזות <strong>{total}</strong>
       </span>
     );
   }
 
-  return <span className={`game-round-shape is-${shape}`}>{label}</span>;
+  const label = shape === "over" ? "OVER" : "UNDER";
+
+  if (size === "lg") {
+    return (
+      <span className={`game-round-shape-lg is-${shape}`}>
+        <span className="game-round-shape-total">{total}</span>
+        <span className="game-round-shape-label">{label}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className={`game-round-shape is-${shape}`}>
+      {total} {label}
+    </span>
+  );
 }
 
 function scoreToneClass(score: number): string {
@@ -560,8 +598,10 @@ export function Scoreboard({ state, phaseLabel, humanPlayerId }: ScoreboardProps
           {state.currentRound}/{state.totalRounds}
         </span>
         <span className="game-scoreboard-round-label">סיבוב</span>
-        <RoundShapeBadge trickBids={state.trickBids} />
-        {phaseLabel && !roundShape && <span className="game-scoreboard-phase">{phaseLabel}</span>}
+        <RoundShapeBadge trickBids={state.trickBids} alwaysShowTotal={state.phase !== "bidding_contract"} />
+        {phaseLabel && !roundShape && state.phase === "bidding_contract" && (
+          <span className="game-scoreboard-phase">{phaseLabel}</span>
+        )}
       </div>
       <div className="game-scoreboard-players">
         {state.players.map((p) => {
@@ -588,7 +628,7 @@ export function Scoreboard({ state, phaseLabel, humanPlayerId }: ScoreboardProps
               <p className={`game-score-value ${scoreToneClass(p.totalScore)}`}>{p.totalScore}</p>
               {showBid && (
                 <p className={`game-score-bid ${bidProgressClass(liveProgress)}`}>
-                  {showPlayProgress ? `${p.tricksWon}/${bid}` : `הכרזה ${bid}`}
+                  {showPlayProgress ? `${p.tricksWon}/${bid}` : bid}
                 </p>
               )}
             </div>
@@ -643,7 +683,7 @@ export function RoundSummary({ state, onContinue }: RoundSummaryProps) {
             סיכום הסיבוב
           </h3>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <RoundShapeBadge trickBids={state.trickBids} size="lg" />
+            <RoundShapeBadge trickBids={state.trickBids} size="lg" alwaysShowTotal />
             {contractLabel && (
               <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-white/80 landscape-phone:text-[10px]">
                 חוזה {contractLabel}

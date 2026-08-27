@@ -17,7 +17,7 @@ import { useGameRealtime } from "@/hooks/useGameRealtime";
 import { playCardSlide, playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
 import { fetchRoom, postGameAction } from "@/lib/api/client";
 import { getDisabledTricksForCurrentBidder } from "@/lib/game/bots";
-import { getPhaseLabel, TRICK_HOLD_MS } from "@/lib/game/engine";
+import { getPhaseLabel, TRICK_HOLD_MS, TRICK_VISUAL_HOLD_MS } from "@/lib/game/engine";
 import { getLegalPlays } from "@/lib/game/trick";
 import type { ContractBid, GameState, TrickPlay } from "@/lib/game/types";
 import { getGuestSession } from "@/lib/session/guest";
@@ -113,7 +113,7 @@ export default function GamePage() {
     void init();
   }, [code, router, humanId]);
 
-  // Keep a local snapshot of the finished trick so late realtime updates cannot erase the 4th card early.
+  // Keep a local snapshot of the finished trick: show up to 5s, or until the next card is played.
   useEffect(() => {
     if (!state) return;
 
@@ -145,7 +145,6 @@ export default function GamePage() {
         heldTrickRef.current = nextHeld;
         setHeldTrick(nextHeld);
       }
-      setTrickCollecting(true);
       return;
     }
 
@@ -155,8 +154,15 @@ export default function GamePage() {
       return;
     }
 
-    const minShow = TRICK_FLY_IN_MS + TRICK_HOLD_MS + TRICK_COLLECT_MS;
-    const remaining = minShow - (Date.now() - held.seenAt);
+    // Next trick started — clear the old four cards immediately.
+    if (state.currentTrick.length > 0) {
+      heldTrickRef.current = null;
+      setHeldTrick(null);
+      setTrickCollecting(false);
+      return;
+    }
+
+    const remaining = TRICK_VISUAL_HOLD_MS - (Date.now() - held.seenAt);
     if (remaining <= 0) {
       heldTrickRef.current = null;
       setHeldTrick(null);
@@ -164,12 +170,19 @@ export default function GamePage() {
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    // Soft collect animation near the end of the visual hold.
+    const collectIn = Math.max(0, remaining - TRICK_COLLECT_MS);
+    const collectTimer = window.setTimeout(() => setTrickCollecting(true), collectIn);
+    const clearTimer = window.setTimeout(() => {
       heldTrickRef.current = null;
       setHeldTrick(null);
       setTrickCollecting(false);
     }, remaining);
-    return () => window.clearTimeout(timer);
+
+    return () => {
+      window.clearTimeout(collectTimer);
+      window.clearTimeout(clearTimer);
+    };
   }, [
     state?.awaitingTrickCollect,
     state?.completedTrickDisplay,
@@ -255,6 +268,21 @@ export default function GamePage() {
   useEffect(() => {
     if (!state || !humanId) return;
     if (state.awaitingTrickCollect != null || state.completedTrickDisplay) return;
+
+    // Let the previous trick stay visible (~5s) before bots lead the next one.
+    const held = heldTrickRef.current;
+    if (
+      held &&
+      state.currentTrick.length === 0 &&
+      state.phase === "playing" &&
+      Date.now() - held.seenAt < TRICK_VISUAL_HOLD_MS
+    ) {
+      const wait = TRICK_VISUAL_HOLD_MS - (Date.now() - held.seenAt) + 40;
+      const timer = window.setTimeout(() => {
+        void runAction({ type: "runBots" });
+      }, wait);
+      return () => window.clearTimeout(timer);
+    }
 
     if (state.phase === "card_exchange") {
       const humanReady = state.cardExchangeReady[humanId];
