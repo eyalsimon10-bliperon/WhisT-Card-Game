@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { BidMark, PassMark, SuitGlyph } from "@/components/game/BidMark";
-import { SuitIcon } from "@/components/cards/SuitIcon";
 import { playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
 import {
   formatContractBid,
@@ -13,7 +12,7 @@ import {
   isContractConfirmLegal,
 } from "@/lib/game/bidding";
 import type { Card, ContractBid, ContractSeatDisplay, GameState, Trump } from "@/lib/game/types";
-import { SUIT_LABEL } from "@/lib/game/types";
+import { SUIT_LABEL, SUIT_SYMBOL } from "@/lib/game/types";
 
 function getContractSeatDisplay(state: GameState, seatIndex: number): ContractSeatDisplay {
   if (
@@ -650,10 +649,10 @@ function RecapMiniCard({ card, winner }: { card: Card; winner?: boolean }) {
   return (
     <div
       className={`recap-mini-card ${isRed ? "is-red" : ""} ${winner ? "is-winner" : ""}`}
-      title={`${card.rank} ${card.suit}`}
+      title={`${card.rank}${SUIT_SYMBOL[card.suit]}`}
     >
       <span className="recap-mini-rank">{card.rank}</span>
-      <SuitIcon suit={card.suit} className="recap-mini-suit-icon" />
+      <span className="recap-mini-suit">{SUIT_SYMBOL[card.suit]}</span>
     </div>
   );
 }

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
-import { SuitIcon } from "@/components/cards/SuitIcon";
 import { playCardSlide } from "@/lib/audio/card-sounds";
 import { sortHand } from "@/lib/game/cards";
 import { useHandFanLayout } from "@/lib/hooks/useHandFanLayout";
 import { scalePx, useTrickLayoutScale } from "@/lib/hooks/useTrickLayoutScale";
 import type { Card, TrickPlay } from "@/lib/game/types";
 import type { GameState } from "@/lib/game/types";
+import { SUIT_SYMBOL } from "@/lib/game/types";
 
 interface TrickAreaProps {
   state: GameState;
@@ -203,13 +203,13 @@ export function TrickArea({
               <span className="text-4xl font-black tracking-tight text-gold-300 landscape-phone:text-3xl">NT</span>
             ) : (
               <span
-                className={`inline-flex h-[3.5rem] w-[3.5rem] landscape-phone:h-[2.75rem] landscape-phone:w-[2.75rem] ${
+                className={`text-6xl landscape-phone:text-5xl ${
                   state.contractBid.trump === "hearts" || state.contractBid.trump === "diamonds"
                     ? "text-[#c41e3a]"
                     : "text-black"
                 }`}
               >
-                <SuitIcon suit={state.contractBid.trump} className="h-full w-full" />
+                {SUIT_SYMBOL[state.contractBid.trump]}
               </span>
             )}
           </div>

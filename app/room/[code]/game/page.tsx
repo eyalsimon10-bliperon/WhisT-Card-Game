@@ -328,9 +328,8 @@ export default function GamePage() {
   const me = state.players.find((p) => p.id === humanId)!;
   const isMyTurn = state.currentPlayerIndex === mySeat;
   const trickAnimating =
-    state.awaitingTrickCollect != null ||
-    state.completedTrickDisplay != null ||
-    heldTrick != null;
+    state.awaitingTrickCollect != null || state.completedTrickDisplay != null;
+  // heldTrick is visual-only — do not block the next lead while the previous four cards are still shown.
   const canPlay = isMyTurn && !trickAnimating && !actionLoading;
 
   const legalPlays =
@@ -352,6 +351,12 @@ export default function GamePage() {
   }
 
   function handlePlayCard(cardId: string) {
+    // Clear the previous trick overlay as soon as the next card is chosen.
+    if (heldTrickRef.current) {
+      heldTrickRef.current = null;
+      setHeldTrick(null);
+    }
+    setTrickCollecting(false);
     playCardSlide(cardId);
     void runAction({ type: "playCard", cardId });
     setSelectedCardId(null);

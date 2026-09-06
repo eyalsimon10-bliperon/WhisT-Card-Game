@@ -1358,9 +1358,8 @@
     font-size: 0.7rem;
   }
 
-  .recap-mini-suit-icon {
-    width: 0.78rem;
-    height: 0.78rem;
+  .recap-mini-suit {
+    font-size: 0.72rem;
   }
 
   .recap-won-trick {
@@ -1428,9 +1427,8 @@
       font-size: 0.78rem;
     }
 
-    .recap-mini-suit-icon {
-      width: 0.8rem;
-      height: 0.8rem;
+    .recap-mini-suit {
+      font-size: 0.8rem;
     }
 
     .recap-score-table td {
@@ -1457,9 +1455,8 @@
       font-size: 0.58rem;
     }
 
-    .recap-mini-suit-icon {
-      width: 0.55rem;
-      height: 0.55rem;
+    .recap-mini-suit {
+      font-size: 0.58rem;
     }
 
     .recap-score-table th {
@@ -1561,19 +1558,13 @@
     letter-spacing: -0.08em;
   }
 
-  .suit-icon,
-  .bbo-suit-icon {
+  .bbo-suit {
     display: block;
-    width: 0.92em;
-    height: 0.92em;
-    flex-shrink: 0;
-  }
-
-  .bbo-index .bbo-suit-icon {
-    width: 82%;
-    height: auto;
-    aspect-ratio: 1;
-    margin-top: 0.06em;
+    width: 100%;
+    font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
+    font-size: 0.88em;
+    line-height: 1;
+    text-align: center;
   }
 
   .bbo-face[data-size="hand"] .bbo-index {
@@ -1602,20 +1593,18 @@
     font-size: clamp(0.78rem, 42cqmin, 1.45rem);
   }
 
-  .bid-mark-suit .suit-icon {
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.12em;
+  .bid-mark-suit {
+    font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
   }
 
-  .trump-tile-suit .suit-icon {
-    width: 1.15em;
-    height: 1.15em;
+  .trump-tile-suit {
+    font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
   }
 
-  .recap-mini-suit-icon {
-    width: 0.78rem;
-    height: 0.78rem;
+  .recap-mini-suit {
+    font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
+    font-size: 0.72rem;
+    line-height: 1;
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
@@ -1651,9 +1640,8 @@
       font-size: clamp(1.05rem, 48cqmin, 1.9rem);
     }
 
-    .bbo-index .bbo-suit-icon {
-      width: 90%;
-      margin-top: 0.08em;
+    .bbo-suit {
+      font-size: 0.92em;
     }
   }
 
@@ -1672,10 +1660,6 @@
     .bbo-face[data-size="hand"] .bbo-rank--ten,
     .bbo-face[data-size="table"] .bbo-rank--ten {
       font-size: clamp(0.95rem, 44cqmin, 1.7rem);
-    }
-
-    .bbo-index .bbo-suit-icon {
-      width: 88%;
     }
   }
 
