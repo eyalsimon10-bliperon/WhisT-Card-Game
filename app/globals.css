@@ -1562,9 +1562,10 @@
     display: block;
     width: 100%;
     font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
-    font-size: 0.88em;
+    font-size: 1.58em;
     line-height: 1;
     text-align: center;
+    margin-top: 0.02em;
   }
 
   .bbo-face[data-size="hand"] .bbo-index {
@@ -1578,6 +1579,11 @@
 
   .bbo-face[data-size="hand"] .bbo-rank--ten {
     font-size: clamp(0.78rem, 44cqmin, 1.5rem);
+  }
+
+  .bbo-face[data-size="hand"] .bbo-suit,
+  .bbo-face[data-size="table"] .bbo-suit {
+    font-size: 1.68em;
   }
 
   .bbo-face[data-size="table"] .bbo-index {
@@ -1641,7 +1647,12 @@
     }
 
     .bbo-suit {
-      font-size: 0.92em;
+      font-size: 1.72em;
+    }
+
+    .bbo-face[data-size="hand"] .bbo-suit,
+    .bbo-face[data-size="table"] .bbo-suit {
+      font-size: 1.82em;
     }
   }
 
@@ -1660,6 +1671,15 @@
     .bbo-face[data-size="hand"] .bbo-rank--ten,
     .bbo-face[data-size="table"] .bbo-rank--ten {
       font-size: clamp(0.95rem, 44cqmin, 1.7rem);
+    }
+
+    .bbo-suit {
+      font-size: 1.68em;
+    }
+
+    .bbo-face[data-size="hand"] .bbo-suit,
+    .bbo-face[data-size="table"] .bbo-suit {
+      font-size: 1.78em;
     }
   }
 

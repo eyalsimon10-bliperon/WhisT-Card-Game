@@ -4,7 +4,13 @@ let audioCtx: AudioContext | null = null;
 let rustleBuffer: AudioBuffer | null = null;
 let lastSlideAt = 0;
 let lastSlideKey = "";
+let lastTrickTakeKey = "";
 let listenersBound = false;
+
+const SOUND_PLAY = "/sounds/card-play.wav";
+const SOUND_TRICK = "/sounds/trick-take.wav";
+
+const htmlAudioCache = new Map<string, HTMLAudioElement>();
 
 function getContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -37,9 +43,43 @@ function whenRunning(ctx: AudioContext, play: () => void): void {
   });
 }
 
+function playSoundFile(url: string, volume: number, onFail: () => void): void {
+  if (typeof window === "undefined") {
+    onFail();
+    return;
+  }
+  try {
+    let audio = htmlAudioCache.get(url);
+    if (!audio) {
+      audio = new Audio(url);
+      audio.preload = "auto";
+      htmlAudioCache.set(url, audio);
+    }
+    audio.volume = volume;
+    audio.currentTime = 0;
+    const result = audio.play();
+    if (result && typeof result.catch === "function") {
+      result.catch(() => onFail());
+    }
+  } catch {
+    onFail();
+  }
+}
+
+function preloadSounds(): void {
+  if (typeof window === "undefined") return;
+  for (const url of [SOUND_PLAY, SOUND_TRICK]) {
+    if (htmlAudioCache.has(url)) continue;
+    const audio = new Audio(url);
+    audio.preload = "auto";
+    htmlAudioCache.set(url, audio);
+  }
+}
+
 /** iOS/Safari block audio until a user gesture — call on taps, not only once. */
 export function unlockCardAudio(): void {
   bindUnlockListeners();
+  preloadSounds();
   const ctx = getContext();
   if (!ctx) return;
   void ctx.resume().then(() => {
@@ -57,6 +97,7 @@ export function unlockCardAudio(): void {
 
 if (typeof window !== "undefined") {
   bindUnlockListeners();
+  preloadSounds();
 }
 
 function makePinkNoise(ctx: AudioContext, seconds: number): AudioBuffer {
@@ -89,8 +130,6 @@ function makePinkNoise(ctx: AudioContext, seconds: number): AudioBuffer {
 /** Soft paper rustle + light felt tap when a card lands on the table. */
 export function playCardSlide(key?: string): void {
   bindUnlockListeners();
-  const ctx = getContext();
-  if (!ctx) return;
 
   if (key) {
     if (key === lastSlideKey) return;
@@ -101,7 +140,11 @@ export function playCardSlide(key?: string): void {
     lastSlideAt = nowMs;
   }
 
-  whenRunning(ctx, () => startSlide(ctx));
+  playSoundFile(SOUND_PLAY, 0.9, () => {
+    const ctx = getContext();
+    if (!ctx) return;
+    whenRunning(ctx, () => startSlide(ctx));
+  });
 }
 
 function startSlide(ctx: AudioContext): void {
@@ -187,6 +230,50 @@ function playTone(
   gain.connect(ctx.destination);
   osc.start(start);
   osc.stop(start + duration + 0.02);
+}
+
+/** Scoop / gather sound when a trick is won and taken. */
+export function playTrickTake(key?: string): void {
+  bindUnlockListeners();
+  if (key) {
+    if (key === lastTrickTakeKey) return;
+    lastTrickTakeKey = key;
+  }
+
+  playSoundFile(SOUND_TRICK, 0.88, () => {
+    const ctx = getContext();
+    if (!ctx) return;
+    whenRunning(ctx, () => {
+      try {
+        const now = ctx.currentTime;
+        rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.22);
+
+        for (let i = 0; i < 3; i++) {
+          const src = ctx.createBufferSource();
+          src.buffer = rustleBuffer;
+          src.playbackRate.value = 1.05 + i * 0.08;
+          const gain = ctx.createGain();
+          const t = now + i * 0.045;
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.exponentialRampToValueAtTime(0.14 - i * 0.02, t + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+          const filter = ctx.createBiquadFilter();
+          filter.type = "bandpass";
+          filter.frequency.value = 700 - i * 80;
+          filter.Q.value = 0.8;
+          src.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          src.start(t);
+          src.stop(t + 0.14);
+        }
+        playTone(ctx, 520, now + 0.08, 0.18, 0.09, "sine");
+        playTone(ctx, 90, now + 0.02, 0.12, 0.08, "triangle");
+      } catch {
+        /* ignore */
+      }
+    });
+  });
 }
 
 let lastResultKey = "";

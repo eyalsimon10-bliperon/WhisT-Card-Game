@@ -14,7 +14,12 @@ import {
 import { HumanPlayerHud, PlayField } from "@/components/game/PlayerSeat";
 import { getMySeat, PlayerHand, TrickArea } from "@/components/game/TrickArea";
 import { useGameRealtime } from "@/hooks/useGameRealtime";
-import { playCardSlide, playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
+import {
+  playCardSlide,
+  playMatchResult,
+  playTrickTake,
+  unlockCardAudio,
+} from "@/lib/audio/card-sounds";
 import { fetchRoom, postGameAction } from "@/lib/api/client";
 import { getDisabledTricksForCurrentBidder } from "@/lib/game/bots";
 import { getPhaseLabel, TRICK_HOLD_MS } from "@/lib/game/engine";
@@ -128,6 +133,7 @@ export default function GamePage() {
         };
         heldTrickRef.current = nextHeld;
         setHeldTrick(nextHeld);
+        playTrickTake(key);
       }
       setTrickCollecting(false);
       return;
@@ -144,6 +150,7 @@ export default function GamePage() {
         };
         heldTrickRef.current = nextHeld;
         setHeldTrick(nextHeld);
+        playTrickTake(key);
       }
       setTrickCollecting(false);
       return;
