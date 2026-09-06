@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PlayingCard } from "@/components/PlayingCard";
+import { SuitIcon } from "@/components/cards/SuitIcon";
 import { playCardSlide } from "@/lib/audio/card-sounds";
 import { sortHand } from "@/lib/game/cards";
 import { useHandFanLayout } from "@/lib/hooks/useHandFanLayout";
@@ -130,17 +131,27 @@ export function TrickArea({
 }: TrickAreaProps) {
   const layoutScale = useTrickLayoutScale();
 
-  const isAwaitingCollect = state.awaitingTrickCollect !== null || !!heldTrick;
-  const isCollecting = collecting || !!state.completedTrickDisplay;
-  const displayPlays: TrickPlay[] =
-    heldTrick?.plays ??
-    (state.completedTrickDisplay ? state.completedTrickDisplay.plays : state.currentTrick);
+  // Once the next trick has a card, always show that — never keep covering with the old four.
+  const nextTrickStarted = state.currentTrick.length > 0 && state.awaitingTrickCollect == null;
+  const showHeld = !!heldTrick && !nextTrickStarted && state.awaitingTrickCollect == null && !state.completedTrickDisplay;
 
-  const winnerSeat =
-    heldTrick?.winner ??
-    state.completedTrickDisplay?.winnerSeat ??
-    state.awaitingTrickCollect ??
-    null;
+  const isAwaitingCollect = state.awaitingTrickCollect !== null || showHeld;
+  const isCollecting = collecting && !showHeld;
+  const displayPlays: TrickPlay[] = nextTrickStarted
+    ? state.currentTrick
+    : state.awaitingTrickCollect != null && state.currentTrick.length === 4
+      ? state.currentTrick
+      : state.completedTrickDisplay
+        ? state.completedTrickDisplay.plays
+        : showHeld
+          ? heldTrick!.plays
+          : state.currentTrick;
+
+  const winnerSeat = nextTrickStarted
+    ? null
+    : state.awaitingTrickCollect != null
+      ? state.awaitingTrickCollect
+      : state.completedTrickDisplay?.winnerSeat ?? (showHeld ? heldTrick!.winner : null);
   const winnerName = winnerSeat !== null ? getPlayerName(state, winnerSeat) : null;
   const winnerRelative = winnerSeat !== null ? relativeSeat(winnerSeat, mySeat) : 0;
 
@@ -192,19 +203,13 @@ export function TrickArea({
               <span className="text-4xl font-black tracking-tight text-gold-300 landscape-phone:text-3xl">NT</span>
             ) : (
               <span
-                className={`text-6xl landscape-phone:text-5xl ${
+                className={`inline-flex h-[3.5rem] w-[3.5rem] landscape-phone:h-[2.75rem] landscape-phone:w-[2.75rem] ${
                   state.contractBid.trump === "hearts" || state.contractBid.trump === "diamonds"
                     ? "text-[#c41e3a]"
                     : "text-black"
                 }`}
               >
-                {state.contractBid.trump === "spades"
-                  ? "♠"
-                  : state.contractBid.trump === "hearts"
-                    ? "♥"
-                    : state.contractBid.trump === "diamonds"
-                      ? "♦"
-                      : "♣"}
+                <SuitIcon suit={state.contractBid.trump} className="h-full w-full" />
               </span>
             )}
           </div>

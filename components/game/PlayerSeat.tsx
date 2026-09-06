@@ -3,10 +3,10 @@
 import type { ReactNode } from "react";
 
 import { BidMark } from "@/components/game/BidMark";
+import { SuitIcon } from "@/components/cards/SuitIcon";
 import { getBidProgress } from "@/lib/game/bidding";
 import { getRelativeSeat } from "@/lib/game/engine";
 import type { GamePlayer, GameState, Trump } from "@/lib/game/types";
-import { SUIT_SYMBOL } from "@/lib/game/types";
 
 interface PlayerHudProps {
   player: GamePlayer;
@@ -24,7 +24,9 @@ function TrumpTile({ trump, size = "md" }: { trump: Trump; size?: "md" | "lg" })
       {trump === "NT" ? (
         <span className="trump-tile-nt" dir="ltr">NT</span>
       ) : (
-        <span className={`trump-tile-suit ${isRed ? "is-red" : "is-black"}`}>{SUIT_SYMBOL[trump]}</span>
+        <span className={`trump-tile-suit ${isRed ? "is-red" : "is-black"}`}>
+          <SuitIcon suit={trump} />
+        </span>
       )}
       <span className="trump-tile-label">שליט</span>
     </div>

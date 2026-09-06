@@ -18,8 +18,8 @@
     --card-hand-w: calc(var(--card-hand-h) * 5 / 7);
     --hand-visible-strip: max(1.55rem, calc(var(--card-hand-w) * 0.44));
     --hand-fan-overlap: calc(var(--hand-visible-strip) - var(--card-hand-w));
-    --index-rank-h: 32cqh;
-    --index-suit-top: 33cqh;
+    --index-rank-h: 38%;
+    --index-suit-top: 40%;
     --trick-zone-h: clamp(12rem, 38vw, 16rem);
     --trick-zone-w: clamp(17rem, 92vw, 22rem);
   }
@@ -29,10 +29,21 @@
       --card-hand-h: clamp(4.5rem, 17vw, 5.85rem);
       --card-table-h: clamp(4.65rem, 16vw, 6.25rem);
       --hand-visible-strip: max(1.7rem, calc(var(--card-hand-w) * 0.5));
-      --index-rank-h: 34cqh;
-      --index-suit-top: 35cqh;
+      --index-rank-h: 40%;
+      --index-suit-top: 42%;
       --trick-zone-w: min(58vw, 15.25rem);
       --trick-zone-h: min(58vw, 15.25rem);
+    }
+  }
+
+  /* iPad / tablet portrait — phone rules don't apply above 640px */
+  @media (orientation: portrait) and (min-width: 641px) and (max-width: 1024px) {
+    :root {
+      --card-hand-h: clamp(5.4rem, 12vw, 7rem);
+      --card-table-h: clamp(5.6rem, 11vw, 7.25rem);
+      --hand-visible-strip: max(2rem, calc(var(--card-hand-w) * 0.48));
+      --trick-zone-w: min(42vw, 20rem);
+      --trick-zone-h: min(42vw, 20rem);
     }
   }
 
@@ -55,8 +66,8 @@
       /* Index strip like portrait (for rank/suit readability) */
       --hand-visible-strip: max(1.7rem, calc(var(--card-hand-w) * 0.5));
       --hand-fan-overlap: 1mm;
-      --index-rank-h: 34cqh;
-      --index-suit-top: 35cqh;
+      --index-rank-h: 40%;
+      --index-suit-top: 42%;
       --trick-zone-h: clamp(8rem, 50vh, 9.75rem);
       --trick-zone-w: clamp(13rem, 70vw, 16.5rem);
     }
@@ -1347,8 +1358,9 @@
     font-size: 0.7rem;
   }
 
-  .recap-mini-suit {
-    font-size: 0.72rem;
+  .recap-mini-suit-icon {
+    width: 0.78rem;
+    height: 0.78rem;
   }
 
   .recap-won-trick {
@@ -1416,8 +1428,9 @@
       font-size: 0.78rem;
     }
 
-    .recap-mini-suit {
-      font-size: 0.8rem;
+    .recap-mini-suit-icon {
+      width: 0.8rem;
+      height: 0.8rem;
     }
 
     .recap-score-table td {
@@ -1440,9 +1453,13 @@
       width: calc(1.85rem * 5 / 7);
     }
 
-    .recap-mini-rank,
-    .recap-mini-suit {
+    .recap-mini-rank {
       font-size: 0.58rem;
+    }
+
+    .recap-mini-suit-icon {
+      width: 0.55rem;
+      height: 0.55rem;
     }
 
     .recap-score-table th {
@@ -1485,7 +1502,7 @@
 
   /*
     Unified card face (hand + table):
-    TL index + BR rotated index — same size, no center pip.
+    TL index + BR rotated index — flex stack so suits never clip on iPad.
   */
   .bbo-face {
     position: relative;
@@ -1508,130 +1525,140 @@
 
   .bbo-index {
     position: absolute;
-    width: 1.45rem;
-    height: calc(var(--index-suit-top) + 28cqh);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.04em;
+    width: 28%;
+    max-width: 1.55rem;
     line-height: 1;
   }
 
   .bbo-index--tl {
-    top: 3.5%;
-    left: 4%;
+    top: 4%;
+    left: 5%;
   }
 
   .bbo-index--br {
-    right: 4%;
-    bottom: 3.5%;
+    right: 5%;
+    bottom: 4%;
     transform: rotate(180deg);
   }
 
-  /* Fixed rank slot — suit always starts at --index-suit-top */
   .bbo-rank {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--index-rank-h);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
+    display: block;
+    width: 100%;
     font-weight: 800;
-    font-size: clamp(1.05rem, 32cqh, 1.65rem);
+    font-size: clamp(0.7rem, 42cqmin, 1.4rem);
     letter-spacing: -0.04em;
-    line-height: 0.85;
+    line-height: 0.9;
     text-align: center;
   }
 
-  /*
-    "10": slightly larger than before, but stays inside the same rank slot
-    so the suit below remains at the exact same Y as other cards.
-  */
   .bbo-rank--ten {
-    font-size: clamp(0.88rem, 26cqh, 1.35rem);
-    letter-spacing: -0.09em;
+    font-size: clamp(0.58rem, 34cqmin, 1.15rem);
+    letter-spacing: -0.08em;
   }
 
-  .bbo-suit {
-    position: absolute;
-    top: var(--index-suit-top);
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    font-size: clamp(0.95rem, 28cqh, 1.45rem);
-    line-height: 1;
+  .suit-icon,
+  .bbo-suit-icon {
+    display: block;
+    width: 0.92em;
+    height: 0.92em;
+    flex-shrink: 0;
+  }
+
+  .bbo-index .bbo-suit-icon {
+    width: 78%;
+    height: auto;
+    aspect-ratio: 1;
+    margin-top: 0.05em;
   }
 
   .bbo-face[data-size="hand"] .bbo-index {
-    width: min(1.4rem, max(1.05rem, calc(var(--card-hand-w) * 0.3)));
+    width: min(30%, 1.45rem);
   }
 
   .bbo-face[data-size="hand"] .bbo-rank {
-    font-size: clamp(1.15rem, 34cqh, 1.75rem);
+    font-size: clamp(0.8rem, 48cqmin, 1.55rem);
   }
 
   .bbo-face[data-size="hand"] .bbo-rank--ten {
-    font-size: clamp(0.95rem, 28cqh, 1.4rem);
-  }
-
-  .bbo-face[data-size="hand"] .bbo-suit {
-    font-size: clamp(1.05rem, 30cqh, 1.55rem);
+    font-size: clamp(0.65rem, 38cqmin, 1.25rem);
   }
 
   .bbo-face[data-size="table"] .bbo-index {
-    width: 1.55rem;
+    width: min(30%, 1.6rem);
   }
 
   .bbo-face[data-size="table"] .bbo-rank {
-    font-size: clamp(1.1rem, 28cqh, 1.65rem);
+    font-size: clamp(0.8rem, 44cqmin, 1.45rem);
   }
 
   .bbo-face[data-size="table"] .bbo-rank--ten {
-    font-size: clamp(0.9rem, 22cqh, 1.3rem);
+    font-size: clamp(0.65rem, 34cqmin, 1.15rem);
   }
 
-  .bbo-face[data-size="table"] .bbo-suit {
-    font-size: clamp(1rem, 26cqh, 1.45rem);
+  .bid-mark-suit .suit-icon {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.12em;
+  }
+
+  .trump-tile-suit .suit-icon {
+    width: 1.15em;
+    height: 1.15em;
+  }
+
+  .recap-mini-suit-icon {
+    width: 0.78rem;
+    height: 0.78rem;
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
     .bbo-face[data-size="hand"] .bbo-rank {
-      font-size: clamp(1.2rem, 36cqh, 1.85rem);
+      font-size: clamp(0.9rem, 50cqmin, 1.7rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank--ten {
-      font-size: clamp(1rem, 29cqh, 1.45rem);
+      font-size: clamp(0.72rem, 40cqmin, 1.35rem);
+    }
+  }
+
+  @media (orientation: portrait) and (min-width: 641px) and (max-width: 1024px) {
+    .bbo-face[data-size="hand"] .bbo-index,
+    .bbo-face[data-size="table"] .bbo-index {
+      width: min(28%, 1.7rem);
+      max-width: 1.7rem;
     }
 
-    .bbo-face[data-size="hand"] .bbo-suit {
-      font-size: clamp(1.1rem, 32cqh, 1.65rem);
+    .bbo-face[data-size="hand"] .bbo-rank,
+    .bbo-face[data-size="table"] .bbo-rank {
+      font-size: clamp(0.95rem, 46cqmin, 1.65rem);
+    }
+
+    .bbo-face[data-size="hand"] .bbo-rank--ten,
+    .bbo-face[data-size="table"] .bbo-rank--ten {
+      font-size: clamp(0.78rem, 36cqmin, 1.3rem);
     }
   }
 
   @media (orientation: landscape) and (max-height: 520px) {
-    /* Match portrait hand index scale — cards are fully visible with 1mm gaps */
     .bbo-face[data-size="hand"] .bbo-index {
-      width: min(1.35rem, max(1.05rem, calc(var(--card-hand-w) * 0.3)));
+      width: min(30%, 1.35rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank {
-      font-size: clamp(1.15rem, 34cqh, 1.75rem);
+      font-size: clamp(0.75rem, 46cqmin, 1.4rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank--ten {
-      font-size: clamp(0.95rem, 28cqh, 1.4rem);
-    }
-
-    .bbo-face[data-size="hand"] .bbo-suit {
-      font-size: clamp(1.05rem, 30cqh, 1.55rem);
+      font-size: clamp(0.62rem, 36cqmin, 1.15rem);
     }
 
     .bbo-face[data-size="table"] .bbo-rank {
-      font-size: clamp(0.9rem, 28cqh, 1.25rem);
-    }
-
-    .bbo-face[data-size="table"] .bbo-suit {
-      font-size: clamp(0.8rem, 26cqh, 1.1rem);
+      font-size: clamp(0.68rem, 40cqmin, 1.15rem);
     }
   }
 

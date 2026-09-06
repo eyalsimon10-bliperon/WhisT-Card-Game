@@ -1,5 +1,5 @@
+import { SuitIcon } from "@/components/cards/SuitIcon";
 import type { Rank, Suit } from "@/lib/game/types";
-import { SUIT_SYMBOL } from "@/lib/game/types";
 
 export type ClassicCardSize = "xs" | "sm" | "md" | "lg" | "hand" | "table";
 
@@ -15,17 +15,16 @@ const RED_SUITS = new Set<Suit>(["hearts", "diamonds"]);
  * One card face for hand + table:
  * - Top-left: rank + suit (visible in fan)
  * - Bottom-right: same index, rotated 180°
- * No center pip. Suit glyphs match bidding: ♠ ♥ ♦ ♣
+ * Suit marks are SVG so iPad/Safari always show the shape.
  */
 export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProps) {
   const isRed = RED_SUITS.has(suit);
-  const symbol = SUIT_SYMBOL[suit];
   const isTen = rank === "10";
 
   const index = (
     <>
       <span className={`bbo-rank${isTen ? " bbo-rank--ten" : ""}`}>{rank}</span>
-      <span className="bbo-suit">{symbol}</span>
+      <SuitIcon suit={suit} className="bbo-suit-icon" />
     </>
   );
 

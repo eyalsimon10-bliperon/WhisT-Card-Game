@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BidMark, PassMark, SuitGlyph } from "@/components/game/BidMark";
+import { SuitIcon } from "@/components/cards/SuitIcon";
 import { playMatchResult, unlockCardAudio } from "@/lib/audio/card-sounds";
 import {
   formatContractBid,
@@ -12,7 +13,7 @@ import {
   isContractConfirmLegal,
 } from "@/lib/game/bidding";
 import type { Card, ContractBid, ContractSeatDisplay, GameState, Trump } from "@/lib/game/types";
-import { SUIT_LABEL, SUIT_SYMBOL } from "@/lib/game/types";
+import { SUIT_LABEL } from "@/lib/game/types";
 
 function getContractSeatDisplay(state: GameState, seatIndex: number): ContractSeatDisplay {
   if (
@@ -117,12 +118,12 @@ interface ContractBiddingPanelProps {
   onPass: () => void;
 }
 
-const TRUMP_OPTIONS: { trump: Trump; symbol: string; label: string; isRed?: boolean }[] = [
-  { trump: "spades", symbol: SUIT_SYMBOL.spades, label: "עלה" },
-  { trump: "hearts", symbol: SUIT_SYMBOL.hearts, label: "לב", isRed: true },
-  { trump: "diamonds", symbol: SUIT_SYMBOL.diamonds, label: "יהלום", isRed: true },
-  { trump: "clubs", symbol: SUIT_SYMBOL.clubs, label: "תלתן" },
-  { trump: "NT", symbol: "NT", label: "ללא שליט" },
+const TRUMP_OPTIONS: { trump: Trump; label: string; isRed?: boolean }[] = [
+  { trump: "spades", label: "עלה" },
+  { trump: "hearts", label: "לב", isRed: true },
+  { trump: "diamonds", label: "יהלום", isRed: true },
+  { trump: "clubs", label: "תלתן" },
+  { trump: "NT", label: "ללא שליט" },
 ];
 
 export function ContractBiddingPanel({
@@ -649,10 +650,10 @@ function RecapMiniCard({ card, winner }: { card: Card; winner?: boolean }) {
   return (
     <div
       className={`recap-mini-card ${isRed ? "is-red" : ""} ${winner ? "is-winner" : ""}`}
-      title={`${card.rank}${SUIT_SYMBOL[card.suit]}`}
+      title={`${card.rank} ${card.suit}`}
     >
       <span className="recap-mini-rank">{card.rank}</span>
-      <span className="recap-mini-suit">{SUIT_SYMBOL[card.suit]}</span>
+      <SuitIcon suit={card.suit} className="recap-mini-suit-icon" />
     </div>
   );
 }

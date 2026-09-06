@@ -352,12 +352,9 @@ function startPlaying(state: GameState): GameState {
 
 /**
  * Server wait before the trick may be finalized (game can continue).
- * The client may keep showing the four cards longer — see TRICK_VISUAL_HOLD_MS.
+ * Clients keep showing the four cards until the next card is played.
  */
-export const TRICK_HOLD_MS = 1200;
-
-/** How long clients keep the four cards on screen, unless the next trick starts sooner. */
-export const TRICK_VISUAL_HOLD_MS = 5000;
+export const TRICK_HOLD_MS = 1000;
 
 export function playCard(state: GameState, seatIndex: number, cardId: string): GameState {
   if (state.phase !== "playing") return state;

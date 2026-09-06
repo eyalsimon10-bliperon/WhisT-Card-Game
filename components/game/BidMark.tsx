@@ -1,5 +1,5 @@
+import { SuitIcon } from "@/components/cards/SuitIcon";
 import type { ContractBid, Trump } from "@/lib/game/types";
-import { SUIT_SYMBOL } from "@/lib/game/types";
 
 export function isRedTrump(trump: Trump): boolean {
   return trump === "hearts" || trump === "diamonds";
@@ -25,7 +25,7 @@ export function SuitGlyph({
       className={`bid-mark-suit ${isRedTrump(trump) ? "is-red" : "is-black"} ${className}`}
       aria-hidden
     >
-      {SUIT_SYMBOL[trump]}
+      <SuitIcon suit={trump} />
     </span>
   );
 }
