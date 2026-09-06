@@ -37,13 +37,13 @@
   }
 
   /* iPad / tablet portrait — phone rules don't apply above 640px */
-  @media (orientation: portrait) and (min-width: 641px) and (max-width: 1024px) {
+  @media (orientation: portrait) and (min-width: 641px) and (max-width: 1366px) {
     :root {
-      --card-hand-h: clamp(5.4rem, 12vw, 7rem);
-      --card-table-h: clamp(5.6rem, 11vw, 7.25rem);
-      --hand-visible-strip: max(2rem, calc(var(--card-hand-w) * 0.48));
-      --trick-zone-w: min(42vw, 20rem);
-      --trick-zone-h: min(42vw, 20rem);
+      --card-hand-h: clamp(5.8rem, 13vw, 7.5rem);
+      --card-table-h: clamp(6rem, 12vw, 7.75rem);
+      --hand-visible-strip: max(2.15rem, calc(var(--card-hand-w) * 0.5));
+      --trick-zone-w: min(42vw, 21rem);
+      --trick-zone-h: min(42vw, 21rem);
     }
   }
 
@@ -1529,20 +1529,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 0.04em;
-    width: 28%;
-    max-width: 1.55rem;
+    gap: 0.06em;
+    width: 32%;
+    max-width: 2.1rem;
     line-height: 1;
   }
 
   .bbo-index--tl {
-    top: 4%;
-    left: 5%;
+    top: 3.5%;
+    left: 4.5%;
   }
 
   .bbo-index--br {
-    right: 5%;
-    bottom: 4%;
+    right: 4.5%;
+    bottom: 3.5%;
     transform: rotate(180deg);
   }
 
@@ -1550,14 +1550,14 @@
     display: block;
     width: 100%;
     font-weight: 800;
-    font-size: clamp(0.7rem, 42cqmin, 1.4rem);
+    font-size: clamp(0.85rem, 52cqmin, 1.75rem);
     letter-spacing: -0.04em;
     line-height: 0.9;
     text-align: center;
   }
 
   .bbo-rank--ten {
-    font-size: clamp(0.58rem, 34cqmin, 1.15rem);
+    font-size: clamp(0.7rem, 42cqmin, 1.4rem);
     letter-spacing: -0.08em;
   }
 
@@ -1570,34 +1570,36 @@
   }
 
   .bbo-index .bbo-suit-icon {
-    width: 78%;
+    width: 82%;
     height: auto;
     aspect-ratio: 1;
-    margin-top: 0.05em;
+    margin-top: 0.06em;
   }
 
   .bbo-face[data-size="hand"] .bbo-index {
-    width: min(30%, 1.45rem);
+    width: 34%;
+    max-width: 2.25rem;
   }
 
   .bbo-face[data-size="hand"] .bbo-rank {
-    font-size: clamp(0.8rem, 48cqmin, 1.55rem);
+    font-size: clamp(0.95rem, 56cqmin, 1.9rem);
   }
 
   .bbo-face[data-size="hand"] .bbo-rank--ten {
-    font-size: clamp(0.65rem, 38cqmin, 1.25rem);
+    font-size: clamp(0.78rem, 44cqmin, 1.5rem);
   }
 
   .bbo-face[data-size="table"] .bbo-index {
-    width: min(30%, 1.6rem);
+    width: 34%;
+    max-width: 2.35rem;
   }
 
   .bbo-face[data-size="table"] .bbo-rank {
-    font-size: clamp(0.8rem, 44cqmin, 1.45rem);
+    font-size: clamp(0.95rem, 52cqmin, 1.85rem);
   }
 
   .bbo-face[data-size="table"] .bbo-rank--ten {
-    font-size: clamp(0.65rem, 34cqmin, 1.15rem);
+    font-size: clamp(0.78rem, 42cqmin, 1.45rem);
   }
 
   .bid-mark-suit .suit-icon {
@@ -1617,48 +1619,82 @@
   }
 
   @media (orientation: portrait) and (max-width: 640px) {
+    .bbo-face[data-size="hand"] .bbo-index {
+      width: 36%;
+      max-width: 1.85rem;
+    }
+
     .bbo-face[data-size="hand"] .bbo-rank {
-      font-size: clamp(0.9rem, 50cqmin, 1.7rem);
+      font-size: clamp(1rem, 58cqmin, 1.85rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank--ten {
-      font-size: clamp(0.72rem, 40cqmin, 1.35rem);
+      font-size: clamp(0.82rem, 46cqmin, 1.45rem);
     }
   }
 
-  @media (orientation: portrait) and (min-width: 641px) and (max-width: 1024px) {
+  /* iPad / tablet: index scales with the larger card so rank+suit stay bold */
+  @media (orientation: portrait) and (min-width: 641px) and (max-width: 1366px) {
     .bbo-face[data-size="hand"] .bbo-index,
     .bbo-face[data-size="table"] .bbo-index {
-      width: min(28%, 1.7rem);
-      max-width: 1.7rem;
+      width: 38%;
+      max-width: 2.85rem;
     }
 
     .bbo-face[data-size="hand"] .bbo-rank,
     .bbo-face[data-size="table"] .bbo-rank {
-      font-size: clamp(0.95rem, 46cqmin, 1.65rem);
+      font-size: clamp(1.3rem, 60cqmin, 2.4rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank--ten,
     .bbo-face[data-size="table"] .bbo-rank--ten {
-      font-size: clamp(0.78rem, 36cqmin, 1.3rem);
+      font-size: clamp(1.05rem, 48cqmin, 1.9rem);
+    }
+
+    .bbo-index .bbo-suit-icon {
+      width: 90%;
+      margin-top: 0.08em;
+    }
+  }
+
+  @media (orientation: landscape) and (min-width: 900px) and (min-height: 600px) and (max-width: 1366px) {
+    .bbo-face[data-size="hand"] .bbo-index,
+    .bbo-face[data-size="table"] .bbo-index {
+      width: 36%;
+      max-width: 2.6rem;
+    }
+
+    .bbo-face[data-size="hand"] .bbo-rank,
+    .bbo-face[data-size="table"] .bbo-rank {
+      font-size: clamp(1.2rem, 56cqmin, 2.15rem);
+    }
+
+    .bbo-face[data-size="hand"] .bbo-rank--ten,
+    .bbo-face[data-size="table"] .bbo-rank--ten {
+      font-size: clamp(0.95rem, 44cqmin, 1.7rem);
+    }
+
+    .bbo-index .bbo-suit-icon {
+      width: 88%;
     }
   }
 
   @media (orientation: landscape) and (max-height: 520px) {
     .bbo-face[data-size="hand"] .bbo-index {
-      width: min(30%, 1.35rem);
+      width: 34%;
+      max-width: 1.55rem;
     }
 
     .bbo-face[data-size="hand"] .bbo-rank {
-      font-size: clamp(0.75rem, 46cqmin, 1.4rem);
+      font-size: clamp(0.85rem, 52cqmin, 1.45rem);
     }
 
     .bbo-face[data-size="hand"] .bbo-rank--ten {
-      font-size: clamp(0.62rem, 36cqmin, 1.15rem);
+      font-size: clamp(0.7rem, 40cqmin, 1.15rem);
     }
 
     .bbo-face[data-size="table"] .bbo-rank {
-      font-size: clamp(0.68rem, 40cqmin, 1.15rem);
+      font-size: clamp(0.75rem, 46cqmin, 1.2rem);
     }
   }
 
