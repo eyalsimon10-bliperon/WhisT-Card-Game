@@ -358,7 +358,8 @@ export const TRICK_HOLD_MS = 1000;
 
 export function playCard(state: GameState, seatIndex: number, cardId: string): GameState {
   if (state.phase !== "playing") return state;
-  if (state.awaitingTrickCollect != null || state.completedTrickDisplay) return state;
+  // Only block while the four cards are still locked for collect — last-trick display must not block the next lead.
+  if (state.awaitingTrickCollect != null) return state;
   if (state.currentPlayerIndex !== seatIndex) return state;
 
   const player = state.players.find((p) => p.seatIndex === seatIndex);
@@ -381,7 +382,8 @@ export function playCard(state: GameState, seatIndex: number, cardId: string): G
     ...state,
     players,
     currentTrick,
-    completedTrickDisplay: state.currentTrick.length === 0 ? null : state.completedTrickDisplay,
+    // Next card played — clear the previous trick for every client at the same moment.
+    completedTrickDisplay: null,
   };
 
   if (currentTrick.length < MAX_PLAYERS) {
@@ -476,26 +478,19 @@ export function advanceToNextRound(state: GameState): GameState {
 }
 
 export function clearCompletedTrickDisplay(state: GameState): GameState {
-  if (!state.completedTrickDisplay) return state;
-  return { ...state, completedTrickDisplay: null };
+  // No-op: last trick stays in completedTrickDisplay until the next playCard.
+  // Kept so older clients calling clearCompletedTrick cannot wipe the table early.
+  return state;
 }
 
 /**
- * Finish the visible trick: first lock the four cards into completedTrickDisplay
- * (so late clients still see them), then clear the display so play can resume.
+ * Finish the visible trick into completedTrickDisplay (shared by all clients).
+ * Does not clear the display — the next playCard removes it for everyone together.
  * Early calls are ignored while trickHoldUntil is in the future.
  */
 export function resolveCompletedTrick(state: GameState): GameState {
-  let next = state;
-  if (next.awaitingTrickCollect != null) {
-    const held = finalizeTrickCollect(next);
-    if (held === next) return next;
-    next = held;
-  }
-  if (next.completedTrickDisplay) {
-    next = clearCompletedTrickDisplay(next);
-  }
-  return next;
+  if (state.awaitingTrickCollect == null) return state;
+  return finalizeTrickCollect(state);
 }
 
 export function getHumanSeatIndex(state: GameState, humanPlayerId: string): number {

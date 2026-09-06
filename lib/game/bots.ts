@@ -62,9 +62,9 @@ export function processBotTurn(state: GameState): GameState {
 }
 
 export function runBotsUntilHumanOrStable(state: GameState, humanPlayerId: string): GameState {
+  // completedTrickDisplay is visual-only and must not freeze bots — only the locked collect does.
   if (
     (state.awaitingTrickCollect !== null && state.awaitingTrickCollect !== undefined) ||
-    state.completedTrickDisplay ||
     (state.trickHoldUntil != null && Date.now() < state.trickHoldUntil)
   ) {
     return state;

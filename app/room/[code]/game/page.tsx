@@ -28,7 +28,6 @@ import type { ContractBid, GameState, TrickPlay } from "@/lib/game/types";
 import { getGuestSession } from "@/lib/session/guest";
 
 const TRICK_FLY_IN_MS = 280;
-const TRICK_COLLECT_MS = 400;
 
 type HeldTrick = {
   key: string;
@@ -118,7 +117,9 @@ export default function GamePage() {
     void init();
   }, [code, router, humanId]);
 
-  // Keep the finished trick on screen until the next card is played — never auto-clear on a timer.
+  // Keep the finished trick on screen until the next card is played.
+  // Source of truth is server completedTrickDisplay (same for all 4 clients).
+  // Local heldTrick mirrors it so a missed realtime frame still has a fallback.
   useEffect(() => {
     if (!state) return;
 
@@ -157,7 +158,7 @@ export default function GamePage() {
     }
 
     // Next trick started — only then remove the old four cards.
-    if (state.currentTrick.length > 0) {
+    if (state.currentTrick.length > 0 && state.awaitingTrickCollect == null) {
       if (heldTrickRef.current) {
         heldTrickRef.current = null;
         setHeldTrick(null);
@@ -166,10 +167,8 @@ export default function GamePage() {
       return;
     }
 
-    // Between tricks: keep showing held cards (no timer).
-    if (!heldTrickRef.current) {
-      setTrickCollecting(false);
-    }
+    // Between tricks with no server display yet: keep local mirror (no timer clear).
+    setTrickCollecting(false);
   }, [
     state?.awaitingTrickCollect,
     state?.completedTrickDisplay,
@@ -230,29 +229,17 @@ export default function GamePage() {
     code,
   ]);
 
-  // Clear completedTrickDisplay quickly so the next player can act — local heldTrick still shows the cards.
-  useEffect(() => {
-    if (!state?.completedTrickDisplay || !humanId) return;
-
-    const plays = state.completedTrickDisplay.plays;
-    const lead = isTrickCollectLeader(plays, state.players, humanId, hostId);
-    if (!lead) return;
-
-    const timer = window.setTimeout(() => {
-      void runAction({ type: "clearCompletedTrick" });
-    }, TRICK_COLLECT_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [state?.completedTrickDisplay, state?.players, humanId, hostId]);
-
   useEffect(() => {
     if (!state || !humanId) return;
-    if (state.awaitingTrickCollect != null || state.completedTrickDisplay) return;
+    // Do not wait for completedTrickDisplay to clear — it stays until the next card.
+    if (state.awaitingTrickCollect != null) return;
 
     // While previous trick is still on screen, wait for a human lead — bots pause briefly then may play
     // (cards stay visible until that play arrives).
-    const held = heldTrickRef.current;
-    if (held && state.currentTrick.length === 0 && state.phase === "playing") {
+    const showingLastTrick =
+      !!state.completedTrickDisplay ||
+      (!!heldTrickRef.current && state.currentTrick.length === 0);
+    if (showingLastTrick && state.currentTrick.length === 0 && state.phase === "playing") {
       const isBotTurn = state.players.find((p) => p.seatIndex === state.currentPlayerIndex)?.isBot;
       if (!isBotTurn) return;
       // Short pause so everyone can read the four cards, then bot leads (cards clear when the card lands).
@@ -334,10 +321,8 @@ export default function GamePage() {
   const mySeat = getMySeat(state, humanId);
   const me = state.players.find((p) => p.id === humanId)!;
   const isMyTurn = state.currentPlayerIndex === mySeat;
-  const trickAnimating =
-    state.awaitingTrickCollect != null || state.completedTrickDisplay != null;
-  // heldTrick is visual-only — do not block the next lead while the previous four cards are still shown.
-  const canPlay = isMyTurn && !trickAnimating && !actionLoading;
+  // Only the locked 4-card collect blocks play. completedTrickDisplay stays until the next card.
+  const canPlay = isMyTurn && state.awaitingTrickCollect == null && !actionLoading;
 
   const legalPlays =
     state.phase === "playing" && state.trump

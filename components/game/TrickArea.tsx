@@ -133,10 +133,18 @@ export function TrickArea({
 
   // Once the next trick has a card, always show that — never keep covering with the old four.
   const nextTrickStarted = state.currentTrick.length > 0 && state.awaitingTrickCollect == null;
-  const showHeld = !!heldTrick && !nextTrickStarted && state.awaitingTrickCollect == null && !state.completedTrickDisplay;
+  const showHeld =
+    !!heldTrick &&
+    !nextTrickStarted &&
+    state.awaitingTrickCollect == null &&
+    !state.completedTrickDisplay;
 
-  const isAwaitingCollect = state.awaitingTrickCollect !== null || showHeld;
-  const isCollecting = collecting && !showHeld;
+  const showingFinishedTrick =
+    !nextTrickStarted &&
+    (state.awaitingTrickCollect != null || !!state.completedTrickDisplay || showHeld);
+
+  const isAwaitingCollect = showingFinishedTrick;
+  const isCollecting = collecting && !showingFinishedTrick;
   const displayPlays: TrickPlay[] = nextTrickStarted
     ? state.currentTrick
     : state.awaitingTrickCollect != null && state.currentTrick.length === 4

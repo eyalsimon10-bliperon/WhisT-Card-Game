@@ -1,7 +1,6 @@
 import { runBotsUntilHumanOrStable } from "@/lib/game/bots";
 import {
   advanceToNextRound,
-  clearCompletedTrickDisplay,
   createBotPlayers,
   createInitialGameState,
   finalizeTrickCollect,
@@ -187,12 +186,11 @@ export async function applyGameAction(
       break;
     }
     case "clearCompletedTrick": {
-      if (!state.completedTrickDisplay) return state;
-      next = clearCompletedTrickDisplay(state);
-      break;
+      // Intentionally keep completedTrickDisplay until the next playCard (shared UI).
+      return state;
     }
     case "resolveTrick": {
-      if (state.awaitingTrickCollect == null && !state.completedTrickDisplay) return state;
+      if (state.awaitingTrickCollect == null) return state;
       next = resolveCompletedTrick(state);
       if (next === state) return state;
       break;

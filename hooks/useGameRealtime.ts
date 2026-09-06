@@ -11,13 +11,18 @@ const POLL_UNSUBSCRIBED_MS = 1200;
 
 function fingerprint(state: GameState | null): string {
   if (!state) return "";
+  const completedKey = state.completedTrickDisplay
+    ? state.completedTrickDisplay.plays.map((p) => `${p.seatIndex}:${p.card.id}`).join("|")
+    : "";
+  const trickKey = state.currentTrick.map((p) => `${p.seatIndex}:${p.card.id}`).join("|");
   return [
     state.phase,
     state.currentPlayerIndex,
     state.tricksPlayed,
     state.currentTrick.length,
+    trickKey,
     state.awaitingTrickCollect ?? "",
-    state.completedTrickDisplay ? "1" : "0",
+    completedKey,
     state.trickBidStep,
     state.currentHighBid ? `${state.currentHighBid.tricks}${state.currentHighBid.trump}` : "",
     state.trickBids.join(","),
