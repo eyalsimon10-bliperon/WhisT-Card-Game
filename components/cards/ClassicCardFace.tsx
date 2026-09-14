@@ -25,7 +25,7 @@ export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProp
   const index = (
     <>
       <span className={`bbo-rank${isTen ? " bbo-rank--ten" : ""}`}>{rank}</span>
-      <span className="bbo-suit" aria-hidden>
+      <span className={`bbo-suit${isTen ? " bbo-suit--ten" : ""}`} aria-hidden>
         {symbol}
       </span>
     </>
@@ -38,8 +38,8 @@ export function ClassicCardFace({ suit, rank, size = "md" }: ClassicCardFaceProp
       data-red={isRed ? "true" : "false"}
       aria-hidden
     >
-      <div className="bbo-index bbo-index--tl">{index}</div>
-      <div className="bbo-index bbo-index--br">{index}</div>
+      <div className={`bbo-index bbo-index--tl${isTen ? " bbo-index--ten" : ""}`}>{index}</div>
+      <div className={`bbo-index bbo-index--br${isTen ? " bbo-index--ten" : ""}`}>{index}</div>
     </div>
   );
 }

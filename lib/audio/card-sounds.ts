@@ -7,7 +7,7 @@ let lastSlideKey = "";
 let lastTrickTakeKey = "";
 let listenersBound = false;
 
-const SOUND_PLAY = "/sounds/card-play.wav";
+const SOUND_PLAY = "/sounds/card-play.wav?v=2";
 const SOUND_TRICK = "/sounds/trick-take.wav";
 
 const htmlAudioCache = new Map<string, HTMLAudioElement>();
@@ -84,7 +84,7 @@ export function unlockCardAudio(): void {
   if (!ctx) return;
   void ctx.resume().then(() => {
     if (ctx.state !== "running") return;
-    rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.22);
+    rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.12);
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     gain.gain.value = 0;
@@ -140,7 +140,7 @@ export function playCardSlide(key?: string): void {
     lastSlideAt = nowMs;
   }
 
-  playSoundFile(SOUND_PLAY, 0.9, () => {
+  playSoundFile(SOUND_PLAY, 0.78, () => {
     const ctx = getContext();
     if (!ctx) return;
     whenRunning(ctx, () => startSlide(ctx));
@@ -150,55 +150,84 @@ export function playCardSlide(key?: string): void {
 function startSlide(ctx: AudioContext): void {
   try {
     const now = ctx.currentTime;
-    rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.22);
+    rustleBuffer = rustleBuffer ?? makePinkNoise(ctx, 0.12);
 
     const rustle = ctx.createBufferSource();
     rustle.buffer = rustleBuffer;
-    rustle.playbackRate.value = 0.94 + Math.random() * 0.1;
+    rustle.playbackRate.value = 1.15 + Math.random() * 0.12;
 
     const band = ctx.createBiquadFilter();
     band.type = "bandpass";
-    band.Q.value = 0.95;
-    band.frequency.setValueAtTime(860, now);
-    band.frequency.exponentialRampToValueAtTime(420, now + 0.16);
+    band.Q.value = 0.85;
+    band.frequency.setValueAtTime(1400, now);
+    band.frequency.exponentialRampToValueAtTime(780, now + 0.07);
 
     const highcut = ctx.createBiquadFilter();
-    highcut.type = "lowpass";
-    highcut.frequency.value = 2400;
-    highcut.Q.value = 0.45;
+    highcut.type = "highpass";
+    highcut.frequency.value = 280;
+    highcut.Q.value = 0.4;
+
+    const air = ctx.createBiquadFilter();
+    air.type = "lowpass";
+    air.frequency.value = 4200;
+    air.Q.value = 0.35;
 
     const rustleGain = ctx.createGain();
     rustleGain.gain.setValueAtTime(0.001, now);
-    rustleGain.gain.exponentialRampToValueAtTime(0.16, now + 0.018);
-    rustleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    rustleGain.gain.exponentialRampToValueAtTime(0.11, now + 0.008);
+    rustleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
 
     rustle.connect(band);
     band.connect(highcut);
-    highcut.connect(rustleGain);
+    highcut.connect(air);
+    air.connect(rustleGain);
     rustleGain.connect(ctx.destination);
     rustle.start(now);
-    rustle.stop(now + 0.2);
+    rustle.stop(now + 0.1);
 
-    const tapAt = now + 0.07;
-    const tap = ctx.createOscillator();
-    tap.type = "sine";
-    tap.frequency.setValueAtTime(240, tapAt);
-    tap.frequency.exponentialRampToValueAtTime(130, tapAt + 0.08);
+    // Light edge tick — dealer flick, not a heavy table slam.
+    const tickAt = now + 0.006;
+    const tick = ctx.createOscillator();
+    tick.type = "sine";
+    tick.frequency.setValueAtTime(2100, tickAt);
+    tick.frequency.exponentialRampToValueAtTime(900, tickAt + 0.035);
 
-    const tapFilter = ctx.createBiquadFilter();
-    tapFilter.type = "lowpass";
-    tapFilter.frequency.value = 520;
+    const tickFilter = ctx.createBiquadFilter();
+    tickFilter.type = "bandpass";
+    tickFilter.frequency.value = 1600;
+    tickFilter.Q.value = 1.1;
 
-    const tapGain = ctx.createGain();
-    tapGain.gain.setValueAtTime(0.001, tapAt);
-    tapGain.gain.exponentialRampToValueAtTime(0.07, tapAt + 0.012);
-    tapGain.gain.exponentialRampToValueAtTime(0.001, tapAt + 0.09);
+    const tickGain = ctx.createGain();
+    tickGain.gain.setValueAtTime(0.001, tickAt);
+    tickGain.gain.exponentialRampToValueAtTime(0.055, tickAt + 0.005);
+    tickGain.gain.exponentialRampToValueAtTime(0.001, tickAt + 0.04);
 
-    tap.connect(tapFilter);
-    tapFilter.connect(tapGain);
-    tapGain.connect(ctx.destination);
-    tap.start(tapAt);
-    tap.stop(tapAt + 0.1);
+    tick.connect(tickFilter);
+    tickFilter.connect(tickGain);
+    tickGain.connect(ctx.destination);
+    tick.start(tickAt);
+    tick.stop(tickAt + 0.045);
+
+    const kissAt = now + 0.022;
+    const kiss = ctx.createOscillator();
+    kiss.type = "triangle";
+    kiss.frequency.setValueAtTime(380, kissAt);
+    kiss.frequency.exponentialRampToValueAtTime(160, kissAt + 0.05);
+
+    const kissFilter = ctx.createBiquadFilter();
+    kissFilter.type = "lowpass";
+    kissFilter.frequency.value = 900;
+
+    const kissGain = ctx.createGain();
+    kissGain.gain.setValueAtTime(0.001, kissAt);
+    kissGain.gain.exponentialRampToValueAtTime(0.035, kissAt + 0.008);
+    kissGain.gain.exponentialRampToValueAtTime(0.001, kissAt + 0.055);
+
+    kiss.connect(kissFilter);
+    kissFilter.connect(kissGain);
+    kissGain.connect(ctx.destination);
+    kiss.start(kissAt);
+    kiss.stop(kissAt + 0.06);
   } catch {
     /* ignore audio graph errors on restricted browsers */
   }

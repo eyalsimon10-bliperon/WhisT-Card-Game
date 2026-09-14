@@ -23,27 +23,33 @@ function hasRank(hand: Card[], suit: Suit, rank: Card["rank"]): boolean {
 
 export { hasRank };
 
+/** Extra leniency after 4-pass exchanges — min rises and someone must declare. */
+export function exchangePressure(minTricks: number): number {
+  return Math.max(0, minTricks - 5);
+}
+
 export function estimateSuitContractTricks(hand: Card[], trump: Suit): number {
   let tricks = 0;
   const trumpLen = suitLength(hand, trump);
 
   if (hasRank(hand, trump, "A")) tricks += 1;
-  if (hasRank(hand, trump, "K")) tricks += trumpLen >= 2 ? 0.85 : 0.35;
-  if (hasRank(hand, trump, "Q")) tricks += trumpLen >= 3 ? 0.55 : 0.2;
-  if (hasRank(hand, trump, "J")) tricks += trumpLen >= 4 ? 0.35 : 0.1;
+  if (hasRank(hand, trump, "K")) tricks += trumpLen >= 2 ? 0.9 : 0.4;
+  if (hasRank(hand, trump, "Q")) tricks += trumpLen >= 3 ? 0.6 : 0.25;
+  if (hasRank(hand, trump, "J")) tricks += trumpLen >= 4 ? 0.4 : 0.15;
 
   for (const suit of SUITS) {
     if (suit === trump) continue;
     const len = suitLength(hand, suit);
     if (hasRank(hand, suit, "A")) tricks += 1;
-    if (hasRank(hand, suit, "K") && len >= 2) tricks += 0.45;
-    if (len === 0) tricks += 0.75;
-    else if (len === 1) tricks += 0.35;
+    if (hasRank(hand, suit, "K") && len >= 2) tricks += 0.55;
+    if (hasRank(hand, suit, "Q") && len >= 3) tricks += 0.25;
+    if (len === 0) tricks += 0.9;
+    else if (len === 1) tricks += 0.45;
   }
 
   if (trumpLen >= 6) tricks += trumpLen - 5;
-  else if (trumpLen === 5) tricks += 0.75;
-  else if (trumpLen === 4) tricks += 0.35;
+  else if (trumpLen === 5) tricks += 0.9;
+  else if (trumpLen === 4) tricks += 0.45;
 
   return tricks;
 }
@@ -55,16 +61,16 @@ export function estimateNTContractTricks(hand: Card[]): number {
   const minLen = Math.min(...lengths);
   const balanced = maxLen <= 5 && maxLen - minLen <= 3;
 
-  if (hcp < 10 || !balanced) {
-    return hcp / 4.5;
+  if (hcp < 9 || !balanced) {
+    return hcp / 4.2;
   }
 
-  let tricks = hcp / 3.2;
+  let tricks = hcp / 3.0;
 
   for (const suit of SUITS) {
     const len = suitLength(hand, suit);
     if (len >= 5 && (hasRank(hand, suit, "A") || hasRank(hand, suit, "K"))) {
-      tricks += (len - 4) * 0.45;
+      tricks += (len - 4) * 0.5;
     }
   }
 
@@ -105,13 +111,21 @@ export function analyzeHand(hand: Card[], minTricks: number): HandAnalysis[] {
 }
 
 function tricksToBid(estimated: number, minTricks: number): number {
-  if (estimated < minTricks - 0.4) return 0;
+  const pressure = exchangePressure(minTricks);
+  // After exchanges, accept thinner values so the auction actually starts.
+  const openFloor = minTricks - 0.35 - pressure * 0.4;
+  if (estimated < openFloor) return 0;
 
   const floor = Math.floor(estimated);
   const fraction = estimated - floor;
 
-  let bid = fraction >= 0.65 ? floor + 1 : floor;
+  let bid = fraction >= 0.55 ? floor + 1 : floor;
   bid = Math.max(bid, minTricks);
+
+  // With exchange pressure, stretch toward min even if estimate is a bit light.
+  if (pressure > 0 && estimated >= openFloor) {
+    bid = Math.max(bid, minTricks);
+  }
 
   if (bid >= 13 && estimated < 11.5) bid = 12;
   if (bid > 12 && estimated < 11) bid = 12;
@@ -126,29 +140,39 @@ export function getBestNaturalBid(
 ): ContractBid | null {
   const analyses = analyzeHand(hand, minTricks);
   const best = analyses[0];
+  const pressure = exchangePressure(minTricks);
+  const margin = 1.15 + pressure * 0.45;
+  const openFloor = minTricks - 0.35 - pressure * 0.55;
 
-  if (!best || best.bidTricks < minTricks || best.estimatedTricks < minTricks - 0.3) {
-    return null;
-  }
+  if (!best) return null;
 
-  const candidate: ContractBid = { tricks: best.bidTricks, trump: best.trump };
+  // Prefer a real suit over NT when stretching after exchanges.
+  const preferred =
+    pressure >= 1 && best.trump === "NT"
+      ? analyses.find((a) => a.trump !== "NT") ?? best
+      : best;
 
-  if (isContractBidLegal(candidate, currentHighBid, minTricks)) {
-    if (best.estimatedTricks >= candidate.tricks - 1.1) {
-      return candidate;
+  if (!currentHighBid) {
+    if (preferred.estimatedTricks >= openFloor || pressure >= 3) {
+      const tricks = Math.max(minTricks, preferred.bidTricks || minTricks);
+      return { tricks: Math.min(tricks, 12), trump: preferred.trump };
+    }
+    if (preferred.bidTricks >= minTricks && preferred.estimatedTricks >= preferred.bidTricks - margin) {
+      return { tricks: preferred.bidTricks, trump: preferred.trump };
     }
     return null;
   }
 
-  if (!currentHighBid) return null;
-
   for (const analysis of analyses) {
-    if (analysis.bidTricks < minTricks) continue;
-
-    for (let tricks = Math.max(minTricks, currentHighBid.tricks); tricks <= Math.min(analysis.bidTricks, 12); tricks++) {
+    const maxTry = Math.max(analysis.bidTricks, minTricks);
+    for (
+      let tricks = Math.max(minTricks, currentHighBid.tricks);
+      tricks <= Math.min(Math.max(maxTry, currentHighBid.tricks + 1), 12);
+      tricks++
+    ) {
       const bid: ContractBid = { tricks, trump: analysis.trump };
       if (!isContractBidLegal(bid, currentHighBid, minTricks)) continue;
-      if (analysis.estimatedTricks >= tricks - 1.2) {
+      if (analysis.estimatedTricks >= tricks - margin || (pressure >= 2 && tricks === minTricks)) {
         return bid;
       }
     }
@@ -157,16 +181,42 @@ export function getBestNaturalBid(
   return null;
 }
 
+function hasDeclarableShape(hand: Card[]): boolean {
+  for (const suit of SUITS) {
+    const len = suitLength(hand, suit);
+    if (len >= 6) return true;
+    if (len >= 5 && (hasRank(hand, suit, "A") || hasRank(hand, suit, "K"))) return true;
+  }
+  return false;
+}
+
 export function shouldBotOpen(hand: Card[], minTricks: number): boolean {
   const analyses = analyzeHand(hand, minTricks);
   const best = analyses[0];
+  if (!best) return false;
+
   const hcp = countHighCardPoints(hand);
-  return (
-    !!best &&
-    best.estimatedTricks >= minTricks + 0.25 &&
-    best.bidTricks >= minTricks &&
-    hcp >= 8
-  );
+  const pressure = exchangePressure(minTricks);
+  const openFloor = minTricks - 0.35 - pressure * 0.55;
+  const requiredHcp = Math.max(2, 7 - pressure * 2);
+
+  if (best.estimatedTricks >= openFloor && (best.bidTricks >= minTricks || pressure >= 1)) {
+    if (hcp >= requiredHcp) return true;
+    if (hasDeclarableShape(hand) && hcp >= Math.max(2, requiredHcp - 2)) return true;
+  }
+
+  // After exchanges, open on almost any long suit / middling values.
+  if (pressure >= 1 && best.estimatedTricks >= minTricks - 1.35 && hcp >= 4) {
+    return true;
+  }
+  if (pressure >= 2 && best.estimatedTricks >= minTricks - 1.8) {
+    return true;
+  }
+  if (pressure >= 3) {
+    return true;
+  }
+
+  return false;
 }
 
 export function shouldBotOvercall(
@@ -178,20 +228,24 @@ export function shouldBotOvercall(
   if (!bid) return false;
 
   const estimate = estimateContractTricks(hand, bid.trump);
+  const pressure = exchangePressure(minTricks);
+  const margin = 1.05 + pressure * 0.25;
+
   return (
     beatsCurrentBid(bid, currentHighBid) &&
-    estimate >= bid.tricks - 1.0 &&
-    bid.tricks <= Math.floor(estimate) + 1
+    estimate >= bid.tricks - margin &&
+    bid.tricks <= Math.floor(estimate) + 1 + (pressure > 0 ? 1 : 0)
   );
 }
 
 export function estimatePersonalTricks(hand: Card[], trump: Trump): number {
   if (trump === "NT") {
     const hcp = countHighCardPoints(hand);
-    let tricks = hcp / 5.5;
+    let tricks = hcp / 4.5;
     for (const suit of SUITS) {
-      if (hasRank(hand, suit, "A")) tricks += 0.85;
-      if (hasRank(hand, suit, "K") && suitLength(hand, suit) >= 2) tricks += 0.35;
+      if (hasRank(hand, suit, "A")) tricks += 0.9;
+      if (hasRank(hand, suit, "K") && suitLength(hand, suit) >= 2) tricks += 0.4;
+      if (hasRank(hand, suit, "Q") && suitLength(hand, suit) >= 3) tricks += 0.2;
     }
     return Math.max(0, Math.min(Math.round(tricks), 8));
   }
@@ -200,18 +254,22 @@ export function estimatePersonalTricks(hand: Card[], trump: Trump): number {
   let tricks = 0;
 
   if (hasRank(hand, trump, "A")) tricks += 1;
-  if (hasRank(hand, trump, "K")) tricks += trumpLen >= 2 ? 0.7 : 0.2;
-  if (hasRank(hand, trump, "Q")) tricks += trumpLen >= 3 ? 0.4 : 0.1;
+  if (hasRank(hand, trump, "K")) tricks += trumpLen >= 2 ? 0.85 : 0.3;
+  if (hasRank(hand, trump, "Q")) tricks += trumpLen >= 3 ? 0.5 : 0.15;
+  if (hasRank(hand, trump, "J") && trumpLen >= 4) tricks += 0.25;
 
   for (const suit of SUITS) {
     if (suit === trump) continue;
-    if (hasRank(hand, suit, "A")) tricks += 0.85;
-    if (hasRank(hand, suit, "K") && suitLength(hand, suit) >= 2) tricks += 0.3;
+    if (hasRank(hand, suit, "A")) tricks += 0.95;
+    if (hasRank(hand, suit, "K") && suitLength(hand, suit) >= 2) tricks += 0.4;
     const len = suitLength(hand, suit);
-    if (len <= 1 && trumpLen >= 3) tricks += 0.25;
+    if (len === 0 && trumpLen >= 3) tricks += 0.45;
+    else if (len === 1 && trumpLen >= 3) tricks += 0.3;
   }
 
-  if (trumpLen >= 5) tricks += 0.5;
+  if (trumpLen >= 6) tricks += 1.0;
+  else if (trumpLen >= 5) tricks += 0.7;
+  else if (trumpLen >= 4) tricks += 0.35;
 
   return Math.max(0, Math.min(Math.round(tricks), 9));
 }

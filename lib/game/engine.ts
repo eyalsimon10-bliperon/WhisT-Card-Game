@@ -14,7 +14,7 @@ import type {
 } from "./types";
 import { MAX_PLAYERS } from "@/lib/types";
 
-const BOT_NAMES = ["רון", "נועה", "עמית", "שירה", "גל", "תום"];
+const BOT_NAMES = ["רון", "אבי", "עמית", "שירה", "גל", "תום"];
 
 function nextSeat(index: number): number {
   return (index - 1 + MAX_PLAYERS) % MAX_PLAYERS;

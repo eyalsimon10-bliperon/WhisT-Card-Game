@@ -1554,8 +1554,28 @@
   }
 
   .bbo-rank--ten {
+    /*
+      Two-digit rank is drawn smaller, which used to lift the suit.
+      Reserve a single-digit footprint, then seat "10" toward the bottom
+      so it reads optically centered next to A/K/Q/J/9.
+    */
     font-size: clamp(0.7rem, 42cqmin, 1.4rem);
-    letter-spacing: -0.08em;
+    letter-spacing: -0.1em;
+    line-height: 0.88;
+    min-height: 1.26em;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0.05em;
+    box-sizing: border-box;
+  }
+
+  .bbo-index--ten {
+    gap: 0.03em;
+  }
+
+  .bbo-suit--ten {
+    margin-top: 0.05em;
   }
 
   .bbo-suit {
