@@ -16,7 +16,11 @@ export function CacheBust() {
 
     if (prev && prev !== BUILD) {
       window.localStorage.setItem(key, BUILD);
-      window.location.reload();
+      // Never hard-reload mid-hand — tablets often reopen into an active /room/.../game.
+      const onGameTable = /\/room\/[^/]+\/game/i.test(window.location.pathname);
+      if (!onGameTable) {
+        window.location.reload();
+      }
       return;
     }
 

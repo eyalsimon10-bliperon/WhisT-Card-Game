@@ -20,11 +20,12 @@ import {
   playTrickTake,
   unlockCardAudio,
 } from "@/lib/audio/card-sounds";
-import { fetchRoom, postGameAction } from "@/lib/api/client";
+import { fetchGameState, fetchRoom, postGameAction } from "@/lib/api/client";
 import { getDisabledTricksForCurrentBidder } from "@/lib/game/bots";
 import { getPhaseLabel, TRICK_HOLD_MS } from "@/lib/game/engine";
 import { getLegalPlays } from "@/lib/game/trick";
 import type { ContractBid, GameState, TrickPlay } from "@/lib/game/types";
+import { clearActiveGame, saveActiveGame } from "@/lib/session/active-game";
 import { getGuestSession } from "@/lib/session/guest";
 
 const TRICK_FLY_IN_MS = 280;
@@ -80,6 +81,11 @@ export default function GamePage() {
 
   useGameRealtime(code, setState);
 
+  // Finished matches should not auto-resume after a tablet/PWA restart.
+  useEffect(() => {
+    if (state?.phase === "game_over") clearActiveGame(code);
+  }, [state?.phase, code]);
+
   useEffect(() => {
     const unlock = () => unlockCardAudio();
     document.addEventListener("pointerdown", unlock);
@@ -107,7 +113,22 @@ export default function GamePage() {
         setIsBotRoom(room.isBotRoom ?? false);
         setHostId(room.hostId);
         if (room.status !== "playing") {
+          clearActiveGame(code);
           router.replace(`/room/${code}`);
+          return;
+        }
+        // Realtime may miss the first paint — pull state once here too.
+        const gameState = await fetchGameState(code);
+        if (gameState) {
+          setState(gameState);
+          saveActiveGame({
+            code,
+            playerId: humanId,
+            isBotRoom: room.isBotRoom ?? false,
+          });
+        } else {
+          clearActiveGame(code);
+          setError("לא נמצא מצב משחק. נסה להתחיל משחק חדש.");
         }
       } catch {
         setError("שגיאה בטעינת החדר");
@@ -283,7 +304,16 @@ export default function GamePage() {
   }, [state, humanId]);
 
   async function runAction(action: Parameters<typeof postGameAction>[2]) {
-    if (!humanId || actionLock.current) return;
+    if (!humanId) return;
+    if (actionLock.current) {
+      // Don't drop bot turns — retry once the current action finishes.
+      if (action.type === "runBots") {
+        window.setTimeout(() => {
+          void runAction({ type: "runBots" });
+        }, 80);
+      }
+      return;
+    }
     actionLock.current = true;
     const silent =
       action.type === "resolveTrick" ||
@@ -387,9 +417,15 @@ export default function GamePage() {
       type: "playAgainBots",
       totalRounds: state.totalRounds ?? 13,
     });
+    saveActiveGame({
+      code,
+      playerId: humanId,
+      isBotRoom: true,
+    });
   }
 
   async function handleExit() {
+    clearActiveGame(code);
     await runAction({ type: "resetRoom" });
     router.push(isBotRoom ? "/" : `/room/${code}`);
   }

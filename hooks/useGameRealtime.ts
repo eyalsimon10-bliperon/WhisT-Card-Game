@@ -17,6 +17,7 @@ function fingerprint(state: GameState | null): string {
   const trickKey = state.currentTrick.map((p) => `${p.seatIndex}:${p.card.id}`).join("|");
   return [
     state.phase,
+    state.currentRound,
     state.currentPlayerIndex,
     state.tricksPlayed,
     state.currentTrick.length,
@@ -44,11 +45,13 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
     let subscribed = false;
     let lastPrint = "";
     let pollId = 0;
+    let hasLiveState = false;
 
     function emit(state: GameState | null) {
-      const print = fingerprint(state);
+      const print = state ? fingerprint(state) : "__null__";
       if (print === lastPrint) return;
       lastPrint = print;
+      if (state) hasLiveState = true;
       handlerRef.current(state);
     }
 
@@ -58,9 +61,16 @@ export function useGameRealtime(code: string, onState: (state: GameState | null)
       inFlight = true;
       try {
         const state = await fetchGameState(normalized);
-        if (!cancelled) emit(state ? normalizeGameState(state) : null);
+        if (cancelled) return;
+        if (state) {
+          emit(normalizeGameState(state));
+          return;
+        }
+        // Game truly gone from DB — only clear UI if we never had a state,
+        // or after we already knew the room ended. Never wipe mid-hand on a blip.
+        if (!hasLiveState) emit(null);
       } catch {
-        if (!cancelled) emit(null);
+        // Tablet / flaky network: keep the last good state instead of blanking the table.
       } finally {
         inFlight = false;
       }

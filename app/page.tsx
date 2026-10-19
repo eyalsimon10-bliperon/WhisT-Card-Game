@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { WhistLogo, WhistWordmark } from "@/components/brand/WhistLogo";
 import { NameInput } from "@/components/NameInput";
 import { InstallAppButton } from "@/components/InstallAppButton";
-import { fetchOpenRoomsCount, postRoomsAction } from "@/lib/api/client";
+import { fetchGameState, fetchOpenRoomsCount, fetchRoom, postRoomsAction } from "@/lib/api/client";
+import { clearActiveGame, getActiveGame } from "@/lib/session/active-game";
 import { getOrCreateGuestSession } from "@/lib/session/guest";
 import { ROOM_CODE_LENGTH } from "@/lib/types";
 
@@ -22,6 +23,8 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const [openRooms, setOpenRooms] = useState(0);
   const [botRounds, setBotRounds] = useState(13);
+  const [resumeCode, setResumeCode] = useState<string | null>(null);
+  const [resuming, setResuming] = useState(false);
 
   const trimmedName = displayName.trim();
   const isNameValid = trimmedName.length >= 2;
@@ -30,6 +33,54 @@ export default function LandingPage() {
   useEffect(() => {
     void fetchOpenRoomsCount().then(setOpenRooms).catch(() => setOpenRooms(0));
   }, []);
+
+  // Android/Lenovo tablets often kill the PWA and reopen at start_url "/".
+  // If a live game still exists, put the player back on the table.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function maybeResume() {
+      const active = getActiveGame();
+      if (!active) return;
+
+      try {
+        const room = await fetchRoom(active.code);
+        if (cancelled) return;
+
+        if (!room || room.status !== "playing") {
+          clearActiveGame(active.code);
+          return;
+        }
+
+        const stillSeated = room.players.some((p) => p.id === active.playerId);
+        if (!stillSeated) {
+          clearActiveGame(active.code);
+          return;
+        }
+
+        const game = await fetchGameState(active.code);
+        if (cancelled) return;
+
+        if (!game || game.phase === "game_over") {
+          clearActiveGame(active.code);
+          return;
+        }
+
+        setResumeCode(active.code);
+        if (active.isBotRoom) {
+          setResuming(true);
+          router.replace(`/room/${active.code}/game`);
+        }
+      } catch {
+        /* stay on home if resume check fails */
+      }
+    }
+
+    void maybeResume();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   function validateName(): boolean {
     if (!isNameValid) {
@@ -101,8 +152,9 @@ export default function LandingPage() {
       });
       if (!result.roomCode) throw new Error("No room");
       router.push(`/room/${result.roomCode}/game`);
-    } catch {
-      setError("שגיאה בהתחלת משחק נגד בוטים.");
+    } catch (err) {
+      const detail = err instanceof Error && err.message ? err.message : "";
+      setError(detail && detail !== "Request failed" ? detail : "שגיאה בהתחלת משחק נגד בוטים.");
     } finally {
       setLoading(false);
     }
@@ -154,6 +206,22 @@ export default function LandingPage() {
         <div className="card-surface mb-6 p-5">
           <NameInput value={displayName} onChange={setDisplayName} autoFocus />
         </div>
+
+        {resuming && (
+          <div className="mb-4 rounded-xl border border-gold-400/30 bg-gold-500/10 px-4 py-3 text-center text-sm text-gold-200">
+            חוזרים למשחק הפתוח…
+          </div>
+        )}
+
+        {resumeCode && !resuming && (
+          <button
+            type="button"
+            className="btn-primary mb-4 bg-emerald-600 hover:bg-emerald-500"
+            onClick={() => router.push(`/room/${resumeCode}/game`)}
+          >
+            המשך משחק פתוח ({resumeCode})
+          </button>
+        )}
 
         <div className="mb-4 flex rounded-xl bg-white/5 p-1">
           <button
